@@ -1,10 +1,7 @@
 import {indexChunks, chunksAtTime} from '../util/subtitles'
 
-function reduce(state = {count: 0, doc: null}, action) {
+function reduce(state = { doc: null }, action) {
   switch (action.type) {
-    case 'incrementCount':
-      return { ...state, count: state.count + 1 };
-
     case 'newDoc':
       return {
         ...state,

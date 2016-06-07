@@ -1,22 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { incrementCount, newDoc, importVideoFile, importSubsFile, videoTimeUpdate } from '../actions';
-
-// Counter
-const Counter = connect(
-  (state) => ({ // mapStateToProps
-    value: state.count,
-  }),
-  (dispatch) => ({ // mapDispatchToProps
-    onIncreaseClick: () => dispatch(incrementCount()),
-  })
-)(({ value, onIncreaseClick }) => (
-  <div>
-    <span>{value}</span>
-    <button onClick={onIncreaseClick}>Increase</button>
-  </div>
-));
+import { newDoc, importVideoFile, importSubsFile, videoTimeUpdate } from '../actions';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -187,7 +172,6 @@ const MaybeDoc = connect(
 // App
 const App = () => (
   <div>
-    <Counter />
     <NewDocForm />
     <MaybeDoc />
   </div>

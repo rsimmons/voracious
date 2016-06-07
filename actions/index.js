@@ -1,9 +1,5 @@
 import { parseSRT } from '../util/subtitles';
 
-export const incrementCount = () => ({
-  type: 'incrementCount',
-});
-
 export const newDoc = (kind, language) => ({
   type: 'newDoc',
   kind,
