@@ -1,10 +1,7 @@
 
 Next steps:
 - Reconsider how we store media/subs; rather than by language, might want just uids. Could mark whichever media/textChunks as 'native' vs. 'translation'
-- Check style guide on curlies spacing, etc.
-- Get eslint going?
 - Display the computed current subs somewhere
-- Jump-back button and kbd shortcut
 - Un-halfwidth subs on import
 - Display more summary info (sub tracks, media presence)
 - Integrate JS-mecab
@@ -13,12 +10,57 @@ Next steps:
   - 0028.jpg is good, has errors/confusion
   - Do we need to ignore summary result and go off pieces alone? Is summary result always the concat of pieces? Seems like we want to go through and make spans with uids, and make corresponding divs over image.
 
+Structure of multiple versions of media/text:
+- While videos typically only have one media version, comics will hopefully have two media versions (scanned and scanlated)
+- It's conceivable that one could use Japanese and simplified-Japanese instead of translation. Same with Shakespeare original-English and modern-English. While maybe not super common, seems like we might as well not tie versions to languages, esp. if there might be a simpler way. Also, we might have two alternate translations, or 'commentary tracks'.
+- It probably makes sense to treat media/text as 'tracks' like in an mp4 file. We can have multiple media 'tracks' and multiple text 'tracks', each with language field, keyed by some uid.
+- We can show a list of all media and all texts, and let user mark them. At most one can be 'original'? And certain ones can be marked by user as the active translations.
+
+Current:
+doc
+  kind
+  language
+  media
+    videoFile
+    videoURL
+    currentTime
+  textChunks
+    ja
+      chunks
+      index
+    en
+      chunks
+      index
+  currentTextChunks
+    ja: [...]
+    en: [...]
+
+Proposed
+doc
+  kind
+  media
+    1234
+      videoFile
+      videoURL
+    2345
+      videoFile
+      videoURL
+  texts
+    4321
+      chunks
+      index
+    5432
+      chunks
+      index
+  position: 123.45 // there is intentionally only one position
+  // still need to store references to 'current' text chunks somewhere
+
 Keyboard shortcuts:
 - general idea is to keep one hand in position on keyboard. let's say left hand, since most people mouse with right. and let's say home row, so asdf+space
 - controls:
   - SPACE: toggle play/pause for video, go to to next page for comic
   - A: jump-back N seconds for video, go to previous page for comic
-  - S: ?
+  - S: ? star/mark current chunk?
   - D: toggle transcription
   - F: toggle translation
 
