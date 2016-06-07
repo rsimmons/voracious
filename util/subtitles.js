@@ -11,8 +11,12 @@ export const parseSRT = (text) => {
   const chunks = [];
   let found;
 
-  while (found = re.exec(normText)) {
-    const [full, indexStr, beginStr, endStr, text] = found;
+  while (true) {
+    found = re.exec(normText);
+    if (!found) {
+      break;
+    }
+    const [full, , beginStr, endStr, lines] = found;
     const begin = parseTime(beginStr);
     const end = parseTime(endStr);
     // TODO: Should verify that end time is >= begin time
@@ -20,7 +24,7 @@ export const parseSRT = (text) => {
     chunks.push({
       begin,
       end,
-      text,
+      lines,
     });
     re.lastIndex = found.index + full.length;
   }
@@ -35,7 +39,9 @@ const indexSortedChunks = (chunks) => {
   const centerTime = 0.5*(centerChunk.begin + centerChunk.end);
 
   // Partition on center time, into chunks that are fully-left, overlapping, and fully-right
-  const left = [], overlap = [], right = [];
+  const left = [];
+  const overlap = [];
+  const right = [];
   for (const c of chunks) {
     if (c.end < centerTime) {
       left.push(c);
@@ -65,9 +71,12 @@ const indexSortedChunks = (chunks) => {
 };
 
 export const indexChunks = (chunks) => {
-  // Build something like an Interval Tree. This differs from wikipedia but I think mine is correct and simpler.
+  // Build something like an Interval Tree.
+  // This differs from wikipedia but I think mine is correct and simpler.
   const sortedChunks = [...chunks];
-  sortedChunks.sort((a, b) => (a.begin - b.begin)); // It doesn't matter that this sort is "perfect", will just help balance tree
+
+   // Roughly sort chunks. It doesn't need to be "perfect", will just help balance tree.
+  sortedChunks.sort((a, b) => (a.begin - b.begin));
   return indexSortedChunks(sortedChunks);
 };
 
@@ -80,11 +89,11 @@ export const chunksAtTime = (index, time) => {
       }
     }
     return result;
-  } else {
-    if (time < index.splitTime) {
-      return chunksAtTime(index.left, time);
-    } else {
-      return chunksAtTime(index.right, time);
-    }
   }
+
+  // Not a leaf
+  if (time < index.splitTime) {
+    return chunksAtTime(index.left, time);
+  }
+  return chunksAtTime(index.right, time);
 };

@@ -1,4 +1,4 @@
-import {parseSRT} from '../util/subtitles'
+import { parseSRT } from '../util/subtitles';
 
 export const incrementCount = () => ({
   type: 'incrementCount',
@@ -28,7 +28,7 @@ export const importSubsFile = (file, language) => (
     reader.onload = (e) => {
       // Parse loaded file data and dispatch action for result
       dispatch(importSubsParsed(parseSRT(e.target.result), language));
-    }
+    };
     reader.readAsText(file);
   }
 );
@@ -37,10 +37,3 @@ export const videoTimeUpdate = (time) => ({
   type: 'videoTimeUpdate',
   time,
 });
-
-export const controlBack = () => {
-  
-  return {
-    type: 'controlBack',
-  }
-};

@@ -2,5 +2,11 @@
     "extends": "airbnb",
     "plugins": [
         "react"
-    ]
+    ],
+    "ecmaFeatures" : {
+        "experimentalObjectRestSpread": true
+    },
+    "rules": {
+        "no-constant-condition": ["error", { "checkLoops": false }]
+    }
 }

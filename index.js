@@ -1,12 +1,12 @@
-import React from 'react'
-import { render } from 'react-dom'
-import { createStore, applyMiddleware } from 'redux'
-import { Provider } from 'react-redux'
-import ReduxThunk from 'redux-thunk'
-import createReduxLogger from 'redux-logger'
+import React from 'react';
+import { render } from 'react-dom';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import ReduxThunk from 'redux-thunk';
+import createReduxLogger from 'redux-logger';
 
-import rootReducer from './reducers'
-import RootComponent from './components'
+import rootReducer from './reducers';
+import RootComponent from './components';
 
 const middlewares = [ReduxThunk];
 
