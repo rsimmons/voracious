@@ -11,12 +11,22 @@
   "license": "MIT",
   "browserify": {
     "transform": [
-      ["babelify", {
-          "presets": ["es2015", "react"],
-          "plugins": ["transform-object-rest-spread"]
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015",
+            "react"
+          ],
+          "plugins": [
+            "transform-object-rest-spread"
+          ]
         }
       ],
-      ["envify", {}]
+      [
+        "envify",
+        {}
+      ]
     ]
   },
   "dependencies": {
