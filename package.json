@@ -1,7 +1,8 @@
 {
   "name": "immersion-player",
-  "version": "0.0.0",
   "description": "A tool for foreign language learners to watch videos, read comics, and more.",
+  "version": "0.0.0",
+  "repository": "rsimmons/immersion-player",
   "main": "index.js",
   "scripts": {
     "watch": "NODE_ENV=development watchify --debug --extension=js -v -o bundle.js index.js"
