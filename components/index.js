@@ -165,7 +165,7 @@ const MaybeDoc = connect(
     doc: state.doc,
   })
 )(({ doc, dispatch }) => (
-  <div>{doc ? <Doc doc={doc} dispatch={dispatch} /> : 'No document'}</div>
+  doc ? <Doc doc={doc} dispatch={dispatch} /> : <div>No document</div>
 ));
 
 // App
