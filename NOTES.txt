@@ -1,6 +1,5 @@
 
 Next steps:
-- Switch to immutable.js and new state structure
 - Show lists of media/texts (sort by ids), track ids of ones that are set as primary/secondary
 - Make nicer display of text chunks
 - Move controls into some sort of control panel

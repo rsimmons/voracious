@@ -1,9 +1,8 @@
 import { parseSRT } from '../util/subtitles';
 
-export const newDoc = (kind, language) => ({
+export const newDoc = (kind) => ({
   type: 'newDoc',
   kind,
-  language,
 });
 
 export const importVideoFile = (file) => ({

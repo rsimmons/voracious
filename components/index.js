@@ -36,9 +36,8 @@ const NewDocForm = connect()(
         { value: 'comic', label: 'Comic' },
       ];
       return (
-        <form onSubmit={e => { e.preventDefault(); this.props.dispatch(newDoc(this.kindVal, this.languageVal)); }}>
+        <form onSubmit={e => { e.preventDefault(); this.props.dispatch(newDoc(this.kindVal)); }}>
           <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
-          <Select options={languageOptions} onSet={v => { this.languageVal = v; }} />
           <button type="submit">New Document</button>
         </form>
       );
@@ -132,7 +131,7 @@ class Doc extends Component {
     const { doc, dispatch } = this.props;
     return (
       <div>
-        <div>Kind: {doc.kind}, Language: {doc.language}</div>
+        <div>Kind: {doc.kind}</div>
         <VideoImportControls dispatch={dispatch} />
         <VideoMedia media={doc.media} onTimeUpdate={time => { dispatch(videoTimeUpdate(time)); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
         <PlayControls dispatch={dispatch} onBack={
