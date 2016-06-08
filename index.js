@@ -4,6 +4,7 @@ import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import ReduxThunk from 'redux-thunk';
 import createReduxLogger from 'redux-logger';
+import { Iterable } from 'immutable';
 
 import rootReducer from './reducers';
 import RootComponent from './components';
@@ -11,7 +12,15 @@ import RootComponent from './components';
 const middlewares = [ReduxThunk];
 
 if (process.env.NODE_ENV === 'development') {
-  middlewares.push(createReduxLogger());
+  // Since our state is an Immutable object, need to transform it for logging
+  const stateTransformer = (state) => {
+    if (Iterable.isIterable(state)) {
+      return state.toJS();
+    }
+    return state;
+  };
+
+  middlewares.push(createReduxLogger({ stateTransformer }));
 }
 
 const store = createStore(rootReducer, applyMiddleware(...middlewares));

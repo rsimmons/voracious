@@ -32,68 +32,34 @@ export const parseSRT = (text) => {
   return chunks;
 };
 
-const indexSortedChunks = (chunks) => {
-  // Determine a "center" time to partition on. Goal is just to balance tree.
-  const centerIdx = Math.floor(0.5*chunks.length);
-  const centerChunk = chunks[centerIdx];
-  const centerTime = 0.5*(centerChunk.begin + centerChunk.end);
-
-  // Partition on center time, into chunks that are fully-left, overlapping, and fully-right
-  const left = [];
-  const overlap = [];
-  const right = [];
+export const indexChunks = (chunks) => {
+  // Build a map from integer-seconds to lists of references to all chunks that overlap that full integer-second
+  const index = new Map();
   for (const c of chunks) {
-    if (c.end < centerTime) {
-      left.push(c);
-    } else if (c.begin > centerTime) {
-      right.push(c);
-    } else {
-      overlap.push(c);
+    for (let t = Math.floor(c.begin); t <= Math.floor(c.end); t++) {
+      if (!index.has(t)) {
+        index.set(t, []);
+      }
+      index.get(t).push(c);
     }
   }
 
-  if ((left.length === 0) || (right.length === 0)) {
-    // Not enough useful partitioning was done, make this a leaf node
-    return {
-      leaf: true,
-      chunks: left.concat(overlap, right),
-    };
-  }
-
-  // Partitioning was done, return a non-leaf node.
-  // Note that we duplicate the overlap into left and right, which makes things simpler.
-  return {
-    leaf: false,
-    splitTime: centerTime,
-    left: indexSortedChunks(left.concat(overlap)),
-    right: indexSortedChunks(right.concat(overlap)),
-  };
-};
-
-export const indexChunks = (chunks) => {
-  // Build something like an Interval Tree.
-  // This differs from wikipedia but I think mine is correct and simpler.
-  const sortedChunks = [...chunks];
-
-   // Roughly sort chunks. It doesn't need to be "perfect", will just help balance tree.
-  sortedChunks.sort((a, b) => (a.begin - b.begin));
-  return indexSortedChunks(sortedChunks);
+  return index;
 };
 
 export const chunksAtTime = (index, time) => {
-  if (index.leaf) {
-    const result = [];
-    for (const c of index.chunks) {
-      if ((time >= c.begin) && (time <= c.end)) {
-        result.push(c);
-      }
-    }
-    return result;
+  const it = Math.floor(time);
+
+  if (!index.has(it)) {
+    return [];
   }
 
-  // Not a leaf
-  if (time < index.splitTime) {
-    return chunksAtTime(index.left, time);
+  const result = [];
+  for (const c of index.get(it)) {
+    if ((time >= c.begin) && (time <= c.end)) {
+      result.push(c);
+    }
   }
-  return chunksAtTime(index.right, time);
+
+  return result;
 };

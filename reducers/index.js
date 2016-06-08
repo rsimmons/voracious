@@ -1,67 +1,64 @@
-import {indexChunks, chunksAtTime} from '../util/subtitles'
+import {Record, Map, List, fromJS} from 'immutable';
+import {indexChunks, chunksAtTime} from '../util/subtitles';
 
-function reduce(state = { doc: null }, action) {
+const genId = (() => {
+  let nextId = 0;
+  return () => {
+    return 'id' + (nextId++);
+  }
+})();
+
+const StateRecord = new Record({
+  doc: null,
+});
+
+const DocRecord = new Record({
+  kind: null,
+  media: new Map(),
+  texts: new Map(),
+  position: 0,
+});
+
+const VideoMediaRecord = new Record({
+  videoFile: null,
+  videoURL: null,
+});
+
+const TextRecord = new Record({
+  chunks: null,
+  index: null,
+  currentChunks: null,
+});
+
+function reduce(state = new StateRecord(), action) {
   switch (action.type) {
-    case 'newDoc':
-      return {
-        ...state,
-        doc: {
-          kind: action.kind,
-          language: action.language,
-          media: null,
-          textChunks: {},
-          currentTextChunks: {},
-        },
-      };
+    case 'newDoc': {
+      return state.set('doc', new DocRecord({
+        kind: action.kind,
+      }));
+    }
 
-    case 'importVideoFile':
-      return {
-        ...state,
-        doc: {
-          ...state.doc,
-          media: {
-            videoFile: action.file,
-            videoURL: URL.createObjectURL(action.file),
-            currentTime: 0,
-          },
-        },
-      };
+    case 'importVideoFile': {
+      const newMediaId = genId();
+      return state.setIn(['doc', 'media', newMediaId], new VideoMediaRecord({
+        videoFile: action.file,
+        videoURL: URL.createObjectURL(action.file),
+      }));
+    }
 
-    case 'importSubsParsed':
-      return {
-        ...state,
-        doc: {
-          ...state.doc,
-          textChunks: {
-            ...state.doc.textChunks,
-            [action.language]: {
-              chunks: action.subChunks,
-              index: indexChunks(action.subChunks),
-            },
-          },
-          // TODO: should update currentTextChunks if media is present
-        },
-      };
+    case 'importSubsParsed': {
+      const newTextId = genId();
+      return state.setIn(['doc', 'texts', newTextId], new TextRecord({
+        chunks: fromJS(action.subChunks),
+        index: fromJS(indexChunks(action.subChunks)),
+        currentChunks: new List(), // TODO: should initialize this
+      }));
+    }
 
     case 'videoTimeUpdate': {
-      const currentTextChunks = {};
-      if (state.doc.kind === 'video') {
-        for (let language in state.doc.textChunks) {
-          currentTextChunks[language] = chunksAtTime(state.doc.textChunks[language].index, action.time);
-        }
-      }
-
-      return {
-        ...state,
-        doc: {
-          ...state.doc,
-          media: {
-            ...state.doc.media,
-            currentTime: action.time,
-          },
-          currentTextChunks,
-        }
-      };
+      return state
+        .updateIn(['doc', 'texts'], texts => texts.map(textRecord => textRecord.set('currentChunks', fromJS(chunksAtTime(textRecord.index, action.time)))))
+        .setIn(['doc', 'position'], action.time);
     }
 
     default:

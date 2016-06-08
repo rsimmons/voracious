@@ -73,8 +73,8 @@ class VideoMedia extends Component {
   render() {
     const { media, onTimeUpdate, mountedVideoElement } = this.props;
     return (
-      <div>{media ? (
-        <video src={media.videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { mountedVideoElement(el); }} />
+      <div>{media.size ? (
+        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { mountedVideoElement(el); }} />
       ) : 'No video media'
       }</div>
     );
@@ -154,7 +154,7 @@ class Doc extends Component {
             }
           }
         />
-        <div>{JSON.stringify(doc.currentTextChunks)}</div>
+        <div>{doc.texts.size ? JSON.stringify(doc.texts.first().currentChunks.toJS()) : ''}</div>
       </div>
     );
   }

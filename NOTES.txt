@@ -1,7 +1,9 @@
 
 Next steps:
-- Reconsider how we store media/subs; rather than by language, might want just uids. Could mark whichever media/textChunks as 'native' vs. 'translation'
-- Display the computed current subs somewhere
+- Switch to immutable.js and new state structure
+- Show lists of media/texts (sort by ids), track ids of ones that are set as primary/secondary
+- Make nicer display of text chunks
+- Move controls into some sort of control panel
 - Un-halfwidth subs on import
 - Display more summary info (sub tracks, media presence)
 - Integrate JS-mecab
@@ -15,45 +17,6 @@ Structure of multiple versions of media/text:
 - It's conceivable that one could use Japanese and simplified-Japanese instead of translation. Same with Shakespeare original-English and modern-English. While maybe not super common, seems like we might as well not tie versions to languages, esp. if there might be a simpler way. Also, we might have two alternate translations, or 'commentary tracks'.
 - It probably makes sense to treat media/text as 'tracks' like in an mp4 file. We can have multiple media 'tracks' and multiple text 'tracks', each with language field, keyed by some uid.
 - We can show a list of all media and all texts, and let user mark them. At most one can be 'original'? And certain ones can be marked by user as the active translations.
-
-Current:
-doc
-  kind
-  language
-  media
-    videoFile
-    videoURL
-    currentTime
-  textChunks
-    ja
-      chunks
-      index
-    en
-      chunks
-      index
-  currentTextChunks
-    ja: [...]
-    en: [...]
-
-Proposed
-doc
-  kind
-  media
-    1234
-      videoFile
-      videoURL
-    2345
-      videoFile
-      videoURL
-  texts
-    4321
-      chunks
-      index
-    5432
-      chunks
-      index
-  position: 123.45 // there is intentionally only one position
-  // still need to store references to 'current' text chunks somewhere
 
 Keyboard shortcuts:
 - general idea is to keep one hand in position on keyboard. let's say left hand, since most people mouse with right. and let's say home row, so asdf+space
