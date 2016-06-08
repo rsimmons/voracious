@@ -38,7 +38,7 @@ const NewDocForm = connect()(
       return (
         <form onSubmit={e => { e.preventDefault(); this.props.dispatch(newDoc(this.kindVal)); }}>
           <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
-          <button type="submit">New Document</button>
+          <button type="submit">Create New Document</button>
         </form>
       );
     }
@@ -131,8 +131,10 @@ class Doc extends Component {
     const { doc, dispatch } = this.props;
     return (
       <div>
-        <div>Kind: {doc.kind}</div>
-        <VideoImportControls dispatch={dispatch} />
+        <div style={{ float: 'right' }}>
+          <div>Kind: {doc.kind}</div>
+          <VideoImportControls dispatch={dispatch} />
+        </div>
         <VideoMedia media={doc.media} onTimeUpdate={time => { dispatch(videoTimeUpdate(time)); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
         <PlayControls dispatch={dispatch} onBack={
             () => {
@@ -159,21 +161,17 @@ class Doc extends Component {
   }
 }
 
-// MaybeDoc
-const MaybeDoc = connect(
+// App
+const App = connect(
   (state) => ({
     doc: state.doc,
   })
 )(({ doc, dispatch }) => (
-  doc ? <Doc doc={doc} dispatch={dispatch} /> : <div>No document</div>
-));
-
-// App
-const App = () => (
-  <div>
+  doc ? (
+    <Doc doc={doc} dispatch={dispatch} />
+  ) : (
     <NewDocForm />
-    <MaybeDoc />
-  </div>
-);
+  )
+));
 
 export default App;
