@@ -44,6 +44,9 @@ function reduce(state = new StateRecord(), action) {
         videoFile: action.file,
         videoURL: URL.createObjectURL(action.file),
       }));
+      // TODO: Need to consider if we want to zero position.
+      //  If yes, then should update texts currentChunks.
+      //  If not, then should seek video to current position?
     }
 
     case 'importSubsParsed': {
@@ -51,7 +54,7 @@ function reduce(state = new StateRecord(), action) {
       return state.setIn(['doc', 'texts', newTextId], new TextRecord({
         chunks: fromJS(action.subChunks),
         index: fromJS(indexChunks(action.subChunks)),
-        currentChunks: new List(), // TODO: should initialize this
+        currentChunks: new List(), // TODO: Should initialize this based on current position
       }));
     }
 
