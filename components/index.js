@@ -133,7 +133,7 @@ class Doc extends Component {
     const { doc, actions } = this.props;
     return (
       <div>
-        <div style={{ float: 'right' }}>
+        <div style={{ float: 'right', backgroundColor: '#ddd', padding: '10px' }}>
           <div>Kind: {doc.kind}</div>
           <VideoImportControls actions={actions} />
         </div>

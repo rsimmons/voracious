@@ -6,3 +6,7 @@ html, body {
 body {
   font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
 }
+
+form {
+  margin-bottom: 0;
+}
