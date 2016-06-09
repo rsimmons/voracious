@@ -9,6 +9,8 @@ const languageOptions = [
   { value: 'en', label: 'English' },
 ];
 
+const newlinesToBrs = s => s.split('\n').map(i => <span>{i}<br/></span>);
+
 // Select, "uncontrolled" but watches changes
 class Select extends Component {
   componentWillMount() {
@@ -162,7 +164,7 @@ class Doc extends Component {
             }
           }
         />
-        <div>{doc.texts.size ? JSON.stringify(doc.texts.first().currentChunks.toJS()) : ''}</div>
+        <div className="studied-text">{doc.texts.size ? doc.texts.first().currentChunks.map(c => newlinesToBrs(c.get('lines').trim())) : ''}</div>
       </div>
     );
   }
