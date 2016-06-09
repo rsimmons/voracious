@@ -1,6 +1,7 @@
 
 Next steps:
-- Make nicer display of text chunks
+- Allow toggling doc settings panel
+- Show primary and secondary subs separated in some sort of boxes (top/bottom or left/right?)
 - Add flags for media/texts for primary/secondary, allow setting them, make use of them.
 - Un-halfwidth subs on import
 - Reduce updates by using Reselect in mapStateToProps and not doing inline event callback defs, because that causes a new function object to be created every render, fucking up Reacts prop-change-detection

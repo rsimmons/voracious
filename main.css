@@ -17,4 +17,12 @@ ul {
 
 .studied-text {
   font-size: 1.6em;
+  text-align: center;
+}
+
+#doc-settings {
+  position: absolute;
+  right: 0;
+  background-color: #ddd;
+  padding: 10px;
 }

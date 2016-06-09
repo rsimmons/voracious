@@ -77,7 +77,7 @@ class VideoMedia extends Component {
   render() {
     const { media, onTimeUpdate, mountedVideoElement } = this.props;
     return (
-      <div>{media.size ? (
+      <div style={{ textAlign: 'center' }}>{media.size ? (
         <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { mountedVideoElement(el); }} />
       ) : 'No video media'
       }</div>
@@ -136,7 +136,7 @@ class Doc extends Component {
     const { doc, actions } = this.props;
     return (
       <div>
-        <div style={{ float: 'right', backgroundColor: '#ddd', padding: '10px' }}>
+        <div id="doc-settings">
           <div>Kind: {doc.kind}</div>
           <VideoImportControls actions={actions} />
           <div>Media:</div>
