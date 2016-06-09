@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import { newDoc, importVideoFile, importSubsFile, videoTimeUpdate } from '../actions';
+import * as allActionCreators from '../actions';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -35,8 +36,9 @@ const NewDocForm = connect()(
         { value: 'video', label: 'Video' },
         { value: 'comic', label: 'Comic' },
       ];
+      const { actions } = this.props;
       return (
-        <form onSubmit={e => { e.preventDefault(); this.props.dispatch(newDoc(this.kindVal)); }}>
+        <form onSubmit={e => { e.preventDefault(); actions.newDoc(this.kindVal); }}>
           <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
           <button type="submit">Create New Document</button>
         </form>
@@ -53,14 +55,14 @@ const FileChooser = ({ label, accept, onChoose }) => (
 // VideoImportControls
 class VideoImportControls extends Component {
   render() {
-    const { dispatch } = this.props;
+    const { actions } = this.props;
     return (
       <div>
         <form>
-          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { dispatch(importVideoFile(file)); }} />
+          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { actions.importVideoFile(file); }} />
         </form>
         <form>
-          <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { dispatch(importSubsFile(file, this.subLanguageVal)); }} />
+          <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { actions.importSubsFile(file, this.subLanguageVal); }} />
           <Select options={languageOptions} onSet={v => { this.subLanguageVal = v; }} />
         </form>
       </div>
@@ -128,15 +130,15 @@ class Doc extends Component {
   }
 
   render() {
-    const { doc, dispatch } = this.props;
+    const { doc, actions } = this.props;
     return (
       <div>
         <div style={{ float: 'right' }}>
           <div>Kind: {doc.kind}</div>
-          <VideoImportControls dispatch={dispatch} />
+          <VideoImportControls actions={actions} />
         </div>
-        <VideoMedia media={doc.media} onTimeUpdate={time => { dispatch(videoTimeUpdate(time)); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
-        <PlayControls dispatch={dispatch} onBack={
+        <VideoMedia media={doc.media} onTimeUpdate={time => { actions.videoTimeUpdate(time); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
+        <PlayControls actions={actions} onBack={
             () => {
               if (this.videoElement) {
                 const nt = this.videoElement.currentTime - 3.0;
@@ -163,14 +165,17 @@ class Doc extends Component {
 
 // App
 const App = connect(
-  (state) => ({
+  state => ({
     doc: state.doc,
+  }),
+  dispatch => ({
+    actions: bindActionCreators(allActionCreators, dispatch),
   })
-)(({ doc, dispatch }) => (
+)(({ doc, actions }) => (
   doc ? (
-    <Doc doc={doc} dispatch={dispatch} />
+    <Doc doc={doc} actions={actions} />
   ) : (
-    <NewDocForm />
+    <NewDocForm actions={actions} />
   )
 ));
 
