@@ -20,11 +20,13 @@ const DocRecord = new Record({
 });
 
 const VideoMediaRecord = new Record({
+  language: null,
   videoFile: null,
   videoURL: null,
 });
 
 const TextRecord = new Record({
+  language: null,
   chunks: null,
   index: null,
   currentChunks: null,
@@ -43,6 +45,7 @@ function reduce(state = new StateRecord(), action) {
       //  If yes, then should update texts currentChunks.
       //  If not, then should seek video to current position?
       return state.updateIn(['doc', 'media'], media => media.push(new VideoMediaRecord({
+        language: action.language,
         videoFile: action.file,
         videoURL: URL.createObjectURL(action.file),
       })));
@@ -50,6 +53,7 @@ function reduce(state = new StateRecord(), action) {
 
     case 'importSubsParsed': {
       return state.updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
+        language: action.language,
         chunks: fromJS(action.subChunks),
         index: fromJS(indexChunks(action.subChunks)),
         currentChunks: new List(), // TODO: Should initialize this based on current position

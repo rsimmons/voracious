@@ -5,9 +5,10 @@ export const newDoc = (kind) => ({
   kind,
 });
 
-export const importVideoFile = (file) => ({
+export const importVideoFile = (file, language) => ({
   type: 'importVideoFile',
   file,
+  language,
 });
 
 export const importSubsParsed = (subChunks, language) => ({

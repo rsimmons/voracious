@@ -1,6 +1,6 @@
 
 Next steps:
-- Show lists of media/texts. Add flags for ones that are set as primary/secondary.
+- Add flags for media/texts for primary/secondary, make use of them.
 - Make nicer display of text chunks
 - Move controls into some sort of control panel
 - Un-halfwidth subs on import

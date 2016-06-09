@@ -59,7 +59,8 @@ class VideoImportControls extends Component {
     return (
       <div>
         <form>
-          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { actions.importVideoFile(file); }} />
+          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { actions.importVideoFile(file, this.videoLanguageVal); }} />
+          <Select options={languageOptions} onSet={v => { this.videoLanguageVal = v; }} />
         </form>
         <form>
           <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { actions.importSubsFile(file, this.subLanguageVal); }} />
@@ -137,9 +138,9 @@ class Doc extends Component {
           <div>Kind: {doc.kind}</div>
           <VideoImportControls actions={actions} />
           <div>Media:</div>
-          <ul>{doc.media.map((o, i) => <li key={i}>media #{i}</li>)}</ul>
+          <ul>{doc.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
           <div>Texts:</div>
-          <ul>{doc.texts.map((o, i) => <li key={i}>text #{i}</li>)}</ul>
+          <ul>{doc.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
         </div>
         <VideoMedia media={doc.media} onTimeUpdate={time => { actions.videoTimeUpdate(time); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
         <PlayControls actions={actions} onBack={
