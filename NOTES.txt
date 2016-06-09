@@ -1,9 +1,10 @@
 
 Next steps:
-- Show lists of media/texts (sort by ids), track ids of ones that are set as primary/secondary
+- Show lists of media/texts. Add flags for ones that are set as primary/secondary.
 - Make nicer display of text chunks
 - Move controls into some sort of control panel
 - Un-halfwidth subs on import
+- Reduce updates by using Reselect in mapStateToProps and not doing inline event callback defs, because that causes a new function object to be created every render, fucking up Reacts prop-change-detection
 - Display more summary info (sub tracks, media presence)
 - Integrate JS-mecab
 - Try JS-mecab on simple OCR output?

@@ -14,8 +14,8 @@ const StateRecord = new Record({
 
 const DocRecord = new Record({
   kind: null,
-  media: new Map(),
-  texts: new Map(),
+  media: new List(),
+  texts: new List(),
   position: 0,
 });
 
@@ -39,23 +39,21 @@ function reduce(state = new StateRecord(), action) {
     }
 
     case 'importVideoFile': {
-      const newMediaId = genId();
-      return state.setIn(['doc', 'media', newMediaId], new VideoMediaRecord({
-        videoFile: action.file,
-        videoURL: URL.createObjectURL(action.file),
-      }));
       // TODO: Need to consider if we want to zero position.
       //  If yes, then should update texts currentChunks.
       //  If not, then should seek video to current position?
+      return state.updateIn(['doc', 'media'], media => media.push(new VideoMediaRecord({
+        videoFile: action.file,
+        videoURL: URL.createObjectURL(action.file),
+      })));
     }
 
     case 'importSubsParsed': {
-      const newTextId = genId();
-      return state.setIn(['doc', 'texts', newTextId], new TextRecord({
+      return state.updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
         chunks: fromJS(action.subChunks),
         index: fromJS(indexChunks(action.subChunks)),
         currentChunks: new List(), // TODO: Should initialize this based on current position
-      }));
+      })));
     }
 
     case 'videoTimeUpdate': {
