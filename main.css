@@ -10,3 +10,7 @@ body {
 form {
   margin-bottom: 0;
 }
+
+ul {
+  margin: 0;
+}

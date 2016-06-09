@@ -136,6 +136,10 @@ class Doc extends Component {
         <div style={{ float: 'right', backgroundColor: '#ddd', padding: '10px' }}>
           <div>Kind: {doc.kind}</div>
           <VideoImportControls actions={actions} />
+          <div>Media:</div>
+          <ul>{doc.media.map((o, i) => <li key={i}>media #{i}</li>)}</ul>
+          <div>Texts:</div>
+          <ul>{doc.texts.map((o, i) => <li key={i}>text #{i}</li>)}</ul>
         </div>
         <VideoMedia media={doc.media} onTimeUpdate={time => { actions.videoTimeUpdate(time); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
         <PlayControls actions={actions} onBack={
