@@ -125,6 +125,10 @@ class PlayControls extends Component {
   }
 }
 
+const TextChunksBox = ({ chunks }) => (
+  <div className="studied-text-box">{chunks.map(c => newlinesToBrs(c.get('lines').trim()))}</div>
+);
+
 // Doc
 class Doc extends Component {
   constructor(props) {
@@ -164,7 +168,8 @@ class Doc extends Component {
             }
           }
         />
-        <div className="studied-text">{doc.texts.size ? doc.texts.first().currentChunks.map(c => newlinesToBrs(c.get('lines').trim())) : ''}</div>
+        {(doc.texts.size >= 1) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} /> : ''}
+        {(doc.texts.size >= 2) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} /> : ''}
       </div>
     );
   }
