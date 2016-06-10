@@ -1,22 +1,73 @@
 
 Next steps:
+- Make text chunks immutable, and extract Record definition from subtitles.js.
+ - Probably separate the text ("lines") from begin/end timing? Since that will differ for comics.
+ - Or could have 'position' which is either a single number or (begin, end) range?
+ - So chunk record could be {position, annoText: {text, annoRegions}}. annoRegions can start out null/empty.
+- Incorporate JS-mecab, make analysis function that takes text and returns annoRegions
+- Update chunk rendering to show furigana
+- Create module to manage immutable "stash"/saved-list.
+- Manage, display, save stash
+- Export stash for Anki (use uuid?)
+- Get some matched JA/EN subs from Delvin to test with
+- Figure out: How will toggling work uniformly between dual-subbed videos and dual-media comics? Comics will have (OCR'd) text as well.
+- Allow toggling primary/secondary texts with keys
 - Allow toggling doc settings panel
-- Show primary and secondary subs separated in some sort of boxes (top/bottom or left/right?)
 - Add flags for media/texts for primary/secondary, allow setting them, make use of them.
 - Un-halfwidth subs on import
 - Reduce updates by using Reselect in mapStateToProps and not doing inline event callback defs, because that causes a new function object to be created every render, fucking up Reacts prop-change-detection
 - Display more summary info (sub tracks, media presence)
-- Integrate JS-mecab
 - Try JS-mecab on simple OCR output?
 - Consume OCR result
   - 0028.jpg is good, has errors/confusion
   - Do we need to ignore summary result and go off pieces alone? Is summary result always the concat of pieces? Seems like we want to go through and make spans with uids, and make corresponding divs over image.
+
+#####
+
+SRS Export
+
+- We might want to cloze more than one region, or even not on region boundaries (allow arbitrary selection)
+- In what ways would we want to cloze stuff for Japanese?
+  - Cloze both kanji+furigana: test remembering from context (could test writing kanji or just phonetic recall)
+  - Cloze only furigana, show kanji: test reading
+  - Cloze only kanji, show furigana: test writing kanji
+- It seems like maybe we could get by with just one type of cloze for now, which is "full" cloze, cloze kanji+furigana.
+- If a user-selection has an endpoint in the middle of a region, furigana may be an issue. Anki will let us emit multiple clozes with same id, so we can just break them up.
+- Be aware of Anki duplicates-updating; the first field of export should ideally be some sort of uniquifying value? Un-clozed text maybe?
+- It seems like we want to durably save things for later export. Probably use local storage for now. Load on pageload, dump-save entire saved-list on each update (can subscribe to store).
+- Button exports to a text file. Another button clears (with confirm).
+- Direct anki import via add-on could only be done in a desktop version
+- The saved-list ("stash"?) can be represented as:
+  - a List of immutable records consisting of (text, annotations, translation, clozes)
+  - clozes would be a set of (begin, end) pairs
+  - store 'index' on text
+  - if user adds another same text and same annotations+translation, just do it. if same text but diff annotations or translation, ask if we should update or add new one
+  - remember that Anki can't support overlapping clozes, so either skip or generate multiple notes on export
+
+#####
+
+Text annotations:
+
+- List of records
+  - A chunk text can be a list of records
+  - Each record basically ends up getting converted to a span (but need to remember newlines)
+  - If text has not been analyzed, it could just be one record (not considering newlines)
+  - If text has been analyzed, each piece would be a separate record.
+- Plain text with a separate list of region annotations
+  - Could initially prohibit overlapping regions
+  - Would furigana be in region or could it be inlined in text? Might be best in regions.
+  - We can render text+annotations to HTML, with React.
+  - Store this in chunk record
+
+#####
 
 Structure of multiple versions of media/text:
 - While videos typically only have one media version, comics will hopefully have two media versions (scanned and scanlated)
 - It's conceivable that one could use Japanese and simplified-Japanese instead of translation. Same with Shakespeare original-English and modern-English. While maybe not super common, seems like we might as well not tie versions to languages, esp. if there might be a simpler way. Also, we might have two alternate translations, or 'commentary tracks'.
 - It probably makes sense to treat media/text as 'tracks' like in an mp4 file. We can have multiple media 'tracks' and multiple text 'tracks', each with language field, keyed by some uid.
 - We can show a list of all media and all texts, and let user mark them. At most one can be 'original'? And certain ones can be marked by user as the active translations.
+
+#####
 
 Keyboard shortcuts:
 - general idea is to keep one hand in position on keyboard. let's say left hand, since most people mouse with right. and let's say home row, so asdf+space
@@ -26,6 +77,8 @@ Keyboard shortcuts:
   - S: ? star/mark current chunk?
   - D: toggle transcription
   - F: toggle translation
+
+#####
 
 What are controls?
 - new document (of given type, language)
@@ -39,6 +92,8 @@ What are controls?
     - pause/resume
     - rewind, replay last section
     - auto-pause checkbox
+
+#####
 
 What contraints should hold for text?
 - For a video, it seems that all text should be inside a timed chunk? And the times should be sequential (in start times at least, overlaps could be allowed). Times could also be nested perhaps(?), but then they should still be in order.
