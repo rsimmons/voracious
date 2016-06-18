@@ -1,5 +1,5 @@
 import {Record, Map, List, fromJS} from 'immutable';
-import {getChunksAtTime} from '../util/chunk';
+import {createTimeRangeChunk, createTimeRangeChunkSet, getChunksAtTime} from '../util/chunk';
 
 const StateRecord = new Record({
   doc: null,
@@ -44,9 +44,15 @@ function reduce(state = new StateRecord(), action) {
     }
 
     case 'importSubsParsed': {
+      const chunks = [];
+      for (const sub of action.subs) {
+        chunks.push(createTimeRangeChunk(sub.begin, sub.end, sub.lines));
+      }
+      const chunkSet = createTimeRangeChunkSet(chunks);
+
       return state.updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
         language: action.language,
-        chunkSet: action.subChunkSet,
+        chunkSet,
         currentChunks: new List(), // TODO: Should initialize this based on current position
       })));
     }
