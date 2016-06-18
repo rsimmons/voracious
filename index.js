@@ -9,6 +9,10 @@ import { Iterable } from 'immutable';
 import rootReducer from './reducers';
 import RootComponent from './components';
 
+// Load Kuromoji right away
+import { loadKuromoji } from './util/analysis';
+loadKuromoji();
+
 const middlewares = [ReduxThunk];
 
 if (process.env.NODE_ENV === 'development') {
