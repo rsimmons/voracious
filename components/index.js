@@ -126,7 +126,7 @@ class PlayControls extends Component {
 }
 
 const TextChunksBox = ({ chunks }) => (
-  <div className="studied-text-box">{chunks.map(c => newlinesToBrs(c.get('lines').trim()))}</div>
+  <div className="studied-text-box">{chunks.map(c => newlinesToBrs(c.annoText.trim()))}</div>
 );
 
 // Doc

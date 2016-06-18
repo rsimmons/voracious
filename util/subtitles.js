@@ -1,3 +1,6 @@
+import {createTimeRangeChunk, createTimeRangeChunkSet} from './chunk';
+import {List} from 'immutable';
+
 const parseTime = (s) => {
   const re = /(\d{2}):(\d{2}):(\d{2}),(\d{3})/;
   const [, hours, mins, seconds, ms] = re.exec(s);
@@ -21,45 +24,13 @@ export const parseSRT = (text) => {
     const end = parseTime(endStr);
     // TODO: Should verify that end time is >= begin time
     // NOTE: We could check that indexes and/or time are in order, but don't really care
-    chunks.push({
+    chunks.push(createTimeRangeChunk(
       begin,
       end,
-      lines,
-    });
+      lines // TODO: this should be an annoText, not just a string
+    ));
     re.lastIndex = found.index + full.length;
   }
 
-  return chunks;
-};
-
-export const indexChunks = (chunks) => {
-  // Build a map from integer-seconds to lists of references to all chunks that overlap that full integer-second
-  const index = new Map();
-  for (const c of chunks) {
-    for (let t = Math.floor(c.begin); t <= Math.floor(c.end); t++) {
-      if (!index.has(t)) {
-        index.set(t, []);
-      }
-      index.get(t).push(c);
-    }
-  }
-
-  return index;
-};
-
-export const chunksAtTime = (index, time) => {
-  const it = Math.floor(time);
-
-  if (!index.has(it)) {
-    return [];
-  }
-
-  const result = [];
-  for (const c of index.get(it)) {
-    if ((time >= c.begin) && (time <= c.end)) {
-      result.push(c);
-    }
-  }
-
-  return result;
+  return createTimeRangeChunkSet(chunks);
 };

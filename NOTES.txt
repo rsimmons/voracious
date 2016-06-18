@@ -1,12 +1,10 @@
 
 Next steps:
-- Make text chunks immutable, and extract Record definition from subtitles.js.
- - Probably separate the text ("lines") from begin/end timing? Since that will differ for comics.
- - Or could have 'position' which is either a single number or (begin, end) range?
- - So chunk record could be {position, annoText: {text, annoRegions}}. annoRegions can start out null/empty.
-- Incorporate JS-mecab, make analysis function that takes text and returns annoRegions
+- Make AnnoText record, use it instead of plain strings for annoText field
+- Add function to update chunk text: Given ChunkSet, Chunk uid, and AnnoText, return new ChunkSet with that Chunk's AnnoText updated. No need to update index, since that points at uids.
+- Incorporate Kuromoji
 - Update chunk rendering to show furigana
-- Create module to manage immutable "stash"/saved-list.
+- Create module to manage immutable "stash"/saved-list. Seems like each item can be {uid, annoText, ?clozes?}
 - Manage, display, save stash
 - Export stash for Anki (use uuid?)
 - Get some matched JA/EN subs from Delvin to test with
@@ -32,6 +30,7 @@ SRS Export
   - Cloze only furigana, show kanji: test reading
   - Cloze only kanji, show furigana: test writing kanji
 - It seems like maybe we could get by with just one type of cloze for now, which is "full" cloze, cloze kanji+furigana.
+- We could also decide which thing to cloze based on the contents of the region text; if we have other clozes containing the same kanji, etc.
 - If a user-selection has an endpoint in the middle of a region, furigana may be an issue. Anki will let us emit multiple clozes with same id, so we can just break them up.
 - Be aware of Anki duplicates-updating; the first field of export should ideally be some sort of uniquifying value? Un-clozed text maybe?
 - It seems like we want to durably save things for later export. Probably use local storage for now. Load on pageload, dump-save entire saved-list on each update (can subscribe to store).

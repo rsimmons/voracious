@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'development') {
     return state;
   };
 
-  middlewares.push(createReduxLogger({ stateTransformer }));
+  // middlewares.push(createReduxLogger({ stateTransformer }));
 }
 
 const store = createStore(rootReducer, applyMiddleware(...middlewares));

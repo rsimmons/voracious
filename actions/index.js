@@ -11,9 +11,9 @@ export const importVideoFile = (file, language) => ({
   language,
 });
 
-export const importSubsParsed = (subChunks, language) => ({
+export const importSubsParsed = (subChunkSet, language) => ({
   type: 'importSubsParsed',
-  subChunks,
+  subChunkSet,
   language,
 });
 

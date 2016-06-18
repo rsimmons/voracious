@@ -1,12 +1,5 @@
 import {Record, Map, List, fromJS} from 'immutable';
-import {indexChunks, chunksAtTime} from '../util/subtitles';
-
-const genId = (() => {
-  let nextId = 0;
-  return () => {
-    return 'id' + (nextId++);
-  }
-})();
+import {getChunksAtTime} from '../util/chunk';
 
 const StateRecord = new Record({
   doc: null,
@@ -27,8 +20,7 @@ const VideoMediaRecord = new Record({
 
 const TextRecord = new Record({
   language: null,
-  chunks: null,
-  index: null,
+  chunkSet: null,
   currentChunks: null,
 });
 
@@ -54,15 +46,14 @@ function reduce(state = new StateRecord(), action) {
     case 'importSubsParsed': {
       return state.updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
         language: action.language,
-        chunks: fromJS(action.subChunks),
-        index: fromJS(indexChunks(action.subChunks)),
+        chunkSet: action.subChunkSet,
         currentChunks: new List(), // TODO: Should initialize this based on current position
       })));
     }
 
     case 'videoTimeUpdate': {
       return state
-        .updateIn(['doc', 'texts'], texts => texts.map(textRecord => textRecord.set('currentChunks', fromJS(chunksAtTime(textRecord.index, action.time)))))
+        .updateIn(['doc', 'texts'], texts => texts.map(textRecord => textRecord.set('currentChunks', getChunksAtTime(textRecord.chunkSet, action.time))))
         .setIn(['doc', 'position'], action.time);
     }
 
