@@ -1,5 +1,6 @@
-import {Record, Map, List, fromJS} from 'immutable';
-import {createTimeRangeChunk, createTimeRangeChunkSet, getChunksAtTime} from '../util/chunk';
+import { Record, Map, List, fromJS } from 'immutable';
+import { createTimeRangeChunk, createTimeRangeChunkSet, getChunksAtTime } from '../util/chunk';
+import { autoAnnotateText } from '../util/annotext';
 
 const StateRecord = new Record({
   doc: null,
@@ -46,7 +47,8 @@ function reduce(state = new StateRecord(), action) {
     case 'importSubsParsed': {
       const chunks = [];
       for (const sub of action.subs) {
-        chunks.push(createTimeRangeChunk(sub.begin, sub.end, sub.lines));
+        const annoText = autoAnnotateText(sub.lines, action.language);
+        chunks.push(createTimeRangeChunk(sub.begin, sub.end, annoText));
       }
       const chunkSet = createTimeRangeChunkSet(chunks);
 

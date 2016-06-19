@@ -1,12 +1,9 @@
 
 Next steps:
-- Analyze subs on upload?
-  - Seems like parseSRT should just return an array of plain objects with {begin, end, text}
-  - The importSubsParsed reducer can take the array of objects and make the Chunks shit
-- Make AnnoText record, use it instead of plain strings for annoText field
+- Fix warning about "key" prop with TextChunk rendering
+- Make furigana code skip okurigana, using diff-match-patch
 - Add function to update chunk text: Given ChunkSet, Chunk uid, and AnnoText, return new ChunkSet with that Chunk's AnnoText updated. No need to update index, since that points at uids.
 - Improve Kuromoji integration: Don't have separate script include, get progress callbacks when loading dicts
-- Update chunk rendering to show furigana
 - Create module to manage immutable "stash"/saved-list. Seems like each item can be {uid, annoText, ?clozes?}
 - Manage, display, save stash
 - Export stash for Anki (use uuid?)

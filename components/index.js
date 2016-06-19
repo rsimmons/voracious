@@ -9,7 +9,7 @@ const languageOptions = [
   { value: 'en', label: 'English' },
 ];
 
-const newlinesToBrs = s => s.split('\n').map(i => <span>{i}<br/></span>);
+const newlinesToBrs = s => s.split('\n').map((o, i) => <span key={i}>{o}<br/></span>);
 
 // Select, "uncontrolled" but watches changes
 class Select extends Component {
@@ -125,8 +125,51 @@ class PlayControls extends Component {
   }
 }
 
+const TextChunk = ({ chunk }) => {
+  const renderPlainTextArr = (text) => {
+    const pieces = [];
+    for (const c of text) {
+      if (c === '\n') {
+        pieces.push(<br />);
+      } else {
+        pieces.push(c);
+      }
+    }
+    return <span>{pieces}</span>;
+  };
+
+  const children = [];
+  const textArr = [...chunk.annoText.text.trim()]; // split up by unicode chars
+  const rubyArr = chunk.annoText.ruby.toArray();
+
+  rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
+
+  let idx = 0;
+  for (const r of rubyArr) {
+    if (r.cpBegin < idx) {
+      throw new Error('Overlapping ruby');
+    }
+
+    const textBeforeArr = textArr.slice(idx, r.cpBegin);
+    if (textBeforeArr.length > 0) {
+      children.push(renderPlainTextArr(textBeforeArr));
+    }
+
+    children.push(<ruby>{renderPlainTextArr(textArr.slice(r.cpBegin, r.cpEnd))}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
+
+    idx = r.cpEnd;
+  }
+
+  // Handle remaining text
+  if (idx < textArr.length) {
+    children.push(renderPlainTextArr(textArr.slice(idx)));
+  }
+
+  return <div>{children}</div>
+};
+
 const TextChunksBox = ({ chunks }) => (
-  <div className="studied-text-box">{chunks.map(c => newlinesToBrs(c.annoText.trim()))}</div>
+  <div className="studied-text-box">{chunks.map(c => <TextChunk chunk={c} key={c.uid} />)}</div>
 );
 
 // Doc
