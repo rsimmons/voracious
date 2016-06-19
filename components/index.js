@@ -126,16 +126,17 @@ class PlayControls extends Component {
 }
 
 const TextChunk = ({ chunk }) => {
-  const renderPlainTextArr = (text) => {
+  const textRangeToElems = (cpBegin, cpEnd) => {
     const pieces = [];
-    for (const c of text) {
+    for (let i = cpBegin; i < cpEnd; i++) {
+      const c = textArr[i];
       if (c === '\n') {
-        pieces.push(<br />);
+        pieces.push(<br key={`char-${i}`} />);
       } else {
-        pieces.push(c);
+        pieces.push(<span key={`char-${i}`}>{c}</span>);
       }
     }
-    return <span>{pieces}</span>;
+    return pieces;
   };
 
   const children = [];
@@ -150,19 +151,18 @@ const TextChunk = ({ chunk }) => {
       throw new Error('Overlapping ruby');
     }
 
-    const textBeforeArr = textArr.slice(idx, r.cpBegin);
-    if (textBeforeArr.length > 0) {
-      children.push(renderPlainTextArr(textBeforeArr));
+    if (r.cpBegin > idx) {
+      children.push(...textRangeToElems(idx, r.cpBegin));
     }
 
-    children.push(<ruby>{renderPlainTextArr(textArr.slice(r.cpBegin, r.cpEnd))}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
+    children.push(<ruby key={`ruby-${r.cpBegin}:${r.cpEnd}`}>{textRangeToElems(r.cpBegin, r.cpEnd)}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
 
     idx = r.cpEnd;
   }
 
   // Handle remaining text
   if (idx < textArr.length) {
-    children.push(renderPlainTextArr(textArr.slice(idx)));
+    children.push(...textRangeToElems(idx, textArr.length));
   }
 
   return <div>{children}</div>
