@@ -153,7 +153,7 @@ class PlayControls extends Component {
   }
 }
 
-const TextChunk = ({ chunk }) => {
+const TextChunk = ({ chunk, language }) => {
   const textRangeToElems = (cpBegin, cpEnd) => {
     const pieces = [];
     for (let i = cpBegin; i < cpEnd; i++) {
@@ -197,13 +197,13 @@ const TextChunk = ({ chunk }) => {
   return (
     <div>
       <div style={{ float: 'right', width: floatWidth }}><ClipboardCopier text={renderChunkHTML(chunk)} /></div>
-      <div style={{ margin: '0 ' + floatWidth }}>{children}</div>
+      <div style={{ margin: '0 ' + floatWidth }} lang={language}>{children}</div>
     </div>
   );
 };
 
-const TextChunksBox = ({ chunks }) => (
-  <div className="studied-text-box">{chunks.map(c => <TextChunk chunk={c} key={c.uid} />)}</div>
+const TextChunksBox = ({ chunks, language }) => (
+  <div className="studied-text-box">{chunks.map(c => <TextChunk chunk={c} key={c.uid} language={language} />)}</div>
 );
 
 // Doc
@@ -245,8 +245,8 @@ class Doc extends Component {
             }
           }
         />
-        {(doc.texts.size >= 1) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} /> : ''}
-        {(doc.texts.size >= 2) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} /> : ''}
+        {(doc.texts.size >= 1) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} language={doc.texts.get(0).language} /> : ''}
+        {(doc.texts.size >= 2) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} language={doc.texts.get(1).language} /> : ''}
       </div>
     );
   }

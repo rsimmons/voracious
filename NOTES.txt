@@ -4,10 +4,9 @@ Next steps:
   - Watch videos. Pause and manually copy-paste JA and EN into Anki, make clozes in Anki.
   - Downside is that we won't have smarts/analysis of clozes (kanji counts, etc), but could always back-import later if I really care.
   - What else is needed?
-    - Toggle display of JA and EN
+    - Toggle display of JA and EN. Probably D key hides both, and F key incrementally reveals first text, then second, etc.
     - Allow deleting/adding ruby?
     - Fix halfwidth katakana crap
-- Put language attribute in appropriate place (TextChunksBox?)
 - Make furigana code skip okurigana, using diff-match-patch
 - Allow modifying ruby?
 - Add function to update chunk text: Given ChunkSet, Chunk uid, and AnnoText, return new ChunkSet with that Chunk's AnnoText updated. No need to update index, since that points at uids.
