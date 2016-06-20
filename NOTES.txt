@@ -5,7 +5,6 @@ Next steps:
   - Downside is that we won't have smarts/analysis of clozes (kanji counts, etc), but could always back-import later if I really care.
   - What else is needed?
     - Toggle display of JA and EN
-    - Fix okurigana (annoying)
     - Allow deleting/adding ruby?
     - Fix halfwidth katakana crap
 - Put language attribute in appropriate place (TextChunksBox?)

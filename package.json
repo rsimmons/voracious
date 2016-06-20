@@ -31,6 +31,7 @@
     ]
   },
   "dependencies": {
+    "diff-match-patch": "^1.0.0",
     "escape-html": "^1.0.3",
     "immutable": "^3.8.1",
     "react": "^15.0.2",

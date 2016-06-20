@@ -1,5 +1,8 @@
 import { Record, List } from 'immutable';
-import { hiraToKata, kataToHira } from '../util/japanese';
+import { hiraToKata, kataToHira, anyCharIsKana } from '../util/japanese';
+import DiffMatchPatch from 'diff-match-patch';
+
+const dmp = new DiffMatchPatch();
 
 let kuromojiTokenizer = null;
 
@@ -54,11 +57,46 @@ const analyzeJAKuromoji = (text) => {
       const kataSurfaceForm = hiraToKata(t.surface_form);
 
       if (kataReading !== kataSurfaceForm) {
-        mutRuby.push(RubyRecord({
-          cpBegin,
-          cpEnd,
-          rubyText: kataToHira(t.reading),
-        }));
+        const hiraReading = kataToHira(t.reading);
+
+        if (anyCharIsKana(t.surface_form)) {
+          const diffs = dmp.diff_main(kataToHira(t.surface_form), hiraReading);
+          let beginOff = 0;
+          let endOff = 0;
+          for (const [action, s] of diffs) {
+            if (action === -1) {
+              // Deletion
+              endOff = beginOff + [...s].length;
+            } else if (action === 1) {
+              // Insertion
+              if (endOff <= beginOff) {
+                throw new Error('Unexpected');
+              }
+              mutRuby.push(RubyRecord({
+                cpBegin: cpBegin + beginOff,
+                cpEnd: cpBegin + endOff,
+                rubyText: s,
+              }));
+              beginOff = endOff;
+            } else {
+              if (action !== 0) {
+                throw new Error('Unexpected');
+              }
+              beginOff += [...s].length;
+              endOff = beginOff;
+            }
+          }
+          if (beginOff !== endOff) {
+            throw new Error('Unexpected');
+          }
+        } else {
+          // Simple case
+          mutRuby.push(RubyRecord({
+            cpBegin,
+            cpEnd,
+            rubyText: hiraReading,
+          }));
+        }
       }
     }
   }
