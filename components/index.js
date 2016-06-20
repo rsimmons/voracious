@@ -211,7 +211,10 @@ const TextChunk = ({ chunk, language }) => {
 };
 
 const TextChunksBox = ({ chunks, language }) => (
-  <div className="studied-text-box">{chunks.map(c => <TextChunk chunk={c} key={c.uid} language={language} />)}</div>
+  <div className="studied-text-box">
+    <div className="language-tag">{language.toUpperCase()}</div>
+    <div>{chunks.map(c => <TextChunk chunk={c} key={c.uid} language={language} />)}</div>
+  </div>
 );
 
 // Doc

@@ -31,3 +31,11 @@ ul {
   background-color: #ddd;
   padding: 10px;
 }
+
+.language-tag {
+  float: left;
+  color: white;
+  font-size: 14px;
+  padding: 5px 10px;
+  background-color: #ccc;
+}
