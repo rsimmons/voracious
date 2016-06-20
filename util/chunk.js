@@ -1,5 +1,6 @@
 import {Record, Map, List, fromJS} from 'immutable';
 import genUID from './uid';
+import escape from 'escape-html';
 
 const RangePosition = new Record({
   begin: null,
@@ -64,4 +65,40 @@ export const getChunksAtTime = (chunkSet, time) => {
   }
 
   return List(result);
+};
+
+export const renderChunkHTML = (chunk) => {
+  const textArr = [...chunk.annoText.text.trim()]; // split up by unicode chars
+  const rubyArr = chunk.annoText.ruby.toArray();
+
+  rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
+
+  let idx = 0;
+  const pieces = [];
+  for (const r of rubyArr) {
+    if (r.cpBegin < idx) {
+      throw new Error('Overlapping ruby');
+    }
+
+    if (r.cpBegin > idx) {
+      pieces.push(escape(textArr.slice(idx, r.cpBegin).join('')));
+    }
+
+    pieces.push('<ruby>' + escape(textArr.slice(r.cpBegin, r.cpEnd).join('')) + '<rp>(</rp><rt>' + escape(r.rubyText) + '</rt><rp>)</rp></ruby>');
+
+    idx = r.cpEnd;
+  }
+
+  // Handle remaining text
+  if (idx < textArr.length) {
+    pieces.push(escape(textArr.slice(idx, textArr.length).join('')));
+  }
+
+  // Join pieces
+  const html = pieces.join('');
+
+  // Convert newlines to breaks
+  const brHtml = html.replace(/\n/g, '<br/>');
+
+  return brHtml;
 };

@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 
 import * as allActionCreators from '../actions';
 
+import { renderChunkHTML } from '../util/chunk';
+
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
   { value: 'en', label: 'English' },
@@ -26,6 +28,32 @@ class Select extends Component {
       <select onChange={e => onSet(e.target.value)}>
         {options.map((o, i) => <option key={i} value={o.value}>{o.label}</option>)}
       </select>
+    );
+  }
+}
+
+// ClipboardCopier
+class ClipboardCopier extends Component {
+  constructor(props) {
+    super(props);
+    this.onSubmit = this.onSubmit.bind(this);
+  }
+
+  onSubmit(e) {
+    e.preventDefault();
+    // TODO: could check input is set and input.select is truthy, and wrap copy+blur in a try block
+    this.inputElem.select();
+    document.execCommand('copy');
+    this.inputElem.blur();
+  }
+
+  render() {
+    const { text } = this.props;
+    return (
+      <form onSubmit={this.onSubmit}>
+        <input style={{ width: '2em' }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }}  />
+        <button type="submit">Copy</button>
+      </form>
     );
   }
 }
@@ -165,7 +193,13 @@ const TextChunk = ({ chunk }) => {
     children.push(...textRangeToElems(idx, textArr.length));
   }
 
-  return <div>{children}</div>
+  const floatWidth = '5em';
+  return (
+    <div>
+      <div style={{ float: 'right', width: floatWidth }}><ClipboardCopier text={renderChunkHTML(chunk)} /></div>
+      <div style={{ margin: '0 ' + floatWidth }}>{children}</div>
+    </div>
+  );
 };
 
 const TextChunksBox = ({ chunks }) => (

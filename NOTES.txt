@@ -1,7 +1,16 @@
 
 Next steps:
-- Fix warning about "key" prop with TextChunk rendering
+- Figure out minimal flow to get shit into Anki
+  - Watch videos. Pause and manually copy-paste JA and EN into Anki, make clozes in Anki.
+  - Downside is that we won't have smarts/analysis of clozes (kanji counts, etc), but could always back-import later if I really care.
+  - What else is needed?
+    - Toggle display of JA and EN
+    - Fix okurigana (annoying)
+    - Allow deleting/adding ruby?
+    - Fix halfwidth katakana crap
+- Put language attribute in appropriate place (TextChunksBox?)
 - Make furigana code skip okurigana, using diff-match-patch
+- Allow modifying ruby?
 - Add function to update chunk text: Given ChunkSet, Chunk uid, and AnnoText, return new ChunkSet with that Chunk's AnnoText updated. No need to update index, since that points at uids.
 - Improve Kuromoji integration: Don't have separate script include, get progress callbacks when loading dicts
 - Create module to manage immutable "stash"/saved-list. Seems like each item can be {uid, annoText, ?clozes?}
