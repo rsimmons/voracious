@@ -11,6 +11,7 @@ const DocRecord = new Record({
   media: new List(),
   texts: new List(),
   position: 0,
+  textRevelation: 0,
 });
 
 const VideoMediaRecord = new Record({
@@ -63,6 +64,14 @@ function reduce(state = new StateRecord(), action) {
       return state
         .updateIn(['doc', 'texts'], texts => texts.map(textRecord => textRecord.set('currentChunks', getChunksAtTime(textRecord.chunkSet, action.time))))
         .setIn(['doc', 'position'], action.time);
+    }
+
+    case 'hideText': {
+      return state.setIn(['doc', 'textRevelation'], 0);
+    }
+
+    case 'revealMoreText': {
+      return state.setIn(['doc', 'textRevelation'], Math.min(state.doc.textRevelation + 1, state.doc.texts.size));
     }
 
     default:

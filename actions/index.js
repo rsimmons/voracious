@@ -33,3 +33,11 @@ export const videoTimeUpdate = (time) => ({
   type: 'videoTimeUpdate',
   time,
 });
+
+export const hideText = () => ({
+  type: 'hideText',
+});
+
+export const revealMoreText = () => ({
+  type: 'revealMoreText',
+});

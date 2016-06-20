@@ -128,13 +128,21 @@ class PlayControls extends Component {
   }
 
   handleKeyDown(e) {
-    const { onBack, onTogglePause } = this.props;
+    const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
 
     // console.log(e);
     if (!e.repeat) {
       switch (e.keyCode) {
         case 65: // a
           onBack();
+          break;
+
+        case 68: // d
+          onHideText();
+          break;
+
+        case 70: // f
+          onRevealMoreText();
           break;
 
         case 32: // space
@@ -243,10 +251,18 @@ class Doc extends Component {
                 }
               }
             }
+          } onHideText={
+            () => {
+              actions.hideText();
+            }
+          } onRevealMoreText={
+            () => {
+              actions.revealMoreText();
+            }
           }
         />
-        {(doc.texts.size >= 1) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} language={doc.texts.get(0).language} /> : ''}
-        {(doc.texts.size >= 2) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} language={doc.texts.get(1).language} /> : ''}
+        {((doc.texts.size >= 1) && (doc.textRevelation >= 1)) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} language={doc.texts.get(0).language} /> : ''}
+        {((doc.texts.size >= 2) && (doc.textRevelation >= 2)) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} language={doc.texts.get(1).language} /> : ''}
       </div>
     );
   }
