@@ -51,7 +51,7 @@ class ClipboardCopier extends Component {
     const { text } = this.props;
     return (
       <form onSubmit={this.onSubmit}>
-        <input style={{ width: '2em' }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }}  />
+        <input style={{ width: '2em' }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }} />
         <button type="submit">Copy</button>
       </form>
     );
@@ -161,54 +161,139 @@ class PlayControls extends Component {
   }
 }
 
-const TextChunk = ({ chunk, language }) => {
-  const textRangeToElems = (cpBegin, cpEnd) => {
-    const pieces = [];
-    for (let i = cpBegin; i < cpEnd; i++) {
-      const c = textArr[i];
-      if (c === '\n') {
-        pieces.push(<br key={`char-${i}`} />);
+const isAncestorNode = (potentialAncestor, given) => {
+  let n = given;
+  while (true) {
+    if (n === potentialAncestor) {
+      return true;
+    }
+    if (n.parentNode) {
+      n = n.parentNode;
+    } else {
+      return false;
+    }
+  }
+}
+
+class TextChunk extends Component {
+  constructor(props) {
+    super(props);
+    this.handleSelectionChange = this.handleSelectionChange.bind(this);
+  }
+
+  componentDidMount() {
+    document.addEventListener('selectionchange', this.handleSelectionChange);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('selectionchange', this.handleSelectionChange);
+  }
+
+  currentSelectionIndexRange() {
+    const selObj = window.getSelection();
+    if (selObj.isCollapsed) {
+      return null;
+    } else {
+      const selRange = selObj.getRangeAt(0);
+      const ancestorNode = selRange.commonAncestorContainer;
+      if (isAncestorNode(this.textContainerElem, ancestorNode)) {
+        const frag = selRange.cloneContents();
+
+        if (ancestorNode.nodeType === Node.TEXT_NODE) {
+          // If we selected text that is inside any element, we'll get a text node.
+          // It might not be useful text (might be furigana), so need to check what element it's inside.
+          // For now we can assume that its immediate parent will be a .textchar element if it's a good character.
+          const parent = ancestorNode.parentNode;
+          if (parent.classList.contains('textchar')) {
+            const cpIndex = +parent.getAttribute('data-index');
+            return {cpBegin: cpIndex, cpEnd: cpIndex+1};
+          } else {
+            return null;
+          }
+        } else {
+          const cpIndexes = [];
+
+          // Iterate over all .textchar elems inside the fragment
+          for (const el of frag.querySelectorAll('.textchar')) {
+            // We might get extraneous .textchar elems that have nothing inside them. Only consider ones that have text inside.
+            if (el.textContent.length > 0) {
+              const cpIndex = +el.getAttribute('data-index');
+              cpIndexes.push(cpIndex);
+            }
+          }
+
+          if (cpIndexes.length === 0) {
+            return null;
+          } else {
+            var minIndex = Math.min(...cpIndexes);
+            var maxIndex = Math.max(...cpIndexes);
+            if ((minIndex !== cpIndexes[0]) || (maxIndex !== cpIndexes[cpIndexes.length-1])) {
+              throw new Error('Unexpected');
+            }
+            return {cpBegin: minIndex, cpEnd: maxIndex+1};
+          }
+        }
       } else {
-        pieces.push(<span key={`char-${i}`}>{c}</span>);
+        return null;
       }
     }
-    return pieces;
-  };
-
-  const children = [];
-  const textArr = [...chunk.annoText.text.trim()]; // split up by unicode chars
-  const rubyArr = chunk.annoText.ruby.toArray();
-
-  rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
-
-  let idx = 0;
-  for (const r of rubyArr) {
-    if (r.cpBegin < idx) {
-      throw new Error('Overlapping ruby');
-    }
-
-    if (r.cpBegin > idx) {
-      children.push(...textRangeToElems(idx, r.cpBegin));
-    }
-
-    children.push(<ruby key={`ruby-${r.cpBegin}:${r.cpEnd}`}>{textRangeToElems(r.cpBegin, r.cpEnd)}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
-
-    idx = r.cpEnd;
   }
 
-  // Handle remaining text
-  if (idx < textArr.length) {
-    children.push(...textRangeToElems(idx, textArr.length));
+  handleSelectionChange(e) {
+    // console.log('selection change', this.currentSelectionIndexRange());
   }
 
-  const floatWidth = '5em';
-  return (
-    <div>
-      <div style={{ float: 'right', width: floatWidth }}><ClipboardCopier text={renderChunkHTML(chunk)} /></div>
-      <div style={{ margin: '0 ' + floatWidth }} lang={language}>{children}</div>
-    </div>
-  );
-};
+  render() {
+    const { chunk, language } = this.props;
+
+    const textRangeToElems = (cpBegin, cpEnd) => {
+      const pieces = [];
+      for (let i = cpBegin; i < cpEnd; i++) {
+        const c = textArr[i];
+        if (c === '\n') {
+          pieces.push(<br key={`char-${i}`} />);
+        } else {
+          pieces.push(<span className="textchar" data-index={i} key={`char-${i}`}>{c}</span>);
+        }
+      }
+      return pieces;
+    };
+
+    const children = [];
+    const textArr = [...chunk.annoText.text.trim()]; // split up by unicode chars
+    const rubyArr = chunk.annoText.ruby.toArray();
+
+    rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
+
+    let idx = 0;
+    for (const r of rubyArr) {
+      if (r.cpBegin < idx) {
+        throw new Error('Overlapping ruby');
+      }
+
+      if (r.cpBegin > idx) {
+        children.push(...textRangeToElems(idx, r.cpBegin));
+      }
+
+      children.push(<ruby key={`ruby-${r.cpBegin}:${r.cpEnd}`}>{textRangeToElems(r.cpBegin, r.cpEnd)}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
+
+      idx = r.cpEnd;
+    }
+
+    // Handle remaining text
+    if (idx < textArr.length) {
+      children.push(...textRangeToElems(idx, textArr.length));
+    }
+
+    const floatWidth = '5em';
+    return (
+      <div>
+        <div style={{ float: 'right', width: floatWidth }}><ClipboardCopier text={renderChunkHTML(chunk)} /></div>
+        <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{children}</div>
+      </div>
+    );
+  }
+}
 
 const TextChunksBox = ({ chunks, language }) => (
   <div className="studied-text-box">

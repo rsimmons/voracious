@@ -1,24 +1,28 @@
 
 Next steps:
-- Figure out minimal flow to get shit into Anki
-  - Watch videos. Pause and manually copy-paste JA and EN into Anki, make clozes in Anki.
-  - Downside is that we won't have smarts/analysis of clozes (kanji counts, etc), but could always back-import later if I really care.
-  - What else is needed?
-    - Allow deleting/adding ruby?
-    - Fix halfwidth katakana crap (e.g. Rintaro ep01 00:20:03,780 --> 00:20:07,240)
-- Make furigana code skip okurigana, using diff-match-patch
-- Allow modifying ruby?
+- Allow modifying ruby
+  - When user selects text (selectionchange event) it should show a form.
+  - The form should have buttons for
+    - clearing ruby
+    - setting ruby (clearing any that overlap)
+    - clearing any words
+    - marking current selection as a word with given lemma (defaults to null meaning already in case form)
+  - Utility function to map the selection range to codepoint indexes
+- Instead of hiding text boxes completely, show them but hide text inside. If any text would be shown, put '(hidden)' or whatever
+- Show word info
+  - When user mouses over or clicks on text, we can get codepoint index and show popups for any words that include that codepoint
+- How to mark clozes? Can select range and click 'add cloze'. If a list of existing clozes is shown below chunk, could also click 'extend cloze' on one of them. Each cloze is a list of ranges. Might want uids for exporting to Anki.
+- Get some matched JA/EN subs from Delvin to test with
+- Fix halfwidth katakana crap (e.g. Rintaro ep01 00:20:03,780 --> 00:20:07,240)
 - Add function to update chunk text: Given ChunkSet, Chunk uid, and AnnoText, return new ChunkSet with that Chunk's AnnoText updated. No need to update index, since that points at uids.
 - Improve Kuromoji integration: Don't have separate script include, get progress callbacks when loading dicts
 - Create module to manage immutable "stash"/saved-list. Seems like each item can be {uid, annoText, ?clozes?}
 - Manage, display, save stash
 - Export stash for Anki (use uuid?)
-- Get some matched JA/EN subs from Delvin to test with
 - Figure out: How will toggling work uniformly between dual-subbed videos and dual-media comics? Comics will have (OCR'd) text as well.
 - Allow toggling primary/secondary texts with keys
 - Allow toggling doc settings panel
 - Add flags for media/texts for primary/secondary, allow setting them, make use of them.
-- Un-halfwidth subs on import
 - Reduce updates by using Reselect in mapStateToProps and not doing inline event callback defs, because that causes a new function object to be created every render, fucking up Reacts prop-change-detection
 - Display more summary info (sub tracks, media presence)
 - Try JS-mecab on simple OCR output?
