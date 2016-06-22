@@ -1,6 +1,5 @@
 
 Next steps:
-- Disclaim keyboard shortcuts, maybe show buttons too
 - Instead of hiding text boxes completely, show them but hide text inside. If any text would be shown, put '(hidden)' or whatever
 - Default to showing subs after loading new ones?
 - Add some instructions for running in development, basic usage
