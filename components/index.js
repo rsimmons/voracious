@@ -158,7 +158,15 @@ class PlayControls extends Component {
   }
 
   render() {
-    return null;
+    const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
+    return (
+      <form style={{ textAlign: 'center', margin: '10px auto' }}>
+        <button type="button" onClick={() => { onBack(); }}>Jump Back [A]</button>
+        <button type="button" onClick={() => { onHideText(); }}>Hide Texts [D]</button>
+        <button type="button" onClick={() => { onRevealMoreText(); }}>Reveal Text [F]</button>
+        <button type="button" onClick={() => { onTogglePause(); }}>Play/Pause [Space]</button>
+      </form>
+    );
   }
 }
 
