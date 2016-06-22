@@ -1,14 +1,16 @@
 
 Next steps:
-- Allow modifying ruby
-  - When user selects text (selectionchange event) it should show a form.
-  - The form should have buttons for
-    - clearing ruby
-    - setting ruby (clearing any that overlap)
-    - clearing any words
-    - marking current selection as a word with given lemma (defaults to null meaning already in case form)
-  - Utility function to map the selection range to codepoint indexes
+- Rename to Voracious
+- Add some instructions for running in development, basic usage
+- Disclaim keyboard shortcuts, maybe show buttons too
 - Instead of hiding text boxes completely, show them but hide text inside. If any text would be shown, put '(hidden)' or whatever
+- Default to showing subs after loading new ones?
+- Try extracting Redux and doing a Fluxy structure with plain React
+- Allow modifying ruby
+  - How does an annotext fire a message to update ruby? How does it identify itself?
+  - We could pass it a callback that it calls with a new version of itself, rather than firing an action. That would probably be best.
+  - Need to pass some identifier chunk to TextChunk? Chunk objects have UIDs, but if we have the "stash" thing we need to then clone them with new UIDs.
+  - Fire action on button click
 - Show word info
   - When user mouses over or clicks on text, we can get codepoint index and show popups for any words that include that codepoint
 - How to mark clozes? Can select range and click 'add cloze'. If a list of existing clozes is shown below chunk, could also click 'extend cloze' on one of them. Each cloze is a list of ranges. Might want uids for exporting to Anki.
@@ -19,6 +21,8 @@ Next steps:
 - Create module to manage immutable "stash"/saved-list. Seems like each item can be {uid, annoText, ?clozes?}
 - Manage, display, save stash
 - Export stash for Anki (use uuid?)
+- Webtorrent?
+- Allow merging subs?
 - Figure out: How will toggling work uniformly between dual-subbed videos and dual-media comics? Comics will have (OCR'd) text as well.
 - Allow toggling primary/secondary texts with keys
 - Allow toggling doc settings panel

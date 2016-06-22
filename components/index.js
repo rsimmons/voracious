@@ -1,10 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import Immutable, { Record  } from 'immutable';
 
 import * as allActionCreators from '../actions';
 
-import { renderChunkHTML } from '../util/chunk';
+import { renderAnnoTextToHTML } from '../util/annotext';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -48,11 +49,11 @@ class ClipboardCopier extends Component {
   }
 
   render() {
-    const { text } = this.props;
+    const { text, buttonText } = this.props;
     return (
       <form onSubmit={this.onSubmit}>
-        <input style={{ width: '2em' }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }} />
-        <button type="submit">Copy</button>
+        <input style={{ /*width: '2em'*/ }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }} />
+        <button type="submit">{buttonText}</button>
       </form>
     );
   }
@@ -175,9 +176,17 @@ const isAncestorNode = (potentialAncestor, given) => {
   }
 }
 
-class TextChunk extends Component {
+const CPRange = new Record({
+  cpBegin: null,
+  cpEnd: null,
+});
+
+class AnnoText extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      selectionRange: null,
+    };
     this.handleSelectionChange = this.handleSelectionChange.bind(this);
   }
 
@@ -206,7 +215,7 @@ class TextChunk extends Component {
           const parent = ancestorNode.parentNode;
           if (parent.classList.contains('textchar')) {
             const cpIndex = +parent.getAttribute('data-index');
-            return {cpBegin: cpIndex, cpEnd: cpIndex+1};
+            return new CPRange({cpBegin: cpIndex, cpEnd: cpIndex+1});
           } else {
             return null;
           }
@@ -230,7 +239,7 @@ class TextChunk extends Component {
             if ((minIndex !== cpIndexes[0]) || (maxIndex !== cpIndexes[cpIndexes.length-1])) {
               throw new Error('Unexpected');
             }
-            return {cpBegin: minIndex, cpEnd: maxIndex+1};
+            return new CPRange({cpBegin: minIndex, cpEnd: maxIndex+1});
           }
         }
       } else {
@@ -240,11 +249,14 @@ class TextChunk extends Component {
   }
 
   handleSelectionChange(e) {
-    // console.log('selection change', this.currentSelectionIndexRange());
+    const newSelRange = this.currentSelectionIndexRange();
+    if (!Immutable.is(newSelRange, this.state.selectionRange)) {
+      this.setState({selectionRange: newSelRange});
+    }
   }
 
   render() {
-    const { chunk, language } = this.props;
+    const { annoText, language } = this.props;
 
     const textRangeToElems = (cpBegin, cpEnd) => {
       const pieces = [];
@@ -260,8 +272,8 @@ class TextChunk extends Component {
     };
 
     const children = [];
-    const textArr = [...chunk.annoText.text.trim()]; // split up by unicode chars
-    const rubyArr = chunk.annoText.ruby.toArray();
+    const textArr = [...annoText.text.trim()]; // split up by unicode chars
+    const rubyArr = annoText.ruby.toArray();
 
     rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
 
@@ -285,15 +297,31 @@ class TextChunk extends Component {
       children.push(...textRangeToElems(idx, textArr.length));
     }
 
-    const floatWidth = '5em';
+    const floatWidth = '10em';
     return (
       <div>
-        <div style={{ float: 'right', width: floatWidth }}><ClipboardCopier text={renderChunkHTML(chunk)} /></div>
+        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', boxSizing: 'border-box' }}>
+          <ClipboardCopier text={renderAnnoTextToHTML(annoText)} buttonText="Copy HTML" />
+          {/*
+          {this.state.selectionRange ? (
+            <form>
+              <button type="button" className="clear-ruby-button">Clear Ruby</button><br />
+              <input className="set-ruby-text" placeholder="Ruby text" /><button type="button" className="set-ruby-button">Set Ruby</button><br />
+              <button type="button" className="clear-words-button">Clear Words</button><br />
+              <input className="mark-word-lemma" placeholder="Lemma (if not base form)" /><button type="button" className="mark-word-button">Mark Word</button>
+            </form>
+          ) : ''}
+          */}
+        </div>
         <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{children}</div>
       </div>
     );
   }
 }
+
+const TextChunk = ({ chunk, language }) => (
+  <AnnoText annoText={chunk.annoText} language={language} />
+);
 
 const TextChunksBox = ({ chunks, language }) => (
   <div className="studied-text-box">
