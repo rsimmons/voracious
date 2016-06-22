@@ -1,8 +1,8 @@
 {
-  "name": "immersion-player",
+  "name": "voracious",
   "description": "A tool for foreign language learners to watch videos, read comics, and more.",
   "version": "0.0.0",
-  "repository": "rsimmons/immersion-player",
+  "repository": "rsimmons/voracious",
   "main": "index.js",
   "scripts": {
     "lint": "eslint index.js actions/** components/** reducers/** util/** || true",
