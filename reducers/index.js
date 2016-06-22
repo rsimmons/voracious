@@ -53,11 +53,13 @@ function reduce(state = new StateRecord(), action) {
       }
       const chunkSet = createTimeRangeChunkSet(chunks);
 
-      return state.updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
-        language: action.language,
-        chunkSet,
-        currentChunks: new List(), // TODO: Should initialize this based on current position
-      })));
+      return state
+        .updateIn(['doc', 'texts'], texts => texts.push(new TextRecord({
+          language: action.language,
+          chunkSet,
+          currentChunks: new List(), // TODO: Should initialize this based on current position
+        })))
+        .setIn(['doc', 'textRevelation'], state.doc.texts.size+1); // Reveal all texts
     }
 
     case 'videoTimeUpdate': {

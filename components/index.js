@@ -163,7 +163,7 @@ class PlayControls extends Component {
       <form style={{ textAlign: 'center', margin: '10px auto' }}>
         <button type="button" onClick={() => { onBack(); }}>Jump Back [A]</button>
         <button type="button" onClick={() => { onHideText(); }}>Hide Texts [D]</button>
-        <button type="button" onClick={() => { onRevealMoreText(); }}>Reveal Text [F]</button>
+        <button type="button" onClick={() => { onRevealMoreText(); }}>Reveal Next Text [F]</button>
         <button type="button" onClick={() => { onTogglePause(); }}>Play/Pause [Space]</button>
       </form>
     );
@@ -331,10 +331,10 @@ const TextChunk = ({ chunk, language }) => (
   <AnnoText annoText={chunk.annoText} language={language} />
 );
 
-const TextChunksBox = ({ chunks, language }) => (
+const TextChunksBox = ({ chunks, language, revealed }) => (
   <div className="studied-text-box">
     <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => <TextChunk chunk={c} key={c.uid} language={language} />)}</div>
+    <div>{chunks.map(c => (revealed ? <TextChunk chunk={c} key={c.uid} language={language} /> : <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div>))}</div>
   </div>
 );
 
@@ -385,8 +385,7 @@ class Doc extends Component {
             }
           }
         />
-        {((doc.texts.size >= 1) && (doc.textRevelation >= 1)) ? <TextChunksBox chunks={doc.texts.get(0).currentChunks} language={doc.texts.get(0).language} /> : ''}
-        {((doc.texts.size >= 2) && (doc.textRevelation >= 2)) ? <TextChunksBox chunks={doc.texts.get(1).currentChunks} language={doc.texts.get(1).language} /> : ''}
+        {doc.texts.map((text, i) => <TextChunksBox key={i} chunks={text.currentChunks} language={text.language} revealed={doc.textRevelation > i} />)}
       </div>
     );
   }
