@@ -4,6 +4,7 @@ import { analyzeText } from './analysis';
 const AnnotatedTextRecord = new Record({
   text: null,
   ruby: null, // List of RubyRecord
+  words: null, // List of WordRecord
 });
 
 export const autoAnnotateText = (text, language) => {
@@ -12,6 +13,7 @@ export const autoAnnotateText = (text, language) => {
   return new AnnotatedTextRecord({
     text,
     ruby: analysis.ruby,
+    words: analysis.words,
   });
 }
 

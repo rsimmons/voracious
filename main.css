@@ -3,6 +3,16 @@ html, body {
   padding: 0;
 }
 
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
 body {
   font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
 }
@@ -38,4 +48,53 @@ ul {
   font-size: 14px;
   padding: 5px 10px;
   background-color: #ccc;
+}
+
+.textchar {
+}
+
+.textchar.inspected {
+  position: relative;
+  background-color: #0f0;
+}
+
+.textchar.highlighted {
+  background-color: #afa;
+}
+
+.textchar-tooltip {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-bottom: 0px; /* note: setting this to 5px lets triangle be shown, but then there are mouseenter event issues */
+  margin-left: -80px;
+  padding: 7px;
+  width: 160px;
+  border-radius: 3px;
+  background-color: hsla(0, 0%, 20%, 0.95);
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.textchar-tooltip-triangle {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -5px;
+  width: 0;
+  border-top: 5px solid #000;
+  border-top: 5px solid hsla(0, 0%, 20%, 0.95);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+a.dict-linkout, a.dict-linkout:link, a.dict-linkout:visited {
+  color: white;
+}
+
+a.dict-linkout:hover, a.dict-linkout:focus, a.dict-linkout:active {
+  color: #ddd;
 }

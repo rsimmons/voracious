@@ -194,8 +194,12 @@ class AnnoText extends Component {
     super(props);
     this.state = {
       selectionRange: null,
+      inspectedIndex: null, // codepoint index of char we're doing a "tooltip" for
     };
+    this.tooltipTimeout = null; // it does not work to have this in state
     this.handleSelectionChange = this.handleSelectionChange.bind(this);
+    this.handleCharMouseEnter = this.handleCharMouseEnter.bind(this);
+    this.handleCharMouseLeave = this.handleCharMouseLeave.bind(this);
   }
 
   componentDidMount() {
@@ -204,6 +208,24 @@ class AnnoText extends Component {
 
   componentWillUnmount() {
     document.removeEventListener('selectionchange', this.handleSelectionChange);
+    this.clearTooltipTimeout();
+  }
+
+  clearTooltipTimeout() {
+    if (this.tooltipTimeout) {
+      window.clearTimeout(this.tooltipTimeout);
+      this.tooltipTimeout = null;
+    }
+  }
+
+  setTooltipTimeout() {
+    if (this.tooltipTimeout) {
+      window.clearTimeout(this.tooltipTimeout);
+    }
+    this.tooltipTimeout = window.setTimeout(
+      () => { this.setState({ inspectedIndex: null }); this.tooltipTimeout = null; },
+      500
+    );
   }
 
   currentSelectionIndexRange() {
@@ -263,8 +285,38 @@ class AnnoText extends Component {
     }
   }
 
+  handleCharMouseEnter(e) {
+    const cpIndex = +e.currentTarget.getAttribute('data-index');
+    this.setState({inspectedIndex: cpIndex});
+    this.clearTooltipTimeout();
+  }
+
+  handleCharMouseLeave(e) {
+    this.setTooltipTimeout();
+  }
+
   render() {
     const { annoText, language } = this.props;
+
+    const inspectedIndex = this.state.inspectedIndex;
+    const hitWords = [];
+    const hitWordInfoElems = [];
+    const hitWordIndexes = new Set();
+    if (inspectedIndex !== null) {
+      annoText.words.forEach((word) => {
+        if ((inspectedIndex >= word.cpBegin) && (inspectedIndex < word.cpEnd)) {
+          hitWords.push(word);
+        }
+      });
+      hitWords.forEach((hitWord) => {
+        hitWordInfoElems.push(<span key={`wordinfo-${hitWord.cpBegin}:${hitWord.cpEnd}`}>{hitWord.lemma}<br /><span style={{ fontSize: '0.5em' }}><a className="dict-linkout" href={'http://tangorin.com/general/' + hitWord.lemma} target="_blank">Tangorin</a></span></span>);
+      });
+      hitWords.forEach((hitWord) => {
+        for (let i = hitWord.cpBegin; i < hitWord.cpEnd; i++) {
+          hitWordIndexes.add(i);
+        }
+      });
+    }
 
     const textRangeToElems = (cpBegin, cpEnd) => {
       const pieces = [];
@@ -273,7 +325,20 @@ class AnnoText extends Component {
         if (c === '\n') {
           pieces.push(<br key={`char-${i}`} />);
         } else {
-          pieces.push(<span className="textchar" data-index={i} key={`char-${i}`}>{c}</span>);
+          const isInspected = (i === inspectedIndex);
+
+          const toolTipElem = (isInspected && (hitWordInfoElems.length > 0))
+            ? <span style={{zIndex: 100}}><span className="textchar-tooltip">{hitWordInfoElems}</span><span className="textchar-tooltip-triangle"> </span></span>
+            : '';
+
+          const classNames = ['textchar'];
+          if (isInspected) {
+            classNames.push('inspected');
+          } else if (hitWordIndexes.has(i)) {
+            classNames.push('highlighted');
+          }
+
+          pieces.push(<span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>);
         }
       }
       return pieces;
@@ -308,7 +373,7 @@ class AnnoText extends Component {
     const floatWidth = '10em';
     return (
       <div>
-        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', boxSizing: 'border-box' }}>
+        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px' }}>
           <ClipboardCopier text={renderAnnoTextToHTML(annoText)} buttonText="Copy HTML" />
           {/*
           {this.state.selectionRange ? (

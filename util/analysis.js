@@ -20,6 +20,12 @@ const RubyRecord = new Record({
   rubyText: null,
 });
 
+const WordRecord = new Record({
+  cpBegin: null,
+  cpEnd: null,
+  lemma: null,
+});
+
 const analyzeJAKuromoji = (text) => {
   if (!kuromojiTokenizer) {
     throw new Error('Kuromoji has not been loaded');
@@ -27,6 +33,7 @@ const analyzeJAKuromoji = (text) => {
 
   const tokens = kuromojiTokenizer.tokenize(text);
   const mutRuby = [];
+  const mutWords = [];
 
   for (const t of tokens) {
     // NOTE: cpBegin and cpEnd are code point indexes, not byte indexes
@@ -51,6 +58,12 @@ const analyzeJAKuromoji = (text) => {
     if (t.basic_form === '*') {
       continue;
     }
+
+    mutWords.push(WordRecord({
+      cpBegin,
+      cpEnd,
+      lemma: t.basic_form,
+    }));
 
     if (t.reading !== '*') {
       const kataReading = hiraToKata(t.reading);
@@ -103,6 +116,7 @@ const analyzeJAKuromoji = (text) => {
 
   return {
     ruby: List(mutRuby),
+    words: List(mutWords),
   }
 };
 
