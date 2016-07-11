@@ -1,5 +1,5 @@
 import { Record, Map, List } from 'immutable';
-import { analyzeText } from './analysis';
+import { canAnalyzeLanguage, analyzeText } from './analysis';
 
 const AnnotatedTextRecord = new Record({
   text: null,
@@ -8,13 +8,21 @@ const AnnotatedTextRecord = new Record({
 });
 
 export const autoAnnotateText = (text, language) => {
-  const analysis = analyzeText(text, language);
+  if (canAnalyzeLanguage(language)) {
+    const analysis = analyzeText(text, language);
 
-  return new AnnotatedTextRecord({
-    text,
-    ruby: analysis.ruby,
-    words: analysis.words,
-  });
+    return new AnnotatedTextRecord({
+      text,
+      ruby: analysis.ruby,
+      words: analysis.words,
+    });
+  } else {
+    return new AnnotatedTextRecord({
+      text,
+      ruby: List(),
+      words: List(),
+    });
+  }
 }
 
 export const renderAnnoTextToHTML = (annoText) => {

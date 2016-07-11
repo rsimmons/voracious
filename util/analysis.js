@@ -120,10 +120,16 @@ const analyzeJAKuromoji = (text) => {
   }
 };
 
+const languageAnalyzerFunc = {
+  'ja': analyzeJAKuromoji,
+}
+
+export const canAnalyzeLanguage = (language) => languageAnalyzerFunc.hasOwnProperty(language);
+
 export const analyzeText = (text, language) => {
-  if (language !== 'ja') {
-    throw new Error('Can only analyze Japanese for now');
+  if (!canAnalyzeLanguage(language)) {
+    throw new Error('Cannot analyze ' + language);
   }
 
-  return analyzeJAKuromoji(text);
+  return languageAnalyzerFunc[language](text);
 };
