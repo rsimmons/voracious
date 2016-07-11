@@ -309,7 +309,17 @@ class AnnoText extends Component {
         }
       });
       hitWords.forEach((hitWord) => {
-        hitWordInfoElems.push(<span key={`wordinfo-${hitWord.cpBegin}:${hitWord.cpEnd}`}>{hitWord.lemma}<br /><span style={{ fontSize: '0.5em' }}><a className="dict-linkout" href={'http://tangorin.com/general/' + hitWord.lemma} target="_blank">Tangorin</a></span></span>);
+        var encLemma = encodeURIComponent(hitWord.lemma);
+        hitWordInfoElems.push(
+          <span key={`wordinfo-${hitWord.cpBegin}:${hitWord.cpEnd}`}>{hitWord.lemma}<br />
+            <span style={{ fontSize: '0.5em' }}>
+              <a className="dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
+              <a className="dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
+              <a className="dict-linkout" href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'} target="_blank">goo</a>{' '}
+              <a className="dict-linkout" href={'http://tangorin.com/general/' + encLemma} target="_blank">Tangorin</a>
+            </span>
+          </span>
+        );
       });
       hitWords.forEach((hitWord) => {
         for (let i = hitWord.cpBegin; i < hitWord.cpEnd; i++) {
