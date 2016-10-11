@@ -1,62 +1,46 @@
 import { Record, Map, List } from 'immutable';
-import { canAnalyzeLanguage, analyzeText } from './analysis';
 
-const AnnotatedTextRecord = new Record({
-  text: null,
-  ruby: null, // List of RubyRecord
-  words: null, // List of WordRecord
+export const Annotation = new Record({
+  cpBegin: null,
+  cpEnd: null,
+  kind: null,
+  data: null,
 });
 
-export const autoAnnotateText = (text, language) => {
-  if (canAnalyzeLanguage(language)) {
-    const analysis = analyzeText(text, language);
+const AnnotatedText = new Record({
+  text: null,
+  annotations: null,
+  // TODO: denormalized forms for acceleration
+});
 
-    return new AnnotatedTextRecord({
-      text,
-      ruby: analysis.ruby,
-      words: analysis.words,
-    });
-  } else {
-    return new AnnotatedTextRecord({
-      text,
-      ruby: List(),
-      words: List(),
-    });
-  }
-}
+export const create = (text, annotations) => {
+  // TODO: validate annotations
+  return new AnnotatedText({text: text, annotations: List(annotations)});
+};
 
-export const renderAnnoTextToHTML = (annoText) => {
-  const textArr = [...annoText.text.trim()]; // split up by unicode chars
-  const rubyArr = annoText.ruby.toArray();
+export const getKindAtIndex = (annoText, kind, cpIndex) => {
+  const annos = [];
 
-  rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
-
-  let idx = 0;
-  const pieces = [];
-  for (const r of rubyArr) {
-    if (r.cpBegin < idx) {
-      throw new Error('Overlapping ruby');
+  annoText.annotations.forEach((anno) => {
+    if ((anno.kind === kind) && (cpIndex >= anno.cpBegin) && (cpIndex < anno.cpEnd)) {
+      annos.push(anno);
     }
+  });
 
-    if (r.cpBegin > idx) {
-      pieces.push(escape(textArr.slice(idx, r.cpBegin).join('')));
+  return annos;
+};
+
+export const getKindSorted = (annoText, kind) => {
+  const annos = [];
+
+  annoText.annotations.forEach((anno) => {
+    if (anno.kind === kind) {
+      annos.push(anno);
     }
+  });
 
-    pieces.push('<ruby>' + escape(textArr.slice(r.cpBegin, r.cpEnd).join('')) + '<rp>(</rp><rt>' + escape(r.rubyText) + '</rt><rp>)</rp></ruby>');
+  // TODO: maybe sort by ends also so that result is 'nested'
+  annos.sort((a, b) => a.cpBegin - b.cpBegin);
 
-    idx = r.cpEnd;
-  }
-
-  // Handle remaining text
-  if (idx < textArr.length) {
-    pieces.push(escape(textArr.slice(idx, textArr.length).join('')));
-  }
-
-  // Join pieces
-  const html = pieces.join('');
-
-  // Convert newlines to breaks
-  const brHtml = html.replace(/\n/g, '<br/>');
-
-  return brHtml;
+  return annos;
 };

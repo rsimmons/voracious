@@ -1,6 +1,6 @@
-import { Record, List } from 'immutable';
 import { hiraToKata, kataToHira, anyCharIsKana } from '../util/japanese';
 import DiffMatchPatch from 'diff-match-patch';
+import { Annotation, create as createAnnoText } from './annotext';
 
 const dmp = new DiffMatchPatch();
 
@@ -14,26 +14,13 @@ export const loadKuromoji = () => {
   });
 };
 
-const RubyRecord = new Record({
-  cpBegin: null,
-  cpEnd: null,
-  rubyText: null,
-});
-
-const WordRecord = new Record({
-  cpBegin: null,
-  cpEnd: null,
-  lemma: null,
-});
-
 const analyzeJAKuromoji = (text) => {
   if (!kuromojiTokenizer) {
     throw new Error('Kuromoji has not been loaded');
   }
 
   const tokens = kuromojiTokenizer.tokenize(text);
-  const mutRuby = [];
-  const mutWords = [];
+  const annotations = [];
 
   for (const t of tokens) {
     // NOTE: cpBegin and cpEnd are code point indexes, not byte indexes
@@ -59,10 +46,11 @@ const analyzeJAKuromoji = (text) => {
       continue;
     }
 
-    mutWords.push(WordRecord({
+    annotations.push(Annotation({
       cpBegin,
       cpEnd,
-      lemma: t.basic_form,
+      kind: 'lemma',
+      data: t.basic_form,
     }));
 
     if (t.reading !== '*') {
@@ -85,10 +73,11 @@ const analyzeJAKuromoji = (text) => {
               if (endOff <= beginOff) {
                 throw new Error('Unexpected');
               }
-              mutRuby.push(RubyRecord({
+              annotations.push(Annotation({
                 cpBegin: cpBegin + beginOff,
                 cpEnd: cpBegin + endOff,
-                rubyText: s,
+                kind: 'ruby',
+                data: s,
               }));
               beginOff = endOff;
             } else {
@@ -104,32 +93,38 @@ const analyzeJAKuromoji = (text) => {
           }
         } else {
           // Simple case
-          mutRuby.push(RubyRecord({
+          annotations.push(Annotation({
             cpBegin,
             cpEnd,
-            rubyText: hiraReading,
+            kind: 'ruby',
+            data: hiraReading,
           }));
         }
       }
     }
   }
 
-  return {
-    ruby: List(mutRuby),
-    words: List(mutWords),
-  }
+  return annotations;
 };
 
 const languageAnalyzerFunc = {
   'ja': analyzeJAKuromoji,
 }
 
-export const canAnalyzeLanguage = (language) => languageAnalyzerFunc.hasOwnProperty(language);
+const canAnalyzeLanguage = (language) => languageAnalyzerFunc.hasOwnProperty(language);
 
-export const analyzeText = (text, language) => {
+const analyzeText = (text, language) => {
   if (!canAnalyzeLanguage(language)) {
     throw new Error('Cannot analyze ' + language);
   }
 
   return languageAnalyzerFunc[language](text);
 };
+
+export const createAutoAnnotatedText = (text, language) => {
+  if (canAnalyzeLanguage(language)) {
+    return createAnnoText(text, analyzeText(text, language));
+  } else {
+    return createAnnoText(text);
+  }
+}

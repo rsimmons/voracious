@@ -4,8 +4,7 @@ import { connect } from 'react-redux';
 import Immutable, { Record  } from 'immutable';
 
 import * as allActionCreators from '../actions';
-
-import { renderAnnoTextToHTML } from '../util/annotext';
+import { getKindAtIndex, getKindSorted } from '../util/annotext';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -184,6 +183,40 @@ const isAncestorNode = (potentialAncestor, given) => {
   }
 }
 
+const renderAnnoTextToHTML = (annoText) => {
+  const textArr = [...annoText.text.trim()]; // split up by unicode chars
+  const sortedRubyAnnos = getKindSorted(annoText, 'ruby');
+
+  let idx = 0;
+  const pieces = [];
+  for (const ra of sortedRubyAnnos) {
+    if (ra.cpBegin < idx) {
+      throw new Error('Overlapping ruby');
+    }
+
+    if (ra.cpBegin > idx) {
+      pieces.push(escape(textArr.slice(idx, ra.cpBegin).join('')));
+    }
+
+    pieces.push('<ruby>' + escape(textArr.slice(ra.cpBegin, ra.cpEnd).join('')) + '<rp>(</rp><rt>' + escape(ra.data) + '</rt><rp>)</rp></ruby>');
+
+    idx = ra.cpEnd;
+  }
+
+  // Handle remaining text
+  if (idx < textArr.length) {
+    pieces.push(escape(textArr.slice(idx, textArr.length).join('')));
+  }
+
+  // Join pieces
+  const html = pieces.join('');
+
+  // Convert newlines to breaks
+  const brHtml = html.replace(/\n/g, '<br/>');
+
+  return brHtml;
+};
+
 const CPRange = new Record({
   cpBegin: null,
   cpEnd: null,
@@ -299,19 +332,14 @@ class AnnoText extends Component {
     const { annoText, language } = this.props;
 
     const inspectedIndex = this.state.inspectedIndex;
-    const hitWords = [];
-    const hitWordInfoElems = [];
-    const hitWordIndexes = new Set();
+    const hitLemmaInfoElems = [];
+    const hitLemmaIndexes = new Set();
     if (inspectedIndex !== null) {
-      annoText.words.forEach((word) => {
-        if ((inspectedIndex >= word.cpBegin) && (inspectedIndex < word.cpEnd)) {
-          hitWords.push(word);
-        }
-      });
-      hitWords.forEach((hitWord) => {
-        var encLemma = encodeURIComponent(hitWord.lemma);
-        hitWordInfoElems.push(
-          <span key={`wordinfo-${hitWord.cpBegin}:${hitWord.cpEnd}`}>{hitWord.lemma}<br />
+      const hitLemmaAnnos = getKindAtIndex(annoText, 'lemma', inspectedIndex);
+      hitLemmaAnnos.forEach((lemmaAnno) => {
+        var encLemma = encodeURIComponent(lemmaAnno.data);
+        hitLemmaInfoElems.push(
+          <span key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`}>{lemmaAnno.data}<br />
             <span style={{ fontSize: '0.5em' }}>
               <a className="dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
               <a className="dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
@@ -321,9 +349,9 @@ class AnnoText extends Component {
           </span>
         );
       });
-      hitWords.forEach((hitWord) => {
-        for (let i = hitWord.cpBegin; i < hitWord.cpEnd; i++) {
-          hitWordIndexes.add(i);
+      hitLemmaAnnos.forEach((lemmaAnno) => {
+        for (let i = lemmaAnno.cpBegin; i < lemmaAnno.cpEnd; i++) {
+          hitLemmaIndexes.add(i);
         }
       });
     }
@@ -337,14 +365,14 @@ class AnnoText extends Component {
         } else {
           const isInspected = (i === inspectedIndex);
 
-          const toolTipElem = (isInspected && (hitWordInfoElems.length > 0))
-            ? <span style={{zIndex: 100}}><span className="textchar-tooltip">{hitWordInfoElems}</span><span className="textchar-tooltip-triangle"> </span></span>
+          const toolTipElem = (isInspected && (hitLemmaInfoElems.length > 0))
+            ? <span style={{zIndex: 100}}><span className="textchar-tooltip">{hitLemmaInfoElems}</span><span className="textchar-tooltip-triangle"> </span></span>
             : '';
 
           const classNames = ['textchar'];
           if (isInspected) {
             classNames.push('inspected');
-          } else if (hitWordIndexes.has(i)) {
+          } else if (hitLemmaIndexes.has(i)) {
             classNames.push('highlighted');
           }
 
@@ -356,23 +384,21 @@ class AnnoText extends Component {
 
     const children = [];
     const textArr = [...annoText.text.trim()]; // split up by unicode chars
-    const rubyArr = annoText.ruby.toArray();
-
-    rubyArr.sort((a, b) => a.cpBegin - b.cpBegin);
+    const sortedRubyAnnos = getKindSorted(annoText, 'ruby');
 
     let idx = 0;
-    for (const r of rubyArr) {
-      if (r.cpBegin < idx) {
+    for (const ra of sortedRubyAnnos) {
+      if (ra.cpBegin < idx) {
         throw new Error('Overlapping ruby');
       }
 
-      if (r.cpBegin > idx) {
-        children.push(...textRangeToElems(idx, r.cpBegin));
+      if (ra.cpBegin > idx) {
+        children.push(...textRangeToElems(idx, ra.cpBegin));
       }
 
-      children.push(<ruby key={`ruby-${r.cpBegin}:${r.cpEnd}`}>{textRangeToElems(r.cpBegin, r.cpEnd)}<rp>(</rp><rt>{r.rubyText}</rt><rp>)</rp></ruby>);
+      children.push(<ruby key={`ruby-${ra.cpBegin}:${ra.cpEnd}`}>{textRangeToElems(ra.cpBegin, ra.cpEnd)}<rp>(</rp><rt>{ra.data}</rt><rp>)</rp></ruby>);
 
-      idx = r.cpEnd;
+      idx = ra.cpEnd;
     }
 
     // Handle remaining text
