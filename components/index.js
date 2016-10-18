@@ -1,10 +1,10 @@
 import React, { Component, PropTypes } from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import Immutable, { Record  } from 'immutable';
+import Immutable, { Record } from 'immutable';
+import { createSelector } from 'reselect';
+import shallowCompare from 'react-addons-shallow-compare';
 
-import * as allActionCreators from '../actions';
 import { getKindAtIndex, getKindSorted } from '../util/annotext';
+import { getChunksAtTime } from '../util/chunk';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -34,12 +34,7 @@ class Select extends Component {
 
 // ClipboardCopier
 class ClipboardCopier extends Component {
-  constructor(props) {
-    super(props);
-    this.onSubmit = this.onSubmit.bind(this);
-  }
-
-  onSubmit(e) {
+  onSubmit = (e) => {
     e.preventDefault();
     // TODO: could check input is set and input.select is truthy, and wrap copy+blur in a try block
     this.inputElem.select();
@@ -58,24 +53,22 @@ class ClipboardCopier extends Component {
   }
 }
 
-// NewDocForm
-const NewDocForm = connect()(
-  class extends Component {
-    render() {
-      const kindOptions = [
-        { value: 'video', label: 'Video' },
-        { value: 'comic', label: 'Comic' },
-      ];
-      const { actions } = this.props;
-      return (
-        <form onSubmit={e => { e.preventDefault(); actions.newDoc(this.kindVal); }}>
-          <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
-          <button type="submit">Create New Document</button>
-        </form>
-      );
-    }
+// NewSourceForm
+class NewSourceForm extends Component {
+  render() {
+    const kindOptions = [
+      { value: 'video', label: 'Video' },
+      { value: 'comic', label: 'Comic' },
+    ];
+    const { onNewSource } = this.props;
+    return (
+      <form onSubmit={e => { e.preventDefault(); onNewSource(this.kindVal); }}>
+        <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
+        <button type="submit">Create New Source</button>
+      </form>
+    );
   }
-);
+};
 
 // FileChooserForm
 const FileChooser = ({ label, accept, onChoose }) => (
@@ -85,15 +78,15 @@ const FileChooser = ({ label, accept, onChoose }) => (
 // VideoImportControls
 class VideoImportControls extends Component {
   render() {
-    const { actions } = this.props;
+    const { onImportVideoFile, onImportSubsFile } = this.props;
     return (
       <div>
         <form>
-          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { actions.importVideoFile(file, this.videoLanguageVal); }} />
+          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { onImportVideoFile(file, this.videoLanguageVal); }} />
           <Select options={languageOptions} onSet={v => { this.videoLanguageVal = v; }} />
         </form>
         <form>
-          <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { actions.importSubsFile(file, this.subLanguageVal); }} />
+          <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { onImportSubsFile(file, this.subLanguageVal); }} />
           <Select options={languageOptions} onSet={v => { this.subLanguageVal = v; }} />
         </form>
       </div>
@@ -102,11 +95,33 @@ class VideoImportControls extends Component {
 }
 
 class VideoMedia extends Component {
+  constructor(props) {
+    super(props);
+    this.videoElem = null;
+  }
+
+  seekRelative(dt) {
+    if (this.videoElem) {
+      const nt = this.videoElem.currentTime + dt;
+      this.videoElem.currentTime = nt >= 0 ? nt : 0;
+    }
+  }
+
+  togglePause() {
+    if (this.videoElem) {
+      if (this.videoElem.paused) {
+        this.videoElem.play();
+      } else {
+        this.videoElem.pause();
+      }
+    }
+  }
+
   render() {
-    const { media, onTimeUpdate, mountedVideoElement } = this.props;
+    const { media, onTimeUpdate } = this.props;
     return (
       <div style={{ textAlign: 'center', backgroundColor: 'black' }}>{media.size ? (
-        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { mountedVideoElement(el); }} />
+        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { this.videoElem = el; }} />
       ) : ''
       }</div>
     );
@@ -114,11 +129,6 @@ class VideoMedia extends Component {
 }
 
 class PlayControls extends Component {
-  constructor(props) {
-    super(props);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-  }
-
   componentDidMount() {
     document.body.addEventListener('keydown', this.handleKeyDown);
   }
@@ -127,7 +137,7 @@ class PlayControls extends Component {
     document.body.removeEventListener('keydown', this.handleKeyDown);
   }
 
-  handleKeyDown(e) {
+  handleKeyDown = (e) => {
     const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
 
     // console.log(e);
@@ -160,10 +170,10 @@ class PlayControls extends Component {
     const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
     return (
       <form style={{ textAlign: 'center', margin: '10px auto' }}>
-        <button type="button" onClick={() => { onBack(); }}>Jump Back [A]</button>
-        <button type="button" onClick={() => { onHideText(); }}>Hide Texts [D]</button>
-        <button type="button" onClick={() => { onRevealMoreText(); }}>Reveal Next Text [F]</button>
-        <button type="button" onClick={() => { onTogglePause(); }}>Play/Pause [Space]</button>
+        <button type="button" onClick={onBack}>Jump Back [A]</button>
+        <button type="button" onClick={onHideText}>Hide Texts [D]</button>
+        <button type="button" onClick={onRevealMoreText}>Reveal Next Text [F]</button>
+        <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
       </form>
     );
   }
@@ -230,9 +240,10 @@ class AnnoText extends Component {
       inspectedIndex: null, // codepoint index of char we're doing a "tooltip" for
     };
     this.tooltipTimeout = null; // it does not work to have this in state
-    this.handleSelectionChange = this.handleSelectionChange.bind(this);
-    this.handleCharMouseEnter = this.handleCharMouseEnter.bind(this);
-    this.handleCharMouseLeave = this.handleCharMouseLeave.bind(this);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
   }
 
   componentDidMount() {
@@ -311,22 +322,22 @@ class AnnoText extends Component {
     }
   }
 
-  handleSelectionChange(e) {
+  handleSelectionChange = (e) => {
     const newSelRange = this.currentSelectionIndexRange();
     if (!Immutable.is(newSelRange, this.state.selectionRange)) {
       this.setState({selectionRange: newSelRange});
     }
-  }
+  };
 
-  handleCharMouseEnter(e) {
+  handleCharMouseEnter = (e) => {
     const cpIndex = +e.currentTarget.getAttribute('data-index');
     this.setState({inspectedIndex: cpIndex});
     this.clearTooltipTimeout();
-  }
+  };
 
-  handleCharMouseLeave(e) {
+  handleCharMouseLeave = (e) => {
     this.setTooltipTimeout();
-  }
+  };
 
   render() {
     const { annoText, language } = this.props;
@@ -439,73 +450,99 @@ const TextChunksBox = ({ chunks, language, revealed }) => (
   </div>
 );
 
-// Doc
-class Doc extends Component {
+// Source
+class Source extends Component {
   constructor(props) {
     super(props);
-    this.videoElement = null;
+    this.videoMediaComponent = undefined;
+    this.state = {
+      currentTime: undefined,
+      textRevelation: props.source.texts.size + 1, // reveal all texts to start
+    };
   }
 
+  handleImportVideoFile = (file, language) => {
+    const {source, actions} = this.props;
+    actions.sourceAddVideoFile(source.id, file, language);
+  };
+
+  handleImportSubsFile = (file, language) => {
+    const {source, actions} = this.props;
+    actions.sourceAddSubsFile(source.id, file, language);
+  };
+
+  handleVideoTimeUpdate = (time) => {
+    this.setState({currentTime: time});
+  };
+
+  handleBack = () => {
+    if (this.videoMediaComponent) {
+      this.videoMediaComponent.seekRelative(-3.0);
+    }
+  };
+
+  handlePause = () => {
+    if (this.videoMediaComponent) {
+      this.videoMediaComponent.togglePause();
+    }
+  };
+
+  handleHideText = () => {
+    this.setState({textRevelation: 0});
+  };
+
+  handleRevealMoreText = () => {
+    this.setState({textRevelation: Math.min(this.state.textRevelation + 1, this.props.source.texts.size)});
+  };
+
   render() {
-    const { doc, actions } = this.props;
+    const { source, onExit } = this.props;
     return (
       <div>
-        <div id="doc-settings">
-          <div>Kind: {doc.kind}</div>
-          <VideoImportControls actions={actions} />
+        <div id="source-settings">
+          <div>Id {source.id}</div>
+          <div>Kind: {source.kind}</div>
+          <VideoImportControls onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
           <div>Media:</div>
-          <ul>{doc.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
+          <ul>{source.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
           <div>Texts:</div>
-          <ul>{doc.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
+          <ul>{source.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
+          <button onClick={onExit}>Exit To Sources</button>
         </div>
-        <VideoMedia media={doc.media} onTimeUpdate={time => { actions.videoTimeUpdate(time); }} mountedVideoElement={(el) => { this.videoElement = el; }} />
-        <PlayControls actions={actions} onBack={
-            () => {
-              if (this.videoElement) {
-                const nt = this.videoElement.currentTime - 3.0;
-                this.videoElement.currentTime = nt >= 0 ? nt : 0;
-              }
-            }
-          } onTogglePause={
-            () => {
-              if (this.videoElement) {
-                if (this.videoElement.paused) {
-                  this.videoElement.play();
-                } else {
-                  this.videoElement.pause();
-                }
-              }
-            }
-          } onHideText={
-            () => {
-              actions.hideText();
-            }
-          } onRevealMoreText={
-            () => {
-              actions.revealMoreText();
-            }
-          }
-        />
-        {doc.texts.map((text, i) => <TextChunksBox key={i} chunks={text.currentChunks} language={text.language} revealed={doc.textRevelation > i} />)}
+        <VideoMedia media={source.media} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
+        <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.currentTime)} language={text.language} revealed={this.state.textRevelation > i} />)}
       </div>
     );
   }
 }
 
 // App
-const App = connect(
-  state => ({
-    doc: state.doc,
-  }),
-  dispatch => ({
-    actions: bindActionCreators(allActionCreators, dispatch),
-  })
-)(({ doc, actions }) => (
-  doc ? (
-    <Doc doc={doc} actions={actions} />
-  ) : (
-    <NewDocForm actions={actions} />
-  )
-));
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      viewingSourceId: null, // otherwise viewing sources list
+    };
+  }
+
+  render() {
+    const { mainState, actions } = this.props;
+
+    return this.state.viewingSourceId ? (
+      <Source actions={actions} source={mainState.sources.get(this.state.viewingSourceId)} onExit={() => {console.log('exit'); this.setState({viewingSourceId: null})}} />
+    ) : (
+      <div>
+        <NewSourceForm onNewSource={actions.createSource} />
+        {mainState.sources.valueSeq().map((s) => (
+          <div key={s.id}>
+            Source Id {s.id} ({s.kind})
+            <button onClick={() => {this.setState({viewingSourceId: s.id})}}>View</button>
+          </div>
+        )).toJS()}
+      </div>
+    );
+  }
+}
 
 export default App;

@@ -35,11 +35,12 @@ ul {
   max-width: 40em;
 }
 
-#doc-settings {
+#source-settings {
   position: absolute;
   right: 0;
   background-color: #ddd;
   padding: 10px;
+  z-index: 100;
 }
 
 .language-tag {
