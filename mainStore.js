@@ -7,7 +7,9 @@ import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from './util/chunk';
 
 const MainStateRecord = new Record({
-  sources: new Map(),
+  sources: new Map(), // uid -> SourceRecord
+  decks: new Map(), // uid -> DeckRecord
+  snipDeckId: undefined, // should be undefined or a valid deck id
 });
 
 const SourceRecord = new Record({
@@ -17,23 +19,30 @@ const SourceRecord = new Record({
   texts: new List(),
 });
 
-const DocRecord = new Record({
-  kind: null,
-  media: new List(),
-  texts: new List(),
-  position: 0,
-  textRevelation: 0,
-});
-
 const VideoMediaRecord = new Record({
-  language: null,
-  videoFile: null,
-  videoURL: null,
+  language: undefined,
+  // videoFile: undefined,
+  videoURL: undefined,
 });
 
-const TextRecord = new Record({
-  language: null,
-  chunkSet: null,
+const SourceTextRecord = new Record({
+  language: undefined,
+  chunkSet: undefined,
+});
+
+const DeckRecord = new Record({
+  id: undefined,
+  snips: new List(), // List of SnipRecord
+});
+
+const SnipRecord = new Record({
+  id: undefined,
+  texts: new List(), // List of SnipTextRecord
+});
+
+const SnipTextRecord = new Record({
+  annoText: undefined,
+  language: undefined,
 });
 
 const initialState = new MainStateRecord();
@@ -69,13 +78,39 @@ const actions = {
       }
       const chunkSet = createTimeRangeChunkSet(chunks);
 
-      this.setState(this.getState().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new TextRecord({
+      this.setState(this.getState().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
         language: language,
         chunkSet,
       }))));
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
     };
     reader.readAsText(file);
+  },
+
+  createDeck: function() {
+    const deckId = genUID();
+    this.setState(this.getState().setIn(['decks', deckId], new DeckRecord({
+      id: deckId,
+    })));
+
+    if (!this.getState().snipDeckId) {
+      this.setState(this.getState().set('snipDeckId', deckId));
+    }
+  },
+
+  setSnipDeckId: function(deckId) {
+    // TODO: verify deckId exists
+    this.setState(this.getState().set('snipDeckId', deckId));
+  },
+
+  addSnip: function(deckId, texts) {
+    const snipId = genUID();
+    const snipTexts = new List(texts.map(t => new SnipTextRecord({annoText: t.annoText, language: t.language})));
+
+    this.setState(this.getState().updateIn(['decks', deckId, 'snips'], snips => snips.push(new SnipRecord({
+      id: snipId,
+      texts: snipTexts,
+    }))));
   },
 };
 

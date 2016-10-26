@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
-import Immutable, { Record } from 'immutable';
+import Immutable, { Record, Map } from 'immutable';
 import { createSelector } from 'reselect';
 import shallowCompare from 'react-addons-shallow-compare';
 
-import { getKindAtIndex, getKindSorted } from '../util/annotext';
+import { getKindAtIndex, getKindSorted, addAnnotation, concat as concatAnnoTexts } from '../util/annotext';
 import { getChunksAtTime } from '../util/chunk';
 
 const languageOptions = [
@@ -140,7 +140,6 @@ class PlayControls extends Component {
   handleKeyDown = (e) => {
     const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
 
-    // console.log(e);
     if (!e.repeat) {
       switch (e.keyCode) {
         case 65: // a
@@ -253,6 +252,9 @@ class AnnoText extends Component {
   componentWillUnmount() {
     document.removeEventListener('selectionchange', this.handleSelectionChange);
     this.clearTooltipTimeout();
+    if (this.props.onSelectionChange && this.state.selectionRange) {
+      this.props.onSelectionChange(null);
+    }
   }
 
   clearTooltipTimeout() {
@@ -326,6 +328,9 @@ class AnnoText extends Component {
     const newSelRange = this.currentSelectionIndexRange();
     if (!Immutable.is(newSelRange, this.state.selectionRange)) {
       this.setState({selectionRange: newSelRange});
+    }
+    if (this.props.onSelectionChange) {
+      this.props.onSelectionChange(newSelRange);
     }
   };
 
@@ -439,14 +444,10 @@ class AnnoText extends Component {
   }
 }
 
-const TextChunk = ({ chunk, language }) => (
-  <AnnoText annoText={chunk.annoText} language={language} />
-);
-
-const TextChunksBox = ({ chunks, language, revealed }) => (
+const TextChunksBox = ({ chunks, language, hidden, onChunkSelectionChange }) => (
   <div className="studied-text-box">
     <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => (revealed ? <TextChunk chunk={c} key={c.uid} language={language} /> : <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div>))}</div>
+    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onSelectionChange={s => { onChunkSelectionChange(c.uid, s); }} />))}</div>
   </div>
 );
 
@@ -458,6 +459,7 @@ class Source extends Component {
     this.state = {
       currentTime: undefined,
       textRevelation: props.source.texts.size + 1, // reveal all texts to start
+      chunkSelections: new Map(), // chunkId -> CPRange
     };
   }
 
@@ -495,8 +497,41 @@ class Source extends Component {
     this.setState({textRevelation: Math.min(this.state.textRevelation + 1, this.props.source.texts.size)});
   };
 
+  handleSnip = () => {
+    // TODO: we could check if there are any chunk ids in this.state.chunkSelections that shouldn't be there
+
+    const snipTexts = [];
+    for (const text of this.props.source.texts) {
+      const annoTexts = [];
+
+      for (const chunk of getChunksAtTime(text.chunkSet, this.state.currentTime)) {
+        if (this.state.chunkSelections.has(chunk.uid)) {
+          const r = this.state.chunkSelections.get(chunk.uid);
+          annoTexts.push(addAnnotation(chunk.annoText, r.cpBegin, r.cpEnd, 'selection', null));
+        } else {
+          annoTexts.push(chunk.annoText);
+        }
+      }
+
+      snipTexts.push({
+        language: text.language,
+        annoText: concatAnnoTexts(annoTexts),
+      });
+    }
+    this.props.onAddSnip(this.props.snipDeckId, snipTexts);
+  };
+
+  handleChunkSelectionChange = (chunkId, selection) => {
+    if (selection) {
+      this.setState({chunkSelections: this.state.chunkSelections.set(chunkId, selection)});
+    } else {
+      this.setState({chunkSelections: this.state.chunkSelections.delete(chunkId)});
+    }
+  };
+
   render() {
-    const { source, onExit } = this.props;
+    const { source, onExit, deckBriefs, snipDeckId, onSetSnipDeckId } = this.props;
+
     return (
       <div>
         <div id="source-settings">
@@ -507,11 +542,38 @@ class Source extends Component {
           <ul>{source.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
           <div>Texts:</div>
           <ul>{source.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
-          <button onClick={onExit}>Exit To Sources</button>
+          <button onClick={onExit}>Exit To Top</button>
         </div>
         <VideoMedia media={source.media} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.currentTime)} language={text.language} revealed={this.state.textRevelation > i} />)}
+        <form style={{ textAlign: 'center', margin: '10px auto' }}>
+          <select value={snipDeckId} onChange={e => onSetSnipDeckId(e.target.value)}>
+            {deckBriefs.map(d => <option key={d.id} value={d.id}>deck {d.id}</option>)}
+          </select>
+          <button type="button" onClick={this.handleSnip}>Snip</button>
+        </form>
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.currentTime)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} />)}
+      </div>
+    );
+  }
+}
+
+// Deck
+class Deck extends Component {
+  render() {
+    const { deck, onExit } = this.props;
+    return (
+      <div>
+        <div>Id {deck.id}</div>
+        <button onClick={onExit}>Exit To Top</button>
+        <div>{deck.snips.map((snip) => (
+          <div key={snip.id}>
+            <p>snip id {snip.id}</p>
+            <div>{snip.texts.map((snipText) => (
+              <AnnoText annoText={snipText.annoText} language={snipText.language} />
+            ))}</div>
+          </div>
+        ))}</div>
       </div>
     );
   }
@@ -522,26 +584,51 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      viewingSourceId: null, // otherwise viewing sources list
+      viewingMode: 'top',
+      viewingId: undefined,
     };
   }
 
   render() {
     const { mainState, actions } = this.props;
 
-    return this.state.viewingSourceId ? (
-      <Source actions={actions} source={mainState.sources.get(this.state.viewingSourceId)} onExit={() => {console.log('exit'); this.setState({viewingSourceId: null})}} />
-    ) : (
-      <div>
-        <NewSourceForm onNewSource={actions.createSource} />
-        {mainState.sources.valueSeq().map((s) => (
-          <div key={s.id}>
-            Source Id {s.id} ({s.kind})
-            <button onClick={() => {this.setState({viewingSourceId: s.id})}}>View</button>
+    // TODO: wrap in selector
+    const deckBriefs = mainState.decks.valueSeq().map(deck => ({
+      id: deck.id,
+    }));
+
+    if (this.state.viewingMode === 'top') {
+      return (
+        <div>
+          <div>
+            <h2>Sources</h2>
+            <NewSourceForm onNewSource={actions.createSource} />
+            {mainState.sources.valueSeq().map((s) => (
+              <div key={s.id}>
+                Source Id {s.id} ({s.kind})
+                <button onClick={() => {this.setState({viewingMode: 'source', viewingId: s.id})}}>View</button>
+              </div>
+            ))}
           </div>
-        )).toJS()}
-      </div>
-    );
+          <div>
+            <h2>Decks</h2>
+            <form onSubmit={e => { e.preventDefault(); actions.createDeck(); }}>
+              <button type="submit">Create New Deck</button>
+            </form>
+            {mainState.decks.valueSeq().map((d) => (
+              <div key={d.id}>
+                Deck Id {d.id}
+                <button onClick={() => {this.setState({viewingMode: 'deck', viewingId: d.id})}}>View</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    } else if (this.state.viewingMode === 'source') {
+      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} />
+    } else if (this.state.viewingMode === 'deck') {
+      return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
+    }
   }
 }
 
