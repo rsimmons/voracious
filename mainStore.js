@@ -17,6 +17,7 @@ const SourceRecord = new Record({
   kind: undefined,
   media: new List(),
   texts: new List(),
+  viewPosition: 0,
 });
 
 const VideoMediaRecord = new Record({
@@ -85,6 +86,10 @@ const actions = {
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
     };
     reader.readAsText(file);
+  },
+
+  setSourceViewPosition: function(sourceId, position) {
+    this.setState(this.getState().setIn(['sources', sourceId, 'viewPosition'], position));
   },
 
   createDeck: function() {

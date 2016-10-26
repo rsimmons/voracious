@@ -118,10 +118,10 @@ class VideoMedia extends Component {
   }
 
   render() {
-    const { media, onTimeUpdate } = this.props;
+    const { media, initialTime, onTimeUpdate } = this.props;
     return (
       <div style={{ textAlign: 'center', backgroundColor: 'black' }}>{media.size ? (
-        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { this.videoElem = el; }} />
+        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
       ) : ''
       }</div>
     );
@@ -457,7 +457,6 @@ class Source extends Component {
     super(props);
     this.videoMediaComponent = undefined;
     this.state = {
-      currentTime: undefined,
       textRevelation: props.source.texts.size + 1, // reveal all texts to start
       chunkSelections: new Map(), // chunkId -> CPRange
     };
@@ -474,7 +473,7 @@ class Source extends Component {
   };
 
   handleVideoTimeUpdate = (time) => {
-    this.setState({currentTime: time});
+    this.props.onUpdateViewPosition(time);
   };
 
   handleBack = () => {
@@ -504,7 +503,7 @@ class Source extends Component {
     for (const text of this.props.source.texts) {
       const annoTexts = [];
 
-      for (const chunk of getChunksAtTime(text.chunkSet, this.state.currentTime)) {
+      for (const chunk of getChunksAtTime(text.chunkSet, this.props.source.viewPosition)) {
         if (this.state.chunkSelections.has(chunk.uid)) {
           const r = this.state.chunkSelections.get(chunk.uid);
           annoTexts.push(addAnnotation(chunk.annoText, r.cpBegin, r.cpEnd, 'selection', null));
@@ -544,7 +543,7 @@ class Source extends Component {
           <ul>{source.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
           <button onClick={onExit}>Exit To Top</button>
         </div>
-        <VideoMedia media={source.media} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
+        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
         <form style={{ textAlign: 'center', margin: '10px auto' }}>
           <select value={snipDeckId} onChange={e => onSetSnipDeckId(e.target.value)}>
@@ -552,7 +551,7 @@ class Source extends Component {
           </select>
           <button type="button" onClick={this.handleSnip}>Snip</button>
         </form>
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.currentTime)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} />)}
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} />)}
       </div>
     );
   }
@@ -625,7 +624,7 @@ class App extends Component {
         </div>
       )
     } else if (this.state.viewingMode === 'source') {
-      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} />
+      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} />
     } else if (this.state.viewingMode === 'deck') {
       return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
     }
