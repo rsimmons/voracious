@@ -1,6 +1,5 @@
 import { Record, Map, List } from 'immutable';
 
-import { createStoreClass } from './ruxx';
 import genUID from './util/uid';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
@@ -46,26 +45,29 @@ const SnipTextRecord = new Record({
   language: undefined,
 });
 
-const initialState = new MainStateRecord();
+export default class MainActions {
+  constructor(subscribableState) {
+    this.state = subscribableState;
+    this.state.set(new MainStateRecord());
+  }
 
-const actions = {
-  createSource: function(kind) {
+  createSource = (kind) => {
     const sourceId = genUID();
-    this.setState(this.getState().setIn(['sources', sourceId], new SourceRecord({
+    this.state.set(this.state.get().setIn(['sources', sourceId], new SourceRecord({
       id: sourceId,
       kind,
     })));
-  },
+  };
 
-  sourceAddVideoFile: function(sourceId, file, language) {
-    this.setState(this.getState().updateIn(['sources', sourceId, 'media'], media => media.push(new VideoMediaRecord({
+  sourceAddVideoFile = (sourceId, file, language) => {
+    this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.push(new VideoMediaRecord({
       language,
       // videoFile: file,
       videoURL: URL.createObjectURL(file),
     }))));
-  },
+  };
 
-  sourceAddSubsFile: function(sourceId, file, language) {
+  sourceAddSubsFile = (sourceId, file, language) => {
     // Start async file load and parse
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -79,44 +81,42 @@ const actions = {
       }
       const chunkSet = createTimeRangeChunkSet(chunks);
 
-      this.setState(this.getState().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
+      this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
         language: language,
         chunkSet,
       }))));
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
     };
     reader.readAsText(file);
-  },
+  };
 
-  setSourceViewPosition: function(sourceId, position) {
-    this.setState(this.getState().setIn(['sources', sourceId, 'viewPosition'], position));
-  },
+  setSourceViewPosition = (sourceId, position) => {
+    this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
+  };
 
-  createDeck: function() {
+  createDeck = () => {
     const deckId = genUID();
-    this.setState(this.getState().setIn(['decks', deckId], new DeckRecord({
+    this.state.set(this.state.get().setIn(['decks', deckId], new DeckRecord({
       id: deckId,
     })));
 
-    if (!this.getState().snipDeckId) {
-      this.setState(this.getState().set('snipDeckId', deckId));
+    if (!this.state.get().snipDeckId) {
+      this.state.set(this.state.get().set('snipDeckId', deckId));
     }
-  },
+  };
 
-  setSnipDeckId: function(deckId) {
+  setSnipDeckId = (deckId) => {
     // TODO: verify deckId exists
-    this.setState(this.getState().set('snipDeckId', deckId));
-  },
+    this.state.set(this.state.get().set('snipDeckId', deckId));
+  };
 
-  addSnip: function(deckId, texts) {
+  addSnip = (deckId, texts) => {
     const snipId = genUID();
     const snipTexts = new List(texts.map(t => new SnipTextRecord({annoText: t.annoText, language: t.language})));
 
-    this.setState(this.getState().updateIn(['decks', deckId, 'snips'], snips => snips.push(new SnipRecord({
+    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.push(new SnipRecord({
       id: snipId,
       texts: snipTexts,
     }))));
-  },
+  };
 };
-
-export default createStoreClass(initialState, actions);

@@ -2,16 +2,15 @@ import React from 'react';
 import { render } from 'react-dom';
 
 import RootComponent from './components';
-import MainStore from './mainStore';
+import MainActions from './mainActions';
 
-import { connect } from './ruxx';
+import { SubscribableState, StateMapper } from './ruxx';
 
 // Load Kuromoji right away
 import { loadKuromoji } from './util/analysis';
 loadKuromoji();
 
-const store = new MainStore();
+const subscribableMainState = new SubscribableState();
+const actions = new MainActions(subscribableMainState);
 
-const ConnectedRootComponent = connect(store, (state, actions) => <RootComponent mainState={state} actions={actions} />);
-
-render(<ConnectedRootComponent />, document.getElementById('root'));
+render(<StateMapper subscribableState={subscribableMainState} renderState={state => <RootComponent mainState={state} actions={actions} />} />, document.getElementById('root'));

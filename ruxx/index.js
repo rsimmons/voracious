@@ -1,4 +1,4 @@
-import createStoreClass from './store';
-import connect from './connect';
+import SubscribableState from './state';
+import StateMapper from './connect';
 
-export { createStoreClass, connect };
+export { SubscribableState, StateMapper };
