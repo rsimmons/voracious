@@ -557,7 +557,7 @@ class Source extends Component {
           <select value={snipDeckId} onChange={e => onSetSnipDeckId(e.target.value)}>
             {deckBriefs.map(d => <option key={d.id} value={d.id}>deck {d.id}</option>)}
           </select>
-          <button type="button" onClick={this.handleSnip}>Snip</button>
+          <button type="button" onClick={this.handleSnip} {...(deckBriefs.isEmpty() ? {disabled: true} : {})}>Snip</button>
         </form>
         {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} />)}
       </div>
