@@ -14,8 +14,8 @@ const jpar = JSON.parse; // alias
 
 const MainStateRecord = new Record({
   loading: false,
-  sources: new OrderedMap(), // uid -> SourceRecord
-  decks: new OrderedMap(), // uid -> DeckRecord
+  sources: new OrderedMap(), // id -> SourceRecord
+  decks: new OrderedMap(), // id -> DeckRecord
   snipDeckId: undefined, // should be undefined or a valid deck id
 });
 
@@ -41,7 +41,7 @@ const SourceTextRecord = new Record({
 const DeckRecord = new Record({
   id: undefined,
   name: undefined,
-  snips: new List(), // List of SnipRecord
+  snips: new OrderedMap(), // id -> SnipRecord
 });
 
 const SnipRecord = new Record({
@@ -92,7 +92,7 @@ export default class MainActions {
         const deck = new DeckRecord({
           id: deckId,
           name: deckObj.name,
-          snips: new List(deckObj.snips.map(snip => new SnipRecord({id: snip.id, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))}))),
+          snips: new OrderedMap(deckObj.snips.map(snip => [snip.id, new SnipRecord({id: snip.id, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))})])),
         });
         mutDecks[deckId] = deck;
       }
@@ -160,7 +160,7 @@ export default class MainActions {
 
   _storageSaveDeck = (deckId) => {
     const iDeck = this.state.get().decks.get(deckId);
-    const deck = {name: iDeck.name, snips: iDeck.snips.toArray().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
+    const deck = {name: iDeck.name, snips: iDeck.snips.valueSeq().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
     return this.storage.setItem('deck:' + deckId, jstr(deck));
   };
 
@@ -197,6 +197,12 @@ export default class MainActions {
       id: snipId,
       texts: snipTexts,
     }))));
+
+    this._storageSaveDeck(deckId);
+  };
+
+  deleteSnip = (deckId, snipId) => {
+    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.delete(snipId)));
 
     this._storageSaveDeck(deckId);
   };

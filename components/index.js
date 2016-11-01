@@ -577,15 +577,21 @@ class Source extends Component {
 
 // Deck
 class Deck extends Component {
+  handleDeleteSnip = (snipId) => {
+    if (window.confirm('Are you sure you want to delete this snip?')) {
+      this.props.onDeleteSnip(snipId);
+    }
+  }
+
   render() {
     const { deck, onExit } = this.props;
     return (
       <div>
         <div>{deck.name} <small>{deck.id}</small></div>
         <button onClick={onExit}>Exit To Top</button>
-        <div>{deck.snips.map((snip) => (
+        <div>{deck.snips.toArray().map((snip) => (
           <div key={snip.id}>
-            <p>snip id {snip.id}</p>
+            <p>snip id {snip.id} <button onClick={() => { this.handleDeleteSnip(snip.id); }}>Delete</button></p>
             <div>{snip.texts.map((snipText, i) => (
               <AnnoText key={i} annoText={snipText.annoText} language={snipText.language} />
             ))}</div>
@@ -675,7 +681,7 @@ class App extends Component {
     } else if (this.state.viewingMode === 'source') {
       return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} />
     } else if (this.state.viewingMode === 'deck') {
-      return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
+      return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onDeleteSnip={(snipId) => { actions.deleteSnip(this.state.viewingId, snipId); }} />
     }
   }
 }
