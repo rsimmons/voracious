@@ -40,6 +40,7 @@ const SourceTextRecord = new Record({
 
 const DeckRecord = new Record({
   id: undefined,
+  name: undefined,
   snips: new List(), // List of SnipRecord
 });
 
@@ -90,6 +91,7 @@ export default class MainActions {
         const deckObj = jpar(v);
         const deck = new DeckRecord({
           id: deckId,
+          name: deckObj.name,
           snips: new List(deckObj.snips.map(snip => new SnipRecord({id: snip.id, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))}))),
         });
         mutDecks[deckId] = deck;
@@ -158,14 +160,19 @@ export default class MainActions {
 
   _storageSaveDeck = (deckId) => {
     const iDeck = this.state.get().decks.get(deckId);
-    const deck = {snips: iDeck.snips.toArray().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
+    const deck = {name: iDeck.name, snips: iDeck.snips.toArray().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
     return this.storage.setItem('deck:' + deckId, jstr(deck));
   };
 
-  createDeck = () => {
+  createDeck = (name) => {
     const deckId = genUID();
+
+    assert(name === name.trim());
+    assert(name.length > 0);
+
     this.state.set(this.state.get().setIn(['decks', deckId], new DeckRecord({
       id: deckId,
+      name: name,
     })));
 
     if (!this.state.get().snipDeckId) {

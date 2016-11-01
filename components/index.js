@@ -571,7 +571,7 @@ class Deck extends Component {
     const { deck, onExit } = this.props;
     return (
       <div>
-        <div>Id {deck.id}</div>
+        <div>{deck.name} <small>{deck.id}</small></div>
         <button onClick={onExit}>Exit To Top</button>
         <div>{deck.snips.map((snip) => (
           <div key={snip.id}>
@@ -582,6 +582,37 @@ class Deck extends Component {
           </div>
         ))}</div>
       </div>
+    );
+  }
+}
+
+// NewDeckForm
+class NewDeckForm extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      deckName: '',
+    };
+  }
+
+  handleNameChange = (e) => {
+    this.setState({deckName: e.target.value});
+  };
+
+  handleSubmit = (e) => {
+    e.preventDefault();
+    this.props.onNewDeck(this.state.deckName.trim());
+    this.setState({deckName: ''});
+  };
+
+  render() {
+    const nameIsValid = this.state.deckName && (this.state.deckName.trim() !== '');
+
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <input type="text" placeholder="New Deck Name" value={this.state.deckName} onChange={this.handleNameChange} />
+        <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Deck</button>
+      </form>
     );
   }
 }
@@ -621,12 +652,10 @@ class App extends Component {
           </div>
           <div>
             <h2>Decks</h2>
-            <form onSubmit={e => { e.preventDefault(); actions.createDeck(); }}>
-              <button type="submit">Create New Deck</button>
-            </form>
+            <NewDeckForm onNewDeck={actions.createDeck} />
             {mainState.decks.valueSeq().map((d) => (
               <div key={d.id}>
-                Deck Id {d.id}
+                {d.name} <small>[{d.id}]</small>
                 <button onClick={() => {this.setState({viewingMode: 'deck', viewingId: d.id})}}>View</button>
               </div>
             ))}
