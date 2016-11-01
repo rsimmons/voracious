@@ -1,13 +1,21 @@
-import { Record, Map, List } from 'immutable';
+import assert from 'assert';
+import { Record, Map, OrderedMap, List } from 'immutable';
 
 import genUID from './util/uid';
+import { startsWith, removePrefix } from './util/string';
 import { parseSRT } from './util/subtitles';
+import { toJS as annoTextToJS, fromJS as annoTextFromJS } from './util/annotext';
 import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from './util/chunk';
+import createStorageBackend from './storage';
+
+const jstr = JSON.stringify; // alias
+const jpar = JSON.parse; // alias
 
 const MainStateRecord = new Record({
-  sources: new Map(), // uid -> SourceRecord
-  decks: new Map(), // uid -> DeckRecord
+  loading: false,
+  sources: new OrderedMap(), // uid -> SourceRecord
+  decks: new OrderedMap(), // uid -> DeckRecord
   snipDeckId: undefined, // should be undefined or a valid deck id
 });
 
@@ -49,6 +57,52 @@ export default class MainActions {
   constructor(subscribableState) {
     this.state = subscribableState;
     this.state.set(new MainStateRecord());
+    this.storage = createStorageBackend('voracious:');
+
+    // Start loading from storage, which is async
+    this.state.set(this.state.get().set('loading', true));
+    this.storage.getItem('version').then(version => {
+      if (version) {
+        assert(version === '0');
+        return Promise.resolve(); // return "empty" promise to be consistent
+      } else {
+        // Key wasn't present, so we can initialize storage to default data
+        return this.storage.setItems([
+          ['version', '0'],
+          ['root', jstr({profiles: ['1']})], // start with a single profile, id '1'
+          ['profile:1', jstr({name: 'default', decks: []})],
+        ]);
+      }
+    }).then(() => {
+      // Storage is known to be initialized and at current version, so we can start loading the real data now
+      return this.storage.getItem('root');
+    }).then(rootStr => {
+      const root = jpar(rootStr);
+      assert((root.profiles.length === 1) && (root.profiles[0] === '1'));
+      return this.storage.getItem('profile:1');
+    }).then(profileStr => {
+      const profile = jpar(profileStr);
+      return this.storage.getItems(profile.decks.map(i => ('deck:'+i)));
+    }).then(deckStrs => {
+      const mutDecks = {};
+      for (const [k, v] of deckStrs) {
+        const deckId = removePrefix(k, 'deck:');
+        const deckObj = jpar(v);
+        const deck = new DeckRecord({
+          id: deckId,
+          snips: new List(deckObj.snips.map(snip => new SnipRecord({id: snip.id, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))}))),
+        });
+        mutDecks[deckId] = deck;
+      }
+      this.state.set(this.state.get()
+        .set('loading', false)
+        .set('decks', new OrderedMap(mutDecks))
+      );
+
+      // Set snipDeckId to just be first deck, for now
+      const firstDeckId = this.state.get().decks.keySeq().get(0);
+      this.state.set(this.state.get().set('snipDeckId', firstDeckId));
+    });
   }
 
   createSource = (kind) => {
@@ -94,6 +148,20 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
   };
 
+  _storageUpdateKeyJSON = (key, update) => {
+    return this.storage.getItem(key).then(value => {
+      const obj = jpar(value);
+      const newObj = update(obj); // newObj could be same identity as obj
+      return this.storage.setItem(key, jstr(newObj));
+    });
+  };
+
+  _storageSaveDeck = (deckId) => {
+    const iDeck = this.state.get().decks.get(deckId);
+    const deck = {snips: iDeck.snips.toArray().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
+    return this.storage.setItem('deck:' + deckId, jstr(deck));
+  };
+
   createDeck = () => {
     const deckId = genUID();
     this.state.set(this.state.get().setIn(['decks', deckId], new DeckRecord({
@@ -103,6 +171,10 @@ export default class MainActions {
     if (!this.state.get().snipDeckId) {
       this.state.set(this.state.get().set('snipDeckId', deckId));
     }
+
+    this._storageSaveDeck(deckId).then(() => {
+      return this._storageUpdateKeyJSON('profile:1', profile => { profile.decks.push(deckId); return profile; });
+    });
   };
 
   setSnipDeckId = (deckId) => {
@@ -118,5 +190,7 @@ export default class MainActions {
       id: snipId,
       texts: snipTexts,
     }))));
+
+    this._storageSaveDeck(deckId);
   };
 };

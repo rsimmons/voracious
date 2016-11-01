@@ -1,3 +1,4 @@
+import assert from 'assert';
 import React, { Component, PropTypes } from 'react';
 import Immutable, { Record, Map } from 'immutable';
 import { createSelector } from 'reselect';
@@ -531,6 +532,13 @@ class Source extends Component {
   render() {
     const { source, onExit, deckBriefs, snipDeckId, onSetSnipDeckId } = this.props;
 
+    // Sanity check on snipDeckId integrity
+    if (deckBriefs.isEmpty()) {
+      assert(!snipDeckId);
+    } else {
+      assert(deckBriefs.some(d => (d.id === snipDeckId)));
+    }
+
     return (
       <div>
         <div id="source-settings">
@@ -568,8 +576,8 @@ class Deck extends Component {
         <div>{deck.snips.map((snip) => (
           <div key={snip.id}>
             <p>snip id {snip.id}</p>
-            <div>{snip.texts.map((snipText) => (
-              <AnnoText annoText={snipText.annoText} language={snipText.language} />
+            <div>{snip.texts.map((snipText, i) => (
+              <AnnoText key={i} annoText={snipText.annoText} language={snipText.language} />
             ))}</div>
           </div>
         ))}</div>
@@ -596,7 +604,9 @@ class App extends Component {
       id: deck.id,
     }));
 
-    if (this.state.viewingMode === 'top') {
+    if (mainState.loading) {
+      return <h1>Loading...</h1>;
+    } else if (this.state.viewingMode === 'top') {
       return (
         <div>
           <div>

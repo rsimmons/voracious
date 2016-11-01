@@ -1,16 +1,16 @@
 import { Record, Map, List } from 'immutable';
 
 export const Annotation = new Record({
-  cpBegin: null,
-  cpEnd: null,
-  kind: null,
-  data: null,
+  cpBegin: null, // integer
+  cpEnd: null, // integer
+  kind: null, // string
+  data: null, // this should be immutable, usually a string
 });
 
 const AnnotatedText = new Record({
   text: null,
   annotations: null,
-  // TODO: denormalized forms for acceleration
+  // TODO: denormalized forms for acceleration. update toJS if we do
 });
 
 export const create = (text, annotations) => {
@@ -69,4 +69,12 @@ export const concat = (annoTexts) => {
   }
 
   return new AnnotatedText({text: newText, annotations: newAnnos});
+};
+
+export const toJS = (annoText) => {
+  return annoText.toJS();
+};
+
+export const fromJS = (obj) => {
+  return new AnnotatedText({text: obj.text, annotations: obj.annotations.map(a => new Annotation(a))});
 };
