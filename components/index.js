@@ -348,6 +348,14 @@ class AnnoText extends Component {
   render() {
     const { annoText, language } = this.props;
 
+    // Determine what code point indexes are covered by 'selection' annotations
+    const selectedIndexes = new Set();
+    getKindSorted(annoText, 'selection').forEach(a => {
+      for (let i = a.cpBegin; i < a.cpEnd; i++) {
+        selectedIndexes.add(i);
+      }
+    });
+
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
     const hitLemmaIndexes = new Set();
@@ -391,6 +399,8 @@ class AnnoText extends Component {
             classNames.push('inspected');
           } else if (hitLemmaIndexes.has(i)) {
             classNames.push('highlighted');
+          } else if (selectedIndexes.has(i)) {
+            classNames.push('selected');
           }
 
           pieces.push(<span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>);

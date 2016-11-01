@@ -63,6 +63,10 @@ ul {
   background-color: #afa;
 }
 
+.textchar.selected {
+  background-color: #aaf;
+}
+
 .textchar-tooltip {
   position: absolute;
   bottom: 150%;
