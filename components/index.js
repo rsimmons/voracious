@@ -1,10 +1,11 @@
 import assert from 'assert';
+import escape from 'escape-html';
 import React, { Component, PropTypes } from 'react';
 import Immutable, { Record, Map } from 'immutable';
 import { createSelector } from 'reselect';
 import shallowCompare from 'react-addons-shallow-compare';
 
-import { getKindAtIndex, getKindSorted, addAnnotation, concat as concatAnnoTexts } from '../util/annotext';
+import { getKindAtIndex, getKindSorted, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender } from '../util/annotext';
 import { getChunksAtTime } from '../util/chunk';
 
 const languageOptions = [
@@ -193,40 +194,6 @@ const isAncestorNode = (potentialAncestor, given) => {
   }
 }
 
-const renderAnnoTextToHTML = (annoText) => {
-  const textArr = [...annoText.text.trim()]; // split up by unicode chars
-  const sortedRubyAnnos = getKindSorted(annoText, 'ruby');
-
-  let idx = 0;
-  const pieces = [];
-  for (const ra of sortedRubyAnnos) {
-    if (ra.cpBegin < idx) {
-      throw new Error('Overlapping ruby');
-    }
-
-    if (ra.cpBegin > idx) {
-      pieces.push(escape(textArr.slice(idx, ra.cpBegin).join('')));
-    }
-
-    pieces.push('<ruby>' + escape(textArr.slice(ra.cpBegin, ra.cpEnd).join('')) + '<rp>(</rp><rt>' + escape(ra.data) + '</rt><rp>)</rp></ruby>');
-
-    idx = ra.cpEnd;
-  }
-
-  // Handle remaining text
-  if (idx < textArr.length) {
-    pieces.push(escape(textArr.slice(idx, textArr.length).join('')));
-  }
-
-  // Join pieces
-  const html = pieces.join('');
-
-  // Convert newlines to breaks
-  const brHtml = html.replace(/\n/g, '<br/>');
-
-  return brHtml;
-};
-
 const CPRange = new Record({
   cpBegin: null,
   cpEnd: null,
@@ -348,14 +315,6 @@ class AnnoText extends Component {
   render() {
     const { annoText, language } = this.props;
 
-    // Determine what code point indexes are covered by 'selection' annotations
-    const selectedIndexes = new Set();
-    getKindSorted(annoText, 'selection').forEach(a => {
-      for (let i = a.cpBegin; i < a.cpEnd; i++) {
-        selectedIndexes.add(i);
-      }
-    });
-
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
     const hitLemmaIndexes = new Set();
@@ -381,12 +340,12 @@ class AnnoText extends Component {
       });
     }
 
-    const textRangeToElems = (cpBegin, cpEnd) => {
-      const pieces = [];
-      for (let i = cpBegin; i < cpEnd; i++) {
-        const c = textArr[i];
+    const annoTextChildren = annoTextCustomRender(
+      annoText,
+      (ra, inner) => <ruby key={`ruby-${ra.cpBegin}:${ra.cpEnd}`}>{inner}<rp>(</rp><rt>{ra.data}</rt><rp>)</rp></ruby>,
+      (c, i, inSelection) => {
         if (c === '\n') {
-          pieces.push(<br key={`char-${i}`} />);
+          return <br key={`char-${i}`} />;
         } else {
           const isInspected = (i === inspectedIndex);
 
@@ -399,45 +358,26 @@ class AnnoText extends Component {
             classNames.push('inspected');
           } else if (hitLemmaIndexes.has(i)) {
             classNames.push('highlighted');
-          } else if (selectedIndexes.has(i)) {
+          } else if (inSelection) {
             classNames.push('selected');
           }
 
-          pieces.push(<span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>);
+          return <span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
         }
       }
-      return pieces;
-    };
+    );
 
-    const children = [];
-    const textArr = [...annoText.text.trim()]; // split up by unicode chars
-    const sortedRubyAnnos = getKindSorted(annoText, 'ruby');
-
-    let idx = 0;
-    for (const ra of sortedRubyAnnos) {
-      if (ra.cpBegin < idx) {
-        throw new Error('Overlapping ruby');
-      }
-
-      if (ra.cpBegin > idx) {
-        children.push(...textRangeToElems(idx, ra.cpBegin));
-      }
-
-      children.push(<ruby key={`ruby-${ra.cpBegin}:${ra.cpEnd}`}>{textRangeToElems(ra.cpBegin, ra.cpEnd)}<rp>(</rp><rt>{ra.data}</rt><rp>)</rp></ruby>);
-
-      idx = ra.cpEnd;
-    }
-
-    // Handle remaining text
-    if (idx < textArr.length) {
-      children.push(...textRangeToElems(idx, textArr.length));
-    }
+    const annoTextHTML = annoTextCustomRender(
+      annoText,
+      (ra, inner) => ('<ruby>' + inner.join('') + '<rp>(</rp><rt>' + escape(ra.data) + '</rt><rp>)</rp></ruby>'),
+      (c, i, inSelection) => (c === '\n' ? '<br/>' : escape(c))
+    ).join('');
 
     const floatWidth = '10em';
     return (
       <div>
         <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px' }}>
-          <ClipboardCopier text={renderAnnoTextToHTML(annoText)} buttonText="Copy HTML" />
+          <ClipboardCopier text={annoTextHTML} buttonText="Copy HTML" />
           {/*
           {this.state.selectionRange ? (
             <form>
@@ -449,7 +389,7 @@ class AnnoText extends Component {
           ) : ''}
           */}
         </div>
-        <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{children}</div>
+        <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
       </div>
     );
   }

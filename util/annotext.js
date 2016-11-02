@@ -78,3 +78,48 @@ export const toJS = (annoText) => {
 export const fromJS = (obj) => {
   return new AnnotatedText({text: obj.text, annotations: obj.annotations.map(a => new Annotation(a))});
 };
+
+export const customRender = (annoText, wrapRuby, xformChar) => {
+  // Determine what code point indexes are covered by 'selection' annotations
+  const selectedIndexes = new Set();
+  getKindSorted(annoText, 'selection').forEach(a => {
+    for (let i = a.cpBegin; i < a.cpEnd; i++) {
+      selectedIndexes.add(i);
+    }
+  });
+
+  const pieces = [];
+  const textArr = [...annoText.text.trim()]; // split up by unicode chars
+  const sortedRubyAnnos = getKindSorted(annoText, 'ruby');
+
+  const textRangeToPieces = (cpBegin, cpEnd) => {
+    const result = [];
+    for (let i = cpBegin; i < cpEnd; i++) {
+      const c = textArr[i];
+      result.push(xformChar(c, i, selectedIndexes.has(i)));
+    }
+    return result;
+  };
+
+  let idx = 0;
+  for (const ra of sortedRubyAnnos) {
+    if (ra.cpBegin < idx) {
+      throw new Error('Overlapping ruby');
+    }
+
+    if (ra.cpBegin > idx) {
+      pieces.push(...textRangeToPieces(idx, ra.cpBegin));
+    }
+
+    pieces.push(wrapRuby(ra, textRangeToPieces(ra.cpBegin, ra.cpEnd)));
+
+    idx = ra.cpEnd;
+  }
+
+  // Handle remaining text
+  if (idx < textArr.length) {
+    pieces.push(...textRangeToPieces(idx, textArr.length));
+  }
+
+  return pieces;
+};
