@@ -184,6 +184,14 @@ export default class MainActions {
     });
   };
 
+  deleteDeck = (deckId) => {
+    this.state.set(this.state.get().deleteIn(['decks', deckId]));
+
+    this.storage.removeItem('deck:' + deckId).then(() => {
+      return this._storageUpdateKeyJSON('profile:1', profile => { profile.decks = profile.decks.filter(i => (i !== deckId)); return profile; });
+    });
+  };
+
   setSnipDeckId = (deckId) => {
     // TODO: verify deckId exists
     this.state.set(this.state.get().set('snipDeckId', deckId));

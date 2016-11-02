@@ -672,7 +672,8 @@ class App extends Component {
             {mainState.decks.valueSeq().map((d) => (
               <div key={d.id}>
                 {d.name} <small>[{d.id}]</small>
-                <button onClick={() => {this.setState({viewingMode: 'deck', viewingId: d.id})}}>View</button>
+                <button onClick={() => { this.setState({viewingMode: 'deck', viewingId: d.id}); }}>View</button>
+                <button onClick={() => { if (window.confirm('Delete deck "' + d.name + '"?')) { actions.deleteDeck(d.id); } }}>Delete</button>
               </div>
             ))}
           </div>
