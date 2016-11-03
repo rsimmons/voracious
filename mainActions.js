@@ -201,7 +201,7 @@ export default class MainActions {
     const snipId = genUID();
     const snipTexts = new List(texts.map(t => new SnipTextRecord({annoText: t.annoText, language: t.language})));
 
-    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.push(new SnipRecord({
+    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.set(snipId, new SnipRecord({
       id: snipId,
       texts: snipTexts,
     }))));
