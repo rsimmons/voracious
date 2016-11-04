@@ -5,7 +5,7 @@ import Immutable, { Record, Map } from 'immutable';
 import { createSelector } from 'reselect';
 import shallowCompare from 'react-addons-shallow-compare';
 
-import { getKindAtIndex, getKindSorted, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender } from '../util/annotext';
+import { getKindAtIndex, getKind, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender } from '../util/annotext';
 import { getChunksAtTime } from '../util/chunk';
 
 const languageOptions = [
@@ -342,8 +342,16 @@ class AnnoText extends Component {
 
     const annoTextChildren = annoTextCustomRender(
       annoText,
-      (ra, inner) => <ruby key={`ruby-${ra.cpBegin}:${ra.cpEnd}`}>{inner}<rp>(</rp><rt>{ra.data}</rt><rp>)</rp></ruby>,
-      (c, i, inSelection) => {
+      (a, inner) => {
+        if (a.kind === 'ruby') {
+          return [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>];
+        } else if (a.kind === 'selection') {
+          return [<span key={`selection-${a.cpBegin}:${a.cpEnd}`} className='annotext-selected'>{inner}</span>];
+        } else {
+          return inner;
+        }
+      },
+      (c, i) => {
         if (c === '\n') {
           return <br key={`char-${i}`} />;
         } else {
@@ -358,8 +366,6 @@ class AnnoText extends Component {
             classNames.push('inspected');
           } else if (hitLemmaIndexes.has(i)) {
             classNames.push('highlighted');
-          } else if (inSelection) {
-            classNames.push('selected');
           }
 
           return <span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
@@ -369,8 +375,14 @@ class AnnoText extends Component {
 
     const annoTextHTML = annoTextCustomRender(
       annoText,
-      (ra, inner) => ('<ruby>' + inner.join('') + '<rp>(</rp><rt>' + escape(ra.data) + '</rt><rp>)</rp></ruby>'),
-      (c, i, inSelection) => (c === '\n' ? '<br/>' : escape(c))
+      (a, inner) => {
+        if (a.kind === 'ruby') {
+          return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
+        } else {
+          return inner;
+        }
+      },
+      (c, i) => (c === '\n' ? '<br/>' : escape(c))
     ).join('');
 
     const floatWidth = '10em';
@@ -521,14 +533,61 @@ class Deck extends Component {
     if (window.confirm('Are you sure you want to delete this snip?')) {
       this.props.onDeleteSnip(snipId);
     }
-  }
+  };
+
+  handleExportTSV = () => {
+    function download(content, filename, contentType) {
+      const a = document.createElement('a');
+      const blob = new Blob([content], {'type': contentType});
+      a.href = window.URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    const lines = [];
+    for (const snip of this.props.deck.snips.values()) {
+      const firstAnnoText = snip.texts.first().annoText; // TODO: unhack
+
+      // If no selection, skip
+      const sortedSelectionAnnos = getKind(firstAnnoText, 'selection');
+      if (!sortedSelectionAnnos.length) {
+        continue;
+      }
+
+      const fields = [];
+
+      const clozedAnnotextHTML = annoTextCustomRender(
+        firstAnnoText,
+        (a, inner) => {
+          if (a.kind === 'ruby') {
+            return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
+          } else if (a.kind === 'selection') {
+            return ['{{c1::', ...inner, '}}'];
+          } else {
+            return inner;
+          }
+        },
+        (c, i) => (c === '\n' ? '<br/>' : escape(c))
+      ).join('');
+      fields.push(clozedAnnotextHTML);
+
+      const translations = snip.texts.rest().map(t => ('<p>' + t.annoText + '</p>')).join('');
+      fields.push(translations);
+
+      lines.push(fields.join('\t') + '\n');
+    }
+    download(lines.join(''), 'voracious_' + Date.now() + '.tsv', 'text/tab-separated-values');
+  };
 
   render() {
     const { deck, onExit } = this.props;
     return (
       <div>
         <div>{deck.name} <small>{deck.id}</small></div>
-        <button onClick={onExit}>Exit To Top</button>
+        <div>
+          <button onClick={this.handleExportTSV}>Export TSV</button>
+          <button onClick={onExit}>Exit To Top</button>
+        </div>
         <div>{deck.snips.toArray().map((snip) => (
           <div key={snip.id}>
             <p>snip id {snip.id} <button onClick={() => { this.handleDeleteSnip(snip.id); }}>Delete</button></p>
