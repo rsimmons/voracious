@@ -556,6 +556,8 @@ class Deck extends Component {
 
       const fields = [];
 
+      fields.push(snip.timeCreated); // Useful as a pseudo-uid and to sort by in Anki
+
       const clozedAnnotextHTML = annoTextCustomRender(
         firstAnnoText,
         (a, inner) => {
@@ -590,7 +592,7 @@ class Deck extends Component {
         </div>
         <div>{deck.snips.toArray().map((snip) => (
           <div key={snip.id}>
-            <p>snip id {snip.id} <button onClick={() => { this.handleDeleteSnip(snip.id); }}>Delete</button></p>
+            <p>snip id {snip.id} {(new Date(snip.timeCreated)).toLocaleString()} <button onClick={() => { this.handleDeleteSnip(snip.id); }}>Delete</button></p>
             <div>{snip.texts.map((snipText, i) => (
               <AnnoText key={i} annoText={snipText.annoText} language={snipText.language} />
             ))}</div>

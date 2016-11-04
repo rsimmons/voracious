@@ -46,6 +46,7 @@ const DeckRecord = new Record({
 
 const SnipRecord = new Record({
   id: undefined,
+  timeCreated: undefined,
   texts: new List(), // List of SnipTextRecord
 });
 
@@ -92,7 +93,7 @@ export default class MainActions {
         const deck = new DeckRecord({
           id: deckId,
           name: deckObj.name,
-          snips: new OrderedMap(deckObj.snips.map(snip => [snip.id, new SnipRecord({id: snip.id, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))})])),
+          snips: new OrderedMap(deckObj.snips.map(snip => [snip.id, new SnipRecord({id: snip.id, timeCreated: snip.timeCreated, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))})])),
         });
         mutDecks[deckId] = deck;
       }
@@ -160,7 +161,7 @@ export default class MainActions {
 
   _storageSaveDeck = (deckId) => {
     const iDeck = this.state.get().decks.get(deckId);
-    const deck = {name: iDeck.name, snips: iDeck.snips.valueSeq().map(snip => ({id: snip.id, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
+    const deck = {name: iDeck.name, snips: iDeck.snips.valueSeq().map(snip => ({id: snip.id, timeCreated: snip.timeCreated, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
     return this.storage.setItem('deck:' + deckId, jstr(deck));
   };
 
@@ -203,6 +204,7 @@ export default class MainActions {
 
     this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.set(snipId, new SnipRecord({
       id: snipId,
+      timeCreated: Date.now(),
       texts: snipTexts,
     }))));
 
