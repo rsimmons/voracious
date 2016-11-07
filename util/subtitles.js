@@ -24,7 +24,7 @@ export const parseSRT = (text) => {
     subs.push({
       begin,
       end,
-      lines,
+      lines: lines.trim(),
     });
     re.lastIndex = found.index + full.length;
   }
