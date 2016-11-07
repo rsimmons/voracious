@@ -22,10 +22,13 @@ const analyzeJAKuromoji = (text) => {
   const tokens = kuromojiTokenizer.tokenize(text);
   const annotations = [];
 
+  // code point indexes, not byte indexes
+  let cpBegin;
+  let cpEnd = 0;
+
   for (const t of tokens) {
-    // NOTE: cpBegin and cpEnd are code point indexes, not byte indexes
-    const cpBegin = t.word_position - 1; // WTF 1-based indexing?
-    const cpEnd = cpBegin + t.surface_form.length;
+    cpBegin = cpEnd;
+    cpEnd = cpBegin + [...t.surface_form].length;
 
     // sanity checks
     if ([...text].slice(cpBegin, cpEnd).join('') !== t.surface_form) {
