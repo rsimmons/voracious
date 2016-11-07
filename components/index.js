@@ -573,7 +573,7 @@ class Deck extends Component {
       ).join('');
       fields.push(clozedAnnotextHTML);
 
-      const translations = snip.texts.rest().map(t => ('<p>' + t.annoText + '</p>')).join('');
+      const translations = snip.texts.rest().map(t => t.annoText.text).join('<br/>');
       fields.push(translations);
 
       lines.push(fields.join('\t') + '\n');
