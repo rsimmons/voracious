@@ -158,6 +158,7 @@ class PlayControls extends Component {
 
         case 32: // space
           onTogglePause();
+          e.preventDefault();
           break;
 
         default:
