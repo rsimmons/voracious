@@ -518,7 +518,7 @@ class Source extends Component {
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
         <form style={{ textAlign: 'center', margin: '10px auto' }}>
           <select value={snipDeckId} onChange={e => onSetSnipDeckId(e.target.value)}>
-            {deckBriefs.map(d => <option key={d.id} value={d.id}>deck {d.id}</option>)}
+            {deckBriefs.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <button type="button" onClick={this.handleSnip} {...(deckBriefs.isEmpty() ? {disabled: true} : {})}>Snip</button>
         </form>
@@ -651,6 +651,7 @@ class App extends Component {
     // TODO: wrap in selector
     const deckBriefs = mainState.decks.valueSeq().map(deck => ({
       id: deck.id,
+      name: deck.name,
     }));
 
     if (mainState.loading) {
