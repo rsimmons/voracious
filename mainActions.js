@@ -6,7 +6,7 @@ import { startsWith, removePrefix } from './util/string';
 import { parseSRT } from './util/subtitles';
 import { toJS as annoTextToJS, fromJS as annoTextFromJS } from './util/annotext';
 import { createAutoAnnotatedText } from './util/analysis';
-import { createTimeRangeChunk, createTimeRangeChunkSet } from './util/chunk';
+import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText } from './util/chunk';
 import createStorageBackend from './storage';
 
 const jstr = JSON.stringify; // alias
@@ -149,6 +149,10 @@ export default class MainActions {
 
   setSourceViewPosition = (sourceId, position) => {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
+  };
+
+  sourceSetChunkAnnoText = (sourceId, textNum, chunkId, newAnnoText) => {
+    this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
   };
 
   _storageUpdateKeyJSON = (key, update) => {

@@ -5,7 +5,7 @@ import Immutable, { Record, Map } from 'immutable';
 import { createSelector } from 'reselect';
 import shallowCompare from 'react-addons-shallow-compare';
 
-import { getKindAtIndex, getKind, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender } from '../util/annotext';
+import { getKindAtIndex, getKind, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender, clearKindInRange } from '../util/annotext';
 import { getChunksAtTime } from '../util/chunk';
 
 const languageOptions = [
@@ -313,8 +313,14 @@ class AnnoText extends Component {
     this.setTooltipTimeout();
   };
 
+  handleClearRuby = () => {
+    const { annoText, onUpdate } = this.props;
+    this.props.onUpdate(clearKindInRange(annoText, 'ruby', this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd));
+    window.getSelection().removeAllRanges();
+  };
+
   render() {
-    const { annoText, language } = this.props;
+    const { annoText, language, onUpdate } = this.props;
 
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
@@ -391,16 +397,16 @@ class AnnoText extends Component {
       <div>
         <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px' }}>
           <ClipboardCopier text={annoTextHTML} buttonText="Copy HTML" />
-          {/*
-          {this.state.selectionRange ? (
+          {(this.state.selectionRange && onUpdate) ? (
             <form>
-              <button type="button" className="clear-ruby-button">Clear Ruby</button><br />
+              <button type="button" onClick={this.handleClearRuby} >Clear Ruby</button><br />
+              {/*
               <input className="set-ruby-text" placeholder="Ruby text" /><button type="button" className="set-ruby-button">Set Ruby</button><br />
               <button type="button" className="clear-words-button">Clear Words</button><br />
               <input className="mark-word-lemma" placeholder="Lemma (if not base form)" /><button type="button" className="mark-word-button">Mark Word</button>
+              */}
             </form>
           ) : ''}
-          */}
         </div>
         <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
       </div>
@@ -408,10 +414,10 @@ class AnnoText extends Component {
   }
 }
 
-const TextChunksBox = ({ chunks, language, hidden, onChunkSelectionChange }) => (
+const TextChunksBox = ({ chunks, language, hidden, onChunkSelectionChange, onChunkSetAnnoText }) => (
   <div className="studied-text-box">
     <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onSelectionChange={s => { onChunkSelectionChange(c.uid, s); }} />))}</div>
+    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onSelectionChange={s => { onChunkSelectionChange(c.uid, s); }} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} />))}</div>
   </div>
 );
 
@@ -493,7 +499,7 @@ class Source extends Component {
   };
 
   render() {
-    const { source, onExit, deckBriefs, snipDeckId, onSetSnipDeckId } = this.props;
+    const { source, onExit, deckBriefs, snipDeckId, onSetSnipDeckId, onSourceSetChunkAnnoText } = this.props;
 
     // Sanity check on snipDeckId integrity
     if (deckBriefs.isEmpty()) {
@@ -522,7 +528,7 @@ class Source extends Component {
           </select>
           <button type="button" onClick={this.handleSnip} {...(deckBriefs.isEmpty() ? {disabled: true} : {})}>Snip</button>
         </form>
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} />)}
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} onChunkSetAnnoText={(chunkId, newAnnoText) => { onSourceSetChunkAnnoText(source.id, i, chunkId, newAnnoText); }} />)}
       </div>
     );
   }
@@ -683,7 +689,7 @@ class App extends Component {
         </div>
       )
     } else if (this.state.viewingMode === 'source') {
-      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} />
+      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} onSourceSetChunkAnnoText={actions.sourceSetChunkAnnoText} />
     } else if (this.state.viewingMode === 'deck') {
       return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onDeleteSnip={(snipId) => { actions.deleteSnip(this.state.viewingId, snipId); }} />
     }

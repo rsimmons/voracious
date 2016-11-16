@@ -66,3 +66,7 @@ export const getChunksAtTime = (chunkSet, time) => {
 
   return List(result);
 };
+
+export const setChunkAnnoText = (chunkSet, chunkId, newAnnoText) => {
+  return chunkSet.setIn(['chunkMap', chunkId, 'annoText'], newAnnoText);
+};
