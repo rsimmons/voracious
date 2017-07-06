@@ -70,6 +70,10 @@ ul {
   background-color: #aaf;
 }
 
+.annotext-marked {
+  background-color: #8ff;
+}
+
 .textchar-tooltip {
   position: absolute;
   bottom: 150%;

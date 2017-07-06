@@ -299,11 +299,20 @@ class AnnoText extends Component {
   handleSetRuby = () => {
     const { annoText, onUpdate } = this.props;
     const rubyText = this.setRubyTextInput.value.trim();
-    let newAnnoText = clearKindInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd, 'ruby');
+    const {cpBegin, cpEnd} = this.state.selectionRange;
+    let newAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'ruby');
     if (rubyText !== '') {
-      newAnnoText = addAnnotation(newAnnoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd, 'ruby', rubyText);
+      newAnnoText = addAnnotation(newAnnoText, cpBegin, cpEnd, 'ruby', rubyText);
     }
-    this.props.onUpdate(newAnnoText);
+    onUpdate(newAnnoText);
+    this.clearSelection();
+  };
+
+  handleAddMark = () => {
+    const { annoText, onUpdate } = this.props;
+    const {cpBegin, cpEnd} = this.state.selectionRange;
+    let newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'mark', null);
+    onUpdate(newAnnoText);
     this.clearSelection();
   };
 
@@ -348,6 +357,8 @@ class AnnoText extends Component {
           return [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>];
         } else if (a.kind === 'selection') {
           return [<span key={`selection-${a.cpBegin}:${a.cpEnd}`} className='annotext-selected'>{inner}</span>];
+        } else if (a.kind === 'mark') {
+          return [<span key={`mark-${a.cpBegin}:${a.cpEnd}`} className='annotext-marked'>{inner}</span>];
         } else {
           return inner;
         }
@@ -397,6 +408,7 @@ class AnnoText extends Component {
           {(this.state.selectionRange && onUpdate) ? (
             <form>
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
+              <button type="button" onClick={this.handleAddMark} >Add Mark</button>
               {/*
               <button type="button" className="clear-words-button">Clear Words</button><br />
               <input className="mark-word-lemma" placeholder="Lemma (if not base form)" /><button type="button" className="mark-word-button">Mark Word</button>
