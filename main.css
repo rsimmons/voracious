@@ -56,7 +56,10 @@ ul {
 
 .textchar.inspected {
   position: relative;
-  background-color: #0f0;
+}
+
+.textchar.selected {
+  background-color: #33ff33;
 }
 
 .textchar.highlighted {

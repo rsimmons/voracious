@@ -208,6 +208,7 @@ class AnnoText extends Component {
       inspectedIndex: null, // codepoint index of char we're doing a "tooltip" for
     };
     this.tooltipTimeout = null; // it does not work to have this in state
+    this.dragStartIndex = null; // codepoint index of character that mousedown happened on, if mouse is still down
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -215,11 +216,11 @@ class AnnoText extends Component {
   }
 
   componentDidMount() {
-    document.addEventListener('selectionchange', this.handleSelectionChange);
   }
 
   componentWillUnmount() {
-    document.removeEventListener('selectionchange', this.handleSelectionChange);
+    document.removeEventListener('mouseup', this.handleMouseUp);
+
     this.clearTooltipTimeout();
     if (this.props.onSelectionChange && this.state.selectionRange) {
       this.props.onSelectionChange(null);
@@ -243,58 +244,7 @@ class AnnoText extends Component {
     );
   }
 
-  currentSelectionIndexRange() {
-    const selObj = window.getSelection();
-    if (selObj.isCollapsed) {
-      return null;
-    } else {
-      const selRange = selObj.getRangeAt(0);
-      const ancestorNode = selRange.commonAncestorContainer;
-      if (isAncestorNode(this.textContainerElem, ancestorNode)) {
-        const frag = selRange.cloneContents();
-
-        if (ancestorNode.nodeType === Node.TEXT_NODE) {
-          // If we selected text that is inside any element, we'll get a text node.
-          // It might not be useful text (might be furigana), so need to check what element it's inside.
-          // For now we can assume that its immediate parent will be a .textchar element if it's a good character.
-          const parent = ancestorNode.parentNode;
-          if (parent.classList.contains('textchar')) {
-            const cpIndex = +parent.getAttribute('data-index');
-            return new CPRange({cpBegin: cpIndex, cpEnd: cpIndex+1});
-          } else {
-            return null;
-          }
-        } else {
-          const cpIndexes = [];
-
-          // Iterate over all .textchar elems inside the fragment
-          for (const el of frag.querySelectorAll('.textchar')) {
-            // We might get extraneous .textchar elems that have nothing inside them. Only consider ones that have text inside.
-            if (el.textContent.length > 0) {
-              const cpIndex = +el.getAttribute('data-index');
-              cpIndexes.push(cpIndex);
-            }
-          }
-
-          if (cpIndexes.length === 0) {
-            return null;
-          } else {
-            var minIndex = Math.min(...cpIndexes);
-            var maxIndex = Math.max(...cpIndexes);
-            if ((minIndex !== cpIndexes[0]) || (maxIndex !== cpIndexes[cpIndexes.length-1])) {
-              throw new Error('Unexpected');
-            }
-            return new CPRange({cpBegin: minIndex, cpEnd: maxIndex+1});
-          }
-        }
-      } else {
-        return null;
-      }
-    }
-  }
-
-  handleSelectionChange = (e) => {
-    const newSelRange = this.currentSelectionIndexRange();
+  setSelRange = (newSelRange) => {
     if (!Immutable.is(newSelRange, this.state.selectionRange)) {
       this.setState({selectionRange: newSelRange});
     }
@@ -303,9 +253,42 @@ class AnnoText extends Component {
     }
   };
 
+  clearSelection = () => {
+    this.setSelRange(null);
+  }
+
+  setSelection = (begin, end) => {
+    this.setSelRange(new CPRange({cpBegin: begin, cpEnd: end}));
+  }
+
+  handleMouseUp = (e) => {
+    this.dragStartIndex = null;
+    document.removeEventListener('mouseup', this.handleMouseUp);
+  };
+
+  handleCharMouseDown = (e) => {
+    e.preventDefault();
+    const cpIndex = +e.currentTarget.getAttribute('data-index');
+    this.dragStartIndex = cpIndex;
+    if (this.state.selectionRange && (cpIndex >= this.state.selectionRange.cpBegin) && (cpIndex < this.state.selectionRange.cpEnd)) {
+      this.clearSelection();
+    } else {
+      this.setSelection(cpIndex, cpIndex+1);
+    }
+    document.addEventListener('mouseup', this.handleMouseUp);
+  };
+
   handleCharMouseEnter = (e) => {
     const cpIndex = +e.currentTarget.getAttribute('data-index');
     this.setState({inspectedIndex: cpIndex});
+    if (this.dragStartIndex !== null) {
+      let a = this.dragStartIndex;
+      let b = cpIndex;
+      if (b < a) {
+        [a, b] = [b, a];
+      }
+      this.setSelection(a, b+1);
+    }
     this.clearTooltipTimeout();
   };
 
@@ -313,10 +296,15 @@ class AnnoText extends Component {
     this.setTooltipTimeout();
   };
 
-  handleClearRuby = () => {
+  handleSetRuby = () => {
     const { annoText, onUpdate } = this.props;
-    this.props.onUpdate(clearKindInRange(annoText, 'ruby', this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd));
-    window.getSelection().removeAllRanges();
+    const rubyText = this.setRubyTextInput.value.trim();
+    let newAnnoText = clearKindInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd, 'ruby');
+    if (rubyText !== '') {
+      newAnnoText = addAnnotation(newAnnoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd, 'ruby', rubyText);
+    }
+    this.props.onUpdate(newAnnoText);
+    this.clearSelection();
   };
 
   render() {
@@ -346,6 +334,12 @@ class AnnoText extends Component {
         }
       });
     }
+    const selectedIndexes = new Set();
+    if (this.state.selectionRange) {
+      for (let i = this.state.selectionRange.cpBegin; i < this.state.selectionRange.cpEnd; i++) {
+        selectedIndexes.add(i);
+      }
+    }
 
     const annoTextChildren = annoTextCustomRender(
       annoText,
@@ -371,11 +365,14 @@ class AnnoText extends Component {
           const classNames = ['textchar'];
           if (isInspected) {
             classNames.push('inspected');
+          }
+          if (selectedIndexes.has(i)) {
+            classNames.push('selected');
           } else if (hitLemmaIndexes.has(i)) {
             classNames.push('highlighted');
           }
 
-          return <span className={classNames.join(' ')} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
+          return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
         }
       }
     );
@@ -399,9 +396,8 @@ class AnnoText extends Component {
           <ClipboardCopier text={annoTextHTML} buttonText="Copy HTML" />
           {(this.state.selectionRange && onUpdate) ? (
             <form>
-              <button type="button" onClick={this.handleClearRuby} >Clear Ruby</button><br />
+              <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
               {/*
-              <input className="set-ruby-text" placeholder="Ruby text" /><button type="button" className="set-ruby-button">Set Ruby</button><br />
               <button type="button" className="clear-words-button">Clear Words</button><br />
               <input className="mark-word-lemma" placeholder="Lemma (if not base form)" /><button type="button" className="mark-word-button">Mark Word</button>
               */}
