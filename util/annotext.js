@@ -34,8 +34,8 @@ export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
   return new AnnotatedText({text: annoText.text, annotations: annoText.annotations.push(new Annotation({cpBegin, cpEnd, kind, data}))});
 };
 
-export const clearKindInRange = (annoText, kind, cpBegin, cpEnd) => {
-  return annoText.update('annotations', annotations => annotations.filter(anno => ((anno.cpEnd <= cpBegin) || (anno.cpBegin >= cpEnd))));
+export const clearKindInRange = (annoText, cpBegin, cpEnd, kind) => {
+  return annoText.update('annotations', annotations => annotations.filter(anno => ((anno.kind !== kind) || (anno.cpEnd <= cpBegin) || (anno.cpBegin >= cpEnd))));
 };
 
 export const getKindAtIndex = (annoText, kind, cpIndex) => {
