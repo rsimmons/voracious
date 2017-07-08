@@ -1,10 +1,9 @@
 import assert from 'assert';
-import { Record, Map, OrderedMap, List } from 'immutable';
+import { Record, OrderedMap, List } from 'immutable';
 
 import genUID from './util/uid';
-import { startsWith, removePrefix } from './util/string';
+import { removePrefix } from './util/string';
 import { parseSRT } from './util/subtitles';
-import { toJS as annoTextToJS, fromJS as annoTextFromJS } from './util/annotext';
 import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText } from './util/chunk';
 import createStorageBackend from './storage';

@@ -1,6 +1,7 @@
 import { hiraToKata, kataToHira, anyCharIsKana } from '../util/japanese';
 import DiffMatchPatch from 'diff-match-patch';
 import { Annotation, create as createAnnoText } from './annotext';
+/*global kuromoji*/ // this is loaded by script tag in index.html
 
 const dmp = new DiffMatchPatch();
 

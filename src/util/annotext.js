@@ -1,4 +1,4 @@
-import { Record, Map, List, OrderedMap } from 'immutable';
+import { Record, List, OrderedMap } from 'immutable';
 
 // in order of priority
 const validKinds = new OrderedMap({
@@ -144,7 +144,6 @@ export const customRender = (annoText, wrap, xformChar) => {
 
   splitAnnos.sort(nestingAnnoSortFunc);
 
-  let pieces = [];
   const textArr = [...annoText.text.trim()]; // split up by unicode chars
   let idx = 0;
 

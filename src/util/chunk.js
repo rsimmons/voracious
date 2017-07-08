@@ -1,6 +1,5 @@
-import {Record, Map, List, fromJS} from 'immutable';
+import {Record, Map, List} from 'immutable';
 import genUID from './uid';
-import escape from 'escape-html';
 
 const RangePosition = new Record({
   begin: null,

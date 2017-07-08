@@ -1,19 +1,19 @@
+import React, { Component, PureComponent } from 'react';
+import './App.css';
 import assert from 'assert';
 import escape from 'escape-html';
-import React, { Component, PropTypes } from 'react';
-import Immutable, { Record, Map } from 'immutable';
-import { createSelector } from 'reselect';
-import shallowCompare from 'react-addons-shallow-compare';
+import Immutable, { Record } from 'immutable';
+// import { createSelector } from 'reselect';
 
-import { getKindAtIndex, getKind, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender, clearKindInRange } from '../util/annotext';
-import { getChunksAtTime, getChunksInRange, iteratableChunks } from '../util/chunk';
+import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange } from './util/annotext';
+import { getChunksAtTime, getChunksInRange, iteratableChunks } from './util/chunk';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
   { value: 'en', label: 'English' },
 ];
 
-const newlinesToBrs = s => s.split('\n').map((o, i) => <span key={i}>{o}<br/></span>);
+// const newlinesToBrs = s => s.split('\n').map((o, i) => <span key={i}>{o}<br/></span>);
 
 // Select, "uncontrolled" but watches changes
 class Select extends Component {
@@ -187,26 +187,12 @@ class PlayControls extends Component {
   }
 }
 
-const isAncestorNode = (potentialAncestor, given) => {
-  let n = given;
-  while (true) {
-    if (n === potentialAncestor) {
-      return true;
-    }
-    if (n.parentNode) {
-      n = n.parentNode;
-    } else {
-      return false;
-    }
-  }
-}
-
 const CPRange = new Record({
   cpBegin: null,
   cpEnd: null,
 });
 
-class AnnoText extends Component {
+class AnnoText extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -215,10 +201,6 @@ class AnnoText extends Component {
     };
     this.tooltipTimeout = null; // it does not work to have this in state
     this.dragStartIndex = null; // codepoint index of character that mousedown happened on, if mouse is still down
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    return shallowCompare(this, nextProps, nextState);
   }
 
   componentDidMount() {

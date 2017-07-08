@@ -11,12 +11,9 @@ Voracious is a power tool for foreign language learners to get the most out of w
 ## Running in development mode
 
 ```
-npm install
-npm run build
-python -m SimpleHTTPServer
+yarn
+yarn start
 ```
-
-Browse to http://localhost:8000/
 
 ## Getting Started
 
