@@ -6,7 +6,7 @@ import { createSelector } from 'reselect';
 import shallowCompare from 'react-addons-shallow-compare';
 
 import { getKindAtIndex, getKind, addAnnotation, concat as concatAnnoTexts, customRender as annoTextCustomRender, clearKindInRange } from '../util/annotext';
-import { getChunksAtTime } from '../util/chunk';
+import { getChunksAtTime, getChunksInRange, iteratableChunks } from '../util/chunk';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -222,9 +222,6 @@ class AnnoText extends Component {
     document.removeEventListener('mouseup', this.handleMouseUp);
 
     this.clearTooltipTimeout();
-    if (this.props.onSelectionChange && this.state.selectionRange) {
-      this.props.onSelectionChange(null);
-    }
   }
 
   clearTooltipTimeout() {
@@ -247,9 +244,6 @@ class AnnoText extends Component {
   setSelRange = (newSelRange) => {
     if (!Immutable.is(newSelRange, this.state.selectionRange)) {
       this.setState({selectionRange: newSelRange});
-    }
-    if (this.props.onSelectionChange) {
-      this.props.onSelectionChange(newSelRange);
     }
   };
 
@@ -308,16 +302,17 @@ class AnnoText extends Component {
     this.clearSelection();
   };
 
-  handleAddMark = () => {
+  handleAddHighlight = () => {
     const { annoText, onUpdate } = this.props;
     const {cpBegin, cpEnd} = this.state.selectionRange;
-    let newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'mark', null);
+    // TODO: the data for the annotation should be immutable, a Record
+    let newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'highlight', {timeCreated: Date.now(), setId: this.props.activeSetId});
     onUpdate(newAnnoText);
     this.clearSelection();
   };
 
   render() {
-    const { annoText, language, onUpdate } = this.props;
+    const { annoText, language, onUpdate, setBriefs, activeSetId, onSetActiveSetId } = this.props;
 
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
@@ -355,10 +350,8 @@ class AnnoText extends Component {
       (a, inner) => {
         if (a.kind === 'ruby') {
           return [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>];
-        } else if (a.kind === 'selection') {
-          return [<span key={`selection-${a.cpBegin}:${a.cpEnd}`} className='annotext-selected'>{inner}</span>];
-        } else if (a.kind === 'mark') {
-          return [<span key={`mark-${a.cpBegin}:${a.cpEnd}`} className='annotext-marked'>{inner}</span>];
+        } else if (a.kind === 'highlight') {
+          return [<span key={`highlight-${a.cpBegin}:${a.cpEnd}`} className='annotext-highlight'>{inner}</span>];
         } else {
           return inner;
         }
@@ -380,7 +373,7 @@ class AnnoText extends Component {
           if (selectedIndexes.has(i)) {
             classNames.push('selected');
           } else if (hitLemmaIndexes.has(i)) {
-            classNames.push('highlighted');
+            classNames.push('word');
           }
 
           return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
@@ -408,11 +401,10 @@ class AnnoText extends Component {
           {(this.state.selectionRange && onUpdate) ? (
             <form>
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
-              <button type="button" onClick={this.handleAddMark} >Add Mark</button>
-              {/*
-              <button type="button" className="clear-words-button">Clear Words</button><br />
-              <input className="mark-word-lemma" placeholder="Lemma (if not base form)" /><button type="button" className="mark-word-button">Mark Word</button>
-              */}
+              <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
+                {setBriefs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <button type="button" onClick={this.handleAddHighlight} {...(setBriefs.isEmpty() ? {disabled: true} : {})}>Highlight</button>
             </form>
           ) : ''}
         </div>
@@ -422,10 +414,10 @@ class AnnoText extends Component {
   }
 }
 
-const TextChunksBox = ({ chunks, language, hidden, onChunkSelectionChange, onChunkSetAnnoText }) => (
+const TextChunksBox = ({ chunks, language, hidden, onChunkSetAnnoText, setBriefs, activeSetId, onSetActiveSetId }) => (
   <div className="studied-text-box">
     <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onSelectionChange={s => { onChunkSelectionChange(c.uid, s); }} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} />))}</div>
+    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />))}</div>
   </div>
 );
 
@@ -436,7 +428,6 @@ class Source extends Component {
     this.videoMediaComponent = undefined;
     this.state = {
       textRevelation: props.source.texts.size + 1, // reveal all texts to start
-      chunkSelections: new Map(), // chunkId -> CPRange
     };
   }
 
@@ -474,47 +465,8 @@ class Source extends Component {
     this.setState({textRevelation: Math.min(this.state.textRevelation + 1, this.props.source.texts.size)});
   };
 
-  handleSnip = () => {
-    // TODO: we could check if there are any chunk ids in this.state.chunkSelections that shouldn't be there
-
-    const snipTexts = [];
-    for (const text of this.props.source.texts) {
-      const annoTexts = [];
-
-      for (const chunk of getChunksAtTime(text.chunkSet, this.props.source.viewPosition)) {
-        if (this.state.chunkSelections.has(chunk.uid)) {
-          const r = this.state.chunkSelections.get(chunk.uid);
-          annoTexts.push(addAnnotation(chunk.annoText, r.cpBegin, r.cpEnd, 'selection', null));
-        } else {
-          annoTexts.push(chunk.annoText);
-        }
-      }
-
-      snipTexts.push({
-        language: text.language,
-        annoText: concatAnnoTexts(annoTexts),
-      });
-    }
-    this.props.onAddSnip(this.props.snipDeckId, snipTexts);
-  };
-
-  handleChunkSelectionChange = (chunkId, selection) => {
-    if (selection) {
-      this.setState({chunkSelections: this.state.chunkSelections.set(chunkId, selection)});
-    } else {
-      this.setState({chunkSelections: this.state.chunkSelections.delete(chunkId)});
-    }
-  };
-
   render() {
-    const { source, onExit, deckBriefs, snipDeckId, onSetSnipDeckId, onSourceSetChunkAnnoText } = this.props;
-
-    // Sanity check on snipDeckId integrity
-    if (deckBriefs.isEmpty()) {
-      assert(!snipDeckId);
-    } else {
-      assert(deckBriefs.some(d => (d.id === snipDeckId)));
-    }
+    const { source, onExit, setBriefs, activeSetId, onSetActiveSetId, onSourceSetChunkAnnoText } = this.props;
 
     return (
       <div>
@@ -530,26 +482,61 @@ class Source extends Component {
         </div>
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
-        <form style={{ textAlign: 'center', margin: '10px auto' }}>
-          <select value={snipDeckId} onChange={e => onSetSnipDeckId(e.target.value)}>
-            {deckBriefs.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-          <button type="button" onClick={this.handleSnip} {...(deckBriefs.isEmpty() ? {disabled: true} : {})}>Snip</button>
-        </form>
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i} onChunkSelectionChange={this.handleChunkSelectionChange} onChunkSetAnnoText={(chunkId, newAnnoText) => { onSourceSetChunkAnnoText(source.id, i, chunkId, newAnnoText); }} />)}
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSourceSetChunkAnnoText(source.id, i, chunkId, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
       </div>
     );
   }
 }
 
-// Deck
-class Deck extends Component {
-  handleDeleteSnip = (snipId) => {
-    if (window.confirm('Are you sure you want to delete this snip?')) {
-      this.props.onDeleteSnip(snipId);
-    }
-  };
+function findSourceHighlightsWithContext(source, highlightSetId) {
+  const contexts = [];
+  for (const text of source.texts) {
+    for (const chunk of iteratableChunks(text.chunkSet)) {
+      const hls = getKind(chunk.annoText, 'highlight');
+      if (hls.some(a => (a.data.setId === highlightSetId))) {
+        // There are some highlights matching the given set id
 
+        // Pull related chunks+texts from other text tracks (translations, generally)
+        const secondaryAnnoTexts = []; // list of {language, annoTexts: [annoText...]}
+        for (const otherText of source.texts) {
+          if (otherText === text) {
+            continue;
+          }
+          const otherChunks = getChunksInRange(otherText.chunkSet, chunk.position.begin, chunk.position.end);
+          // TODO: sort otherChunks by time, if not already
+          const otherChunkTexts = [];
+          for (const otherChunk of otherChunks) {
+            otherChunkTexts.push(otherChunk.annoText);
+          }
+          if (otherChunkTexts.length > 0) {
+            secondaryAnnoTexts.push({language: otherText.language, annoTexts: otherChunkTexts});
+          }
+        }
+
+        contexts.push({
+          primaryAnnoText: chunk.annoText, // this one has highlights
+          primaryLanguage: text.language,
+          secondaryAnnoTexts: secondaryAnnoTexts, // list of {language, annoTexts: [annoText...]}
+        });
+      }
+    }
+  }
+
+  return contexts;
+}
+
+function findAllHighlightsWithContext(sources, highlightSetId) {
+  let result = [];
+
+  for (const source of sources) {
+    result = result.concat(findSourceHighlightsWithContext(source, highlightSetId));
+  }
+
+  return result;
+}
+
+// HighlightSet
+class HighlightSet extends Component {
   handleExportTSV = () => {
     function download(content, filename, contentType) {
       const a = document.createElement('a');
@@ -597,19 +584,25 @@ class Deck extends Component {
   };
 
   render() {
-    const { deck, onExit } = this.props;
+    const { highlightSet, sources, onExit } = this.props;
+
+    const contexts = findAllHighlightsWithContext(sources, highlightSet.id);
+
     return (
       <div>
-        <div>{deck.name} <small>{deck.id}</small></div>
+        <div>{highlightSet.name} <small>{highlightSet.id}</small></div>
         <div>
-          <button onClick={this.handleExportTSV}>Export TSV</button>
+          <button onClick={this.handleExportTSV} disabled>Export TSV</button>
           <button onClick={onExit}>Exit To Top</button>
         </div>
-        <div>{deck.snips.toArray().map((snip) => (
-          <div key={snip.id}>
-            <p>snip id {snip.id} {(new Date(snip.timeCreated)).toLocaleString()} <button onClick={() => { this.handleDeleteSnip(snip.id); }}>Delete</button></p>
-            <div>{snip.texts.map((snipText, i) => (
-              <AnnoText key={i} annoText={snipText.annoText} language={snipText.language} />
+        <div>{contexts.map((context, i) => (
+          <div key={i}>
+            <p>{i} {/*(new Date(timeCreated)).toLocaleString()*/}</p>
+            <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
+            <div>{context.secondaryAnnoTexts.map((sec, i) => (
+              <div key={i}>{sec.annoTexts.map((t, i) => (
+                <AnnoText key={i} annoText={t} language={sec.language} />
+              ))}</div>
             ))}</div>
           </div>
         ))}</div>
@@ -619,31 +612,31 @@ class Deck extends Component {
 }
 
 // NewDeckForm
-class NewDeckForm extends Component {
+class NewHighlightSetForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      deckName: '',
+      setName: '',
     };
   }
 
   handleNameChange = (e) => {
-    this.setState({deckName: e.target.value});
+    this.setState({setName: e.target.value});
   };
 
   handleSubmit = (e) => {
     e.preventDefault();
-    this.props.onNewDeck(this.state.deckName.trim());
-    this.setState({deckName: ''});
+    this.props.onNewHighlightSet(this.state.setName.trim());
+    this.setState({setName: ''});
   };
 
   render() {
-    const nameIsValid = this.state.deckName && (this.state.deckName.trim() !== '');
+    const nameIsValid = this.state.setName && (this.state.setName.trim() !== '');
 
     return (
       <form onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="New Deck Name" value={this.state.deckName} onChange={this.handleNameChange} />
-        <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Deck</button>
+        <input type="text" placeholder="New Set Name" value={this.state.setName} onChange={this.handleNameChange} />
+        <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Set</button>
       </form>
     );
   }
@@ -663,10 +656,18 @@ class App extends Component {
     const { mainState, actions } = this.props;
 
     // TODO: wrap in selector
-    const deckBriefs = mainState.decks.valueSeq().map(deck => ({
-      id: deck.id,
-      name: deck.name,
+    const setBriefs = mainState.highlightSets.valueSeq().map(s => ({
+      id: s.id,
+      name: s.name,
     }));
+
+    // Sanity check on activeSetId integrity
+    // TODO: move this into model
+    if (setBriefs.isEmpty()) {
+      assert(!mainState.activeHighlightSetId);
+    } else {
+      assert(setBriefs.some(s => (s.id === mainState.activeHighlightSetId)));
+    }
 
     if (mainState.loading) {
       return <h1>Loading...</h1>;
@@ -684,22 +685,22 @@ class App extends Component {
             ))}
           </div>
           <div>
-            <h2>Decks</h2>
-            <NewDeckForm onNewDeck={actions.createDeck} />
-            {mainState.decks.valueSeq().map((d) => (
-              <div key={d.id}>
-                {d.name} <small>[{d.id}]</small>
-                <button onClick={() => { this.setState({viewingMode: 'deck', viewingId: d.id}); }}>View</button>
-                <button onClick={() => { if (window.confirm('Delete deck "' + d.name + '"?')) { actions.deleteDeck(d.id); } }}>Delete</button>
+            <h2>Highlights</h2>
+            <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
+            {mainState.highlightSets.valueSeq().map((s) => (
+              <div key={s.id}>
+                {s.name} <small>[{s.id}]</small>
+                <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
+                <button onClick={() => { if (window.confirm('Delete set "' + s.name + '"?')) { actions.deleteHighlightSet(s.id); } }} disabled>Delete</button>
               </div>
             ))}
           </div>
         </div>
       )
     } else if (this.state.viewingMode === 'source') {
-      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} deckBriefs={deckBriefs} snipDeckId={mainState.snipDeckId} onSetSnipDeckId={actions.setSnipDeckId} onAddSnip={actions.addSnip} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} onSourceSetChunkAnnoText={actions.sourceSetChunkAnnoText} />
-    } else if (this.state.viewingMode === 'deck') {
-      return <Deck actions={actions} deck={mainState.decks.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onDeleteSnip={(snipId) => { actions.deleteSnip(this.state.viewingId, snipId); }} />
+      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} onSourceSetChunkAnnoText={actions.sourceSetChunkAnnoText} />
+    } else if (this.state.viewingMode === 'set') {
+      return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
     }
   }
 }

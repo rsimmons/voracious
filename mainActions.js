@@ -15,8 +15,8 @@ const jpar = JSON.parse; // alias
 const MainStateRecord = new Record({
   loading: false,
   sources: new OrderedMap(), // id -> SourceRecord
-  decks: new OrderedMap(), // id -> DeckRecord
-  snipDeckId: undefined, // should be undefined or a valid deck id
+  highlightSets: new OrderedMap(), // id -> HighlightSetRecord
+  activeHighlightSetId: undefined, // should be undefined or a valid set id
 });
 
 const SourceRecord = new Record({
@@ -38,21 +38,9 @@ const SourceTextRecord = new Record({
   chunkSet: undefined,
 });
 
-const DeckRecord = new Record({
+const HighlightSetRecord = new Record({
   id: undefined,
   name: undefined,
-  snips: new OrderedMap(), // id -> SnipRecord
-});
-
-const SnipRecord = new Record({
-  id: undefined,
-  timeCreated: undefined,
-  texts: new List(), // List of SnipTextRecord
-});
-
-const SnipTextRecord = new Record({
-  annoText: undefined,
-  language: undefined,
 });
 
 export default class MainActions {
@@ -72,7 +60,7 @@ export default class MainActions {
         return this.storage.setItems([
           ['version', '0'],
           ['root', jstr({profiles: ['1']})], // start with a single profile, id '1'
-          ['profile:1', jstr({name: 'default', decks: []})],
+          ['profile:1', jstr({name: 'default', highlightSets: []})],
         ]);
       }
     }).then(() => {
@@ -84,27 +72,26 @@ export default class MainActions {
       return this.storage.getItem('profile:1');
     }).then(profileStr => {
       const profile = jpar(profileStr);
-      return this.storage.getItems(profile.decks.map(i => ('deck:'+i)));
-    }).then(deckStrs => {
-      const mutDecks = {};
-      for (const [k, v] of deckStrs) {
-        const deckId = removePrefix(k, 'deck:');
-        const deckObj = jpar(v);
-        const deck = new DeckRecord({
-          id: deckId,
-          name: deckObj.name,
-          snips: new OrderedMap(deckObj.snips.map(snip => [snip.id, new SnipRecord({id: snip.id, timeCreated: snip.timeCreated, texts: new List(snip.texts.map(stext => new SnipTextRecord({annoText: annoTextFromJS(stext.annoText), language: stext.language})))})])),
+      return this.storage.getItems(profile.highlightSets.map(i => ('highlightSet:'+i)));
+    }).then(setStrs => {
+      const mutSets = {};
+      for (const [k, v] of setStrs) {
+        const setId = removePrefix(k, 'highlightSet:');
+        const setObj = jpar(v);
+        const set = new HighlightSetRecord({
+          id: setId,
+          name: setObj.name,
         });
-        mutDecks[deckId] = deck;
+        mutSets[setId] = set;
       }
       this.state.set(this.state.get()
         .set('loading', false)
-        .set('decks', new OrderedMap(mutDecks))
+        .set('highlightSets', new OrderedMap(mutSets))
       );
 
-      // Set snipDeckId to just be first deck, for now
-      const firstDeckId = this.state.get().decks.keySeq().get(0);
-      this.state.set(this.state.get().set('snipDeckId', firstDeckId));
+      // Set activeHighlightSetId to just be first set, for now
+      const firstHighlightSetId = this.state.get().highlightSets.keySeq().get(0);
+      this.state.set(this.state.get().set('activeHighlightSetId', firstHighlightSetId));
     });
   }
 
@@ -155,6 +142,7 @@ export default class MainActions {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
   };
 
+/*
   _storageUpdateKeyJSON = (key, update) => {
     return this.storage.getItem(key).then(value => {
       const obj = jpar(value);
@@ -163,61 +151,47 @@ export default class MainActions {
     });
   };
 
-  _storageSaveDeck = (deckId) => {
-    const iDeck = this.state.get().decks.get(deckId);
-    const deck = {name: iDeck.name, snips: iDeck.snips.valueSeq().map(snip => ({id: snip.id, timeCreated: snip.timeCreated, texts: snip.texts.toArray().map(text => ({annoText: annoTextToJS(text.annoText), language: text.language}))}))};
-    return this.storage.setItem('deck:' + deckId, jstr(deck));
+  _storageSaveHighlightSet = (setId) => {
+    const iSet = this.state.get().highlightSets.get(setId);
+    const set = {name: iSet.name};
+    return this.storage.setItem('highlightSet:' + setId, jstr(set));
   };
+*/
 
-  createDeck = (name) => {
-    const deckId = genUID();
+  createHighlightSet = (name) => {
+    const setId = genUID();
 
     assert(name === name.trim());
     assert(name.length > 0);
 
-    this.state.set(this.state.get().setIn(['decks', deckId], new DeckRecord({
-      id: deckId,
+    this.state.set(this.state.get().setIn(['highlightSets', setId], new HighlightSetRecord({
+      id: setId,
       name: name,
     })));
 
-    if (!this.state.get().snipDeckId) {
-      this.state.set(this.state.get().set('snipDeckId', deckId));
+    if (!this.state.get().activeHighlightSetId) {
+      this.state.set(this.state.get().set('activeHighlightSetId', setId));
     }
 
-    this._storageSaveDeck(deckId).then(() => {
-      return this._storageUpdateKeyJSON('profile:1', profile => { profile.decks.push(deckId); return profile; });
+/*
+    this._storageSaveHighlightSet(setId).then(() => {
+      return this._storageUpdateKeyJSON('profile:1', profile => { profile.highlightSets.push(setId); return profile; });
     });
+*/
   };
 
-  deleteDeck = (deckId) => {
-    this.state.set(this.state.get().deleteIn(['decks', deckId]));
-
+  deleteHighlightSet = (setId) => {
+    this.state.set(this.state.get().deleteIn(['highlightSets', setId]));
+    // TODO: update activeHighlightSetId
+/*
     this.storage.removeItem('deck:' + deckId).then(() => {
       return this._storageUpdateKeyJSON('profile:1', profile => { profile.decks = profile.decks.filter(i => (i !== deckId)); return profile; });
     });
+*/
   };
 
-  setSnipDeckId = (deckId) => {
-    // TODO: verify deckId exists
-    this.state.set(this.state.get().set('snipDeckId', deckId));
-  };
-
-  addSnip = (deckId, texts) => {
-    const snipId = genUID();
-    const snipTexts = new List(texts.map(t => new SnipTextRecord({annoText: t.annoText, language: t.language})));
-
-    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.set(snipId, new SnipRecord({
-      id: snipId,
-      timeCreated: Date.now(),
-      texts: snipTexts,
-    }))));
-
-    this._storageSaveDeck(deckId);
-  };
-
-  deleteSnip = (deckId, snipId) => {
-    this.state.set(this.state.get().updateIn(['decks', deckId, 'snips'], snips => snips.delete(snipId)));
-
-    this._storageSaveDeck(deckId);
+  setActiveHighlightSetId = (setId) => {
+    // TODO: verify setId exists
+    this.state.set(this.state.get().set('activeHighlightSetId', setId));
   };
 };

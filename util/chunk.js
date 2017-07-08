@@ -48,6 +48,10 @@ export const createTimeRangeChunkSet = (chunks) => {
   });
 };
 
+export const iteratableChunks = (chunkSet) => {
+  return chunkSet.chunkMap.values();
+};
+
 export const getChunksAtTime = (chunkSet, time) => {
   const it = Math.floor(time);
   const index = chunkSet.index;
@@ -59,11 +63,35 @@ export const getChunksAtTime = (chunkSet, time) => {
   const result = [];
   for (const cid of index.get(it)) {
     const c = chunkSet.chunkMap.get(cid);
-    if ((time >= c.position.begin) && (time <= c.position.end)) {
+    if ((time >= c.position.begin) && (time < c.position.end)) {
       result.push(c);
     }
   }
 
+  return List(result);
+};
+
+export const getChunksInRange = (chunkSet, begin, end) => {
+  const iBegin = Math.floor(begin);
+  const iEnd = Math.floor(end);
+  const index = chunkSet.index;
+  const resultCids = {}; // NOTE: this is hacky, should use Set or something
+
+  for (let i = iBegin; i <= iEnd; i++) {
+    if (index.has(i)) {
+      for (const cid of index.get(i)) {
+        const c = chunkSet.chunkMap.get(cid);
+        if ((end > c.position.begin) && (begin < c.position.end)) {
+          resultCids[cid] = null;
+        }
+      }
+    }
+  }
+
+  const result = [];
+  for (const cid in resultCids) {
+    result.push(chunkSet.chunkMap.get(cid));
+  }
   return List(result);
 };
 

@@ -62,15 +62,11 @@ ul {
   background-color: #33ff33;
 }
 
-.textchar.highlighted {
+.textchar.word {
   background-color: #afa;
 }
 
-.annotext-selected {
-  background-color: #aaf;
-}
-
-.annotext-marked {
+.annotext-highlight {
   background-color: #8ff;
 }
 

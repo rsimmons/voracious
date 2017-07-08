@@ -3,9 +3,8 @@ import { Record, Map, List, OrderedMap } from 'immutable';
 // in order of priority
 const validKinds = new OrderedMap({
   'ruby': {priority: 0},
-  'selection': {priority: 1},
-  'mark': {priority: 2},
-  'lemma': {priority: 3},
+  'highlight': {priority: 1},
+  'lemma': {priority: 2},
 });
 
 export const Annotation = new Record({
