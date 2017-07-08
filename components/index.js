@@ -80,12 +80,18 @@ const FileChooser = ({ label, accept, onChoose }) => (
 // VideoImportControls
 class VideoImportControls extends Component {
   render() {
-    const { onImportVideoFile, onImportSubsFile } = this.props;
+    const { onImportVideoFile, onImportVideoURL, onImportSubsFile } = this.props;
     return (
       <div>
         <form>
-          <FileChooser label="Import Video" accept="video/*" onChoose={(file) => { onImportVideoFile(file, this.videoLanguageVal); }} />
-          <Select options={languageOptions} onSet={v => { this.videoLanguageVal = v; }} />
+          <FileChooser label="Import Video File" accept="video/*" onChoose={(file) => { onImportVideoFile(file, this.videoFileLanguageVal); }} />
+          <Select options={languageOptions} onSet={v => { this.videoFileLanguageVal = v; }} />
+        </form>
+        <form>
+          <label>Import Video URL <input type="text" placeholder="Video URL" onChange={(e) => { this.videoURLVal = e.target.value; }} />
+          <Select options={languageOptions} onSet={v => { this.videoURLLanguageVal = v; }} />
+          <button type="submit" onClick={(e) => { e.preventDefault(); onImportVideoURL(this.videoURLVal, this.videoURLLanguageVal); }}>Import</button>
+          </label>
         </form>
         <form>
           <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { onImportSubsFile(file, this.subLanguageVal); }} />
@@ -431,6 +437,11 @@ class Source extends Component {
     };
   }
 
+  handleImportVideoURL = (url, language) => {
+    const {source, actions} = this.props;
+    actions.sourceAddVideoURL(source.id, url, language);
+  };
+
   handleImportVideoFile = (file, language) => {
     const {source, actions} = this.props;
     actions.sourceAddVideoFile(source.id, file, language);
@@ -473,7 +484,7 @@ class Source extends Component {
         <div id="source-settings">
           <div>Id {source.id}</div>
           <div>Kind: {source.kind}</div>
-          <VideoImportControls onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
+          <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
           <div>Media:</div>
           <ul>{source.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
           <div>Texts:</div>

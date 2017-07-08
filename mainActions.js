@@ -103,12 +103,15 @@ export default class MainActions {
     })));
   };
 
-  sourceAddVideoFile = (sourceId, file, language) => {
+  sourceAddVideoURL = (sourceId, url, language) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.push(new VideoMediaRecord({
       language,
-      // videoFile: file,
-      videoURL: URL.createObjectURL(file),
+      videoURL: url,
     }))));
+  };
+
+  sourceAddVideoFile = (sourceId, file, language) => {
+    this.sourceAddVideoURL(sourceId, URL.createObjectURL(file), language);
   };
 
   sourceAddSubsFile = (sourceId, file, language) => {
