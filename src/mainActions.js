@@ -2,7 +2,6 @@ import assert from 'assert';
 import { Record, OrderedMap, List } from 'immutable';
 
 import genUID from './util/uid';
-import { removePrefix } from './util/string';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText } from './util/chunk';
@@ -42,6 +41,8 @@ const HighlightSetRecord = new Record({
   name: undefined,
 });
 
+const STORAGE_ACTIVE_KEY = 'active';
+
 export default class MainActions {
   constructor(subscribableState) {
     this.state = subscribableState;
@@ -49,50 +50,71 @@ export default class MainActions {
     this.storage = createStorageBackend('voracious:');
 
     // Start loading from storage, which is async
-    this.state.set(this.state.get().set('loading', true));
-    this.storage.getItem('version').then(version => {
-      if (version) {
-        assert(version === '0');
-        return Promise.resolve(); // return "empty" promise to be consistent
-      } else {
-        // Key wasn't present, so we can initialize storage to default data
-        return this.storage.setItems([
-          ['version', '0'],
-          ['root', jstr({profiles: ['1']})], // start with a single profile, id '1'
-          ['profile:1', jstr({name: 'default', highlightSets: []})],
-        ]);
-      }
-    }).then(() => {
-      // Storage is known to be initialized and at current version, so we can start loading the real data now
-      return this.storage.getItem('root');
-    }).then(rootStr => {
-      const root = jpar(rootStr);
-      assert((root.profiles.length === 1) && (root.profiles[0] === '1'));
-      return this.storage.getItem('profile:1');
-    }).then(profileStr => {
-      const profile = jpar(profileStr);
-      return this.storage.getItems(profile.highlightSets.map(i => ('highlightSet:'+i)));
-    }).then(setStrs => {
-      const mutSets = {};
-      for (const [k, v] of setStrs) {
-        const setId = removePrefix(k, 'highlightSet:');
-        const setObj = jpar(v);
-        const set = new HighlightSetRecord({
-          id: setId,
-          name: setObj.name,
-        });
-        mutSets[setId] = set;
-      }
-      this.state.set(this.state.get()
-        .set('loading', false)
-        .set('highlightSets', new OrderedMap(mutSets))
-      );
-
-      // Set activeHighlightSetId to just be first set, for now
-      const firstHighlightSetId = this.state.get().highlightSets.keySeq().get(0);
-      this.state.set(this.state.get().set('activeHighlightSetId', firstHighlightSetId));
-    });
+    this._loadFromStorageKey(STORAGE_ACTIVE_KEY);
   }
+
+  // NOTE: This takes a key argument so that we could load from a backup
+  _loadFromStorageKey = (key) => {
+    this.state.set(this.state.get().set('loading', true));
+    this.storage.getItem(key).then(storedStateStr => {
+      let newState = this.state.get();
+
+      if (storedStateStr) {
+        // Parse and load stored state JSON
+        const storedState = jpar(storedStateStr);
+
+        assert(storedState.version === 1);
+
+        // Load in storedState
+        for (const source of storedState.sources) {
+          newState = newState.setIn(['sources', source.id], new SourceRecord({
+            id: source.id,
+            kind: source.kind,
+            viewPosition: source.viewPosition,
+          }));
+        }
+      } else {
+        // Key wasn't present, so we can initialize state to default
+
+        // Save our empty/default state
+        this._saveToStorage();
+      }
+
+      newState = newState.set('loading', false);
+
+      // "Commit" new state
+      this.state.set(newState);
+    });
+  };
+
+  _saveToStorageKey = (key) => {
+    const saveState = {
+      version: 1,
+      sources: [],
+    };
+
+    for (const source of this.state.get().sources.values()) {
+      saveState.sources.push({
+        id: source.id,
+        kind: source.kind,
+        viewPosition: source.viewPosition,
+      });
+    }
+
+    // NOTE: We don't do anything with the Promise return value,
+    //  saving is "fire and forget"
+    // TODO: we should check if this fails
+    this.storage.setItem(STORAGE_ACTIVE_KEY, jstr(saveState));
+  };
+
+  _saveToStorage = () => {
+    this._saveToStorageKey(STORAGE_ACTIVE_KEY);
+  };
+
+  _saveBackup = () => {
+    const backupKey = 'backup:' + (new Date()).toISOString().replace(/[-:.ZT]/g, ''); // TODO: append :uid?
+    this._saveToStorageKey(backupKey);
+  };
 
   createSource = (kind) => {
     const sourceId = genUID();
@@ -100,6 +122,7 @@ export default class MainActions {
       id: sourceId,
       kind,
     })));
+    this._saveToStorage();
   };
 
   sourceAddVideoURL = (sourceId, url, language) => {
@@ -144,22 +167,6 @@ export default class MainActions {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
   };
 
-/*
-  _storageUpdateKeyJSON = (key, update) => {
-    return this.storage.getItem(key).then(value => {
-      const obj = jpar(value);
-      const newObj = update(obj); // newObj could be same identity as obj
-      return this.storage.setItem(key, jstr(newObj));
-    });
-  };
-
-  _storageSaveHighlightSet = (setId) => {
-    const iSet = this.state.get().highlightSets.get(setId);
-    const set = {name: iSet.name};
-    return this.storage.setItem('highlightSet:' + setId, jstr(set));
-  };
-*/
-
   createHighlightSet = (name) => {
     const setId = genUID();
 
@@ -174,22 +181,11 @@ export default class MainActions {
     if (!this.state.get().activeHighlightSetId) {
       this.state.set(this.state.get().set('activeHighlightSetId', setId));
     }
-
-/*
-    this._storageSaveHighlightSet(setId).then(() => {
-      return this._storageUpdateKeyJSON('profile:1', profile => { profile.highlightSets.push(setId); return profile; });
-    });
-*/
   };
 
   deleteHighlightSet = (setId) => {
     this.state.set(this.state.get().deleteIn(['highlightSets', setId]));
     // TODO: update activeHighlightSetId
-/*
-    this.storage.removeItem('deck:' + deckId).then(() => {
-      return this._storageUpdateKeyJSON('profile:1', profile => { profile.decks = profile.decks.filter(i => (i !== deckId)); return profile; });
-    });
-*/
   };
 
   setActiveHighlightSetId = (setId) => {
