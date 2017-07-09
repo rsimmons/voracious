@@ -5,6 +5,7 @@ import genUID from './util/uid';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText } from './util/chunk';
+import { startsWith } from './util/string';
 import createStorageBackend from './storage';
 
 const jstr = JSON.stringify; // alias
@@ -67,9 +68,17 @@ export default class MainActions {
 
         // Load in storedState
         for (const source of storedState.sources) {
+          const media = [];
+          for (const m of source.media) {
+            media.push({
+              language: m.language,
+              videoURL: m.videoURL,
+            });
+          }
           newState = newState.setIn(['sources', source.id], new SourceRecord({
             id: source.id,
             kind: source.kind,
+            media: new List(media),
             viewPosition: source.viewPosition,
           }));
         }
@@ -94,11 +103,22 @@ export default class MainActions {
     };
 
     for (const source of this.state.get().sources.values()) {
-      saveState.sources.push({
+      const saveSource = {
         id: source.id,
         kind: source.kind,
+        media: [],
         viewPosition: source.viewPosition,
-      });
+      };
+      for (const media of source.media) {
+        // NOTE: We only save media if the video URL is not an object URL
+        if (media.videoURL && !startsWith(media.videoURL, 'blob:')) {
+          saveSource.media.push({
+            language: media.language,
+            videoURL: media.videoURL,
+          });
+        }
+      }
+      saveState.sources.push(saveSource);
     }
 
     // NOTE: We don't do anything with the Promise return value,
@@ -130,10 +150,12 @@ export default class MainActions {
       language,
       videoURL: url,
     }))));
+    this._saveToStorage();
   };
 
   sourceAddVideoFile = (sourceId, file, language) => {
     this.sourceAddVideoURL(sourceId, URL.createObjectURL(file), language);
+    this._saveToStorage();
   };
 
   sourceAddSubsFile = (sourceId, file, language) => {
