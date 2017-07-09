@@ -82,6 +82,15 @@ export default class MainActions {
             viewPosition: source.viewPosition,
           }));
         }
+
+        for (const set of storedState.highlightSets) {
+          newState = newState.setIn(['highlightSets', set.id], new HighlightSetRecord({
+            id: set.id,
+            name: set.name,
+          }));
+        }
+
+        newState = newState.set('activeHighlightSetId', storedState.activeHighlightSetId);
       } else {
         // Key wasn't present, so we can initialize state to default
 
@@ -100,6 +109,8 @@ export default class MainActions {
     const saveState = {
       version: 1,
       sources: [],
+      highlightSets: [],
+      activeHighlightSetId: this.state.get().activeHighlightSetId,
     };
 
     for (const source of this.state.get().sources.values()) {
@@ -119,6 +130,13 @@ export default class MainActions {
         }
       }
       saveState.sources.push(saveSource);
+    }
+
+    for (const set of this.state.get().highlightSets.values()) {
+      saveState.highlightSets.push({
+        id: set.id,
+        name: set.name,
+      });
     }
 
     // NOTE: We don't do anything with the Promise return value,
@@ -203,15 +221,18 @@ export default class MainActions {
     if (!this.state.get().activeHighlightSetId) {
       this.state.set(this.state.get().set('activeHighlightSetId', setId));
     }
+    this._saveToStorage();
   };
 
   deleteHighlightSet = (setId) => {
     this.state.set(this.state.get().deleteIn(['highlightSets', setId]));
     // TODO: update activeHighlightSetId
+    this._saveToStorage();
   };
 
   setActiveHighlightSetId = (setId) => {
     // TODO: verify setId exists
     this.state.set(this.state.get().set('activeHighlightSetId', setId));
+    this._saveToStorage();
   };
 };
