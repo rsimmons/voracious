@@ -1,5 +1,6 @@
 import {Record, Map, List} from 'immutable';
 import genUID from './uid';
+import {toJS as annoTextToJS, fromJS as annoTextFromJS} from './annotext';
 
 const RangePosition = new Record({
   begin: null,
@@ -96,4 +97,33 @@ export const getChunksInRange = (chunkSet, begin, end) => {
 
 export const setChunkAnnoText = (chunkSet, chunkId, newAnnoText) => {
   return chunkSet.setIn(['chunkMap', chunkId, 'annoText'], newAnnoText);
+};
+
+export const chunkSetToJS = (chunkSet) => {
+  // NOTE: We skip the index, since we can recreate that.
+  //  We also just store a list of chunks, map is unnecessary.
+  const chunks = [];
+  for (const c of chunkSet.chunkMap.values()) {
+    chunks.push({
+      uid: c.uid,
+      position: c.position.toJS(),
+      annoText: annoTextToJS(c.annoText),
+    });
+  }
+
+  return {
+    chunks,
+  }
+};
+
+export const chunkSetFromJS = (obj) => {
+  const chunks = [];
+  for (const c of obj.chunks) {
+    chunks.push(new Chunk({
+      uid: c.uid,
+      position: new RangePosition(c.position),
+      annoText: annoTextFromJS(c.annoText),
+    }));
+  }
+  return createTimeRangeChunkSet(chunks);
 };

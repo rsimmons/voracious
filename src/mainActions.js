@@ -4,7 +4,7 @@ import { Record, OrderedMap, List } from 'immutable';
 import genUID from './util/uid';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
-import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText } from './util/chunk';
+import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, chunkSetToJS, chunkSetFromJS } from './util/chunk';
 import { startsWith } from './util/string';
 import createStorageBackend from './storage';
 
@@ -70,15 +70,25 @@ export default class MainActions {
         for (const source of storedState.sources) {
           const media = [];
           for (const m of source.media) {
-            media.push({
+            media.push(new VideoMediaRecord({
               language: m.language,
               videoURL: m.videoURL,
-            });
+            }));
           }
+
+          const texts = [];
+          for (const t of source.texts) {
+            texts.push(new SourceTextRecord({
+              language: t.language,
+              chunkSet: chunkSetFromJS(t.chunkSet),
+            }));
+          }
+
           newState = newState.setIn(['sources', source.id], new SourceRecord({
             id: source.id,
             kind: source.kind,
             media: new List(media),
+            texts: new List(texts),
             viewPosition: source.viewPosition,
           }));
         }
@@ -118,6 +128,7 @@ export default class MainActions {
         id: source.id,
         kind: source.kind,
         media: [],
+        texts: [],
         viewPosition: source.viewPosition,
       };
       for (const media of source.media) {
@@ -128,6 +139,12 @@ export default class MainActions {
             videoURL: media.videoURL,
           });
         }
+      }
+      for (const text of source.texts) {
+        saveSource.texts.push({
+          language: text.language,
+          chunkSet: chunkSetToJS(text.chunkSet),
+        });
       }
       saveState.sources.push(saveSource);
     }
@@ -195,16 +212,19 @@ export default class MainActions {
         chunkSet,
       }))));
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
+      this._saveToStorage();
     };
     reader.readAsText(file);
   };
 
   setSourceViewPosition = (sourceId, position) => {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
+    // NOTE: We don't yet save here, because it would be too frequent
   };
 
   sourceSetChunkAnnoText = (sourceId, textNum, chunkId, newAnnoText) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
+    this._saveToStorage();
   };
 
   createHighlightSet = (name) => {

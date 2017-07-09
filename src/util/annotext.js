@@ -118,7 +118,7 @@ export const toJS = (annoText) => {
 };
 
 export const fromJS = (obj) => {
-  return new AnnotatedText({text: obj.text, annotations: obj.annotations.map(a => new Annotation(a))});
+  return new AnnotatedText({text: obj.text, annotations: new List(obj.annotations.map(a => new Annotation(a)))});
 };
 
 // wrap takes an anno and list of pieces, and must return a list of pieces
