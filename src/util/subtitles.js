@@ -4,6 +4,12 @@ const parseTime = (s) => {
   return 3600*(+hours) + 60*(+mins) + (+seconds) + 0.001*(+ms);
 };
 
+const cleanText = (s) => {
+  const BREAK_RE = /(<br>)/ig; // SRT files shouldn't have these, but some do
+  const TAG_RE = /(<([^>]+)>)/ig;
+  return s.trim().replace(BREAK_RE, '\n').replace(TAG_RE, '');
+};
+
 export const parseSRT = (text) => {
   const normText = text.replace(/\r\n/g, '\n'); // normalize newlines
 
@@ -24,7 +30,7 @@ export const parseSRT = (text) => {
     subs.push({
       begin,
       end,
-      lines: lines.trim(),
+      lines: cleanText(lines),
     });
     re.lastIndex = found.index + full.length;
   }
