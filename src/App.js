@@ -459,7 +459,7 @@ class Source extends Component {
   };
 
   render() {
-    const { source, onExit, setBriefs, activeSetId, onSetActiveSetId, onSourceSetChunkAnnoText } = this.props;
+    const { source, onExit, setBriefs, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
 
     return (
       <div>
@@ -468,14 +468,22 @@ class Source extends Component {
           <div>Kind: {source.kind}</div>
           <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
           <div>Media:</div>
-          <ul>{source.media.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
+          <ul>{source.media.map((o, i) => (
+            <li key={i}>#{i} [{o.language}]
+              <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
+            </li>
+          ))}</ul>
           <div>Texts:</div>
-          <ul>{source.texts.map((o, i) => <li key={i}>#{i} [{o.language}]</li>)}</ul>
+          <ul>{source.texts.map((o, i) => (
+            <li key={i}>#{i} [{o.language}]
+              <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
+            </li>
+          ))}</ul>
           <button onClick={onExit}>Exit To Top</button>
         </div>
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSourceSetChunkAnnoText(source.id, i, chunkId, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
       </div>
     );
   }
@@ -691,7 +699,8 @@ class App extends Component {
         </div>
       )
     } else if (this.state.viewingMode === 'source') {
-      return <Source actions={actions} source={mainState.sources.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(this.state.viewingId, pos); }} onSourceSetChunkAnnoText={actions.sourceSetChunkAnnoText} />
+      const sourceId = this.state.viewingId;
+      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} />
     } else if (this.state.viewingMode === 'set') {
       return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
     }

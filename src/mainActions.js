@@ -193,6 +193,11 @@ export default class MainActions {
     this._saveToStorage();
   };
 
+  sourceDeleteMedia = (sourceId, mediaNum) => {
+    this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.delete(mediaNum)));
+    this._saveToStorage();
+  };
+
   sourceAddSubsFile = (sourceId, file, language) => {
     // Start async file load and parse
     const reader = new FileReader();
@@ -215,6 +220,11 @@ export default class MainActions {
       this._saveToStorage();
     };
     reader.readAsText(file);
+  };
+
+  sourceDeleteText = (sourceId, textNum) => {
+    this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.delete(textNum)));
+    this._saveToStorage();
   };
 
   setSourceViewPosition = (sourceId, position) => {
