@@ -24,6 +24,7 @@ const SourceRecord = new Record({
   media: new List(),
   texts: new List(),
   viewPosition: 0,
+  timeCreated: undefined,
 });
 
 const VideoMediaRecord = new Record({
@@ -90,6 +91,7 @@ export default class MainActions {
             media: new List(media),
             texts: new List(texts),
             viewPosition: source.viewPosition,
+            timeCreated: source.timeCreated,
           }));
         }
 
@@ -130,6 +132,7 @@ export default class MainActions {
         media: [],
         texts: [],
         viewPosition: source.viewPosition,
+        timeCreated: source.timeCreated,
       };
       for (const media of source.media) {
         // NOTE: We only save media if the video URL is not an object URL
@@ -176,6 +179,7 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['sources', sourceId], new SourceRecord({
       id: sourceId,
       kind,
+      timeCreated: Date.now(),
     })));
     this._saveToStorage();
   };
