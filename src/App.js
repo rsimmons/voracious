@@ -682,6 +682,7 @@ class App extends Component {
               <div key={s.id}>
                 Source Id {s.id} ({s.kind})
                 <button onClick={() => {this.setState({viewingMode: 'source', viewingId: s.id})}}>View</button>
+                <button onClick={() => { if (window.confirm('Delete source "' + s.id + '"?')) { actions.deleteSource(s.id); } }}>Delete</button>
               </div>
             ))}
           </div>

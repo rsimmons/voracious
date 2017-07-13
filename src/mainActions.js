@@ -180,6 +180,11 @@ export default class MainActions {
     this._saveToStorage();
   };
 
+  deleteSource = (sourceId) => {
+    this.state.set(this.state.get().deleteIn(['sources', sourceId]));
+    this._saveToStorage();
+  };
+
   sourceAddVideoURL = (sourceId, url, language) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.push(new VideoMediaRecord({
       language,
