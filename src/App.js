@@ -464,7 +464,8 @@ class Source extends Component {
     return (
       <div>
         <div id="source-settings">
-          <div>Id {source.id}</div>
+          <div>Id: {source.id}</div>
+          <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
           <div>Kind: {source.kind}</div>
           <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
           <div>Media:</div>
@@ -680,9 +681,9 @@ class App extends Component {
             <NewSourceForm onNewSource={actions.createSource} />
             {mainState.sources.valueSeq().map((s) => (
               <div key={s.id}>
-                Source Id {s.id} ({s.kind})
+                {s.name} <small>[{s.id}]</small>
                 <button onClick={() => {this.setState({viewingMode: 'source', viewingId: s.id})}}>View</button>
-                <button onClick={() => { if (window.confirm('Delete source "' + s.id + '"?')) { actions.deleteSource(s.id); } }}>Delete</button>
+                <button onClick={() => { if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
               </div>
             ))}
           </div>
@@ -701,7 +702,7 @@ class App extends Component {
       )
     } else if (this.state.viewingMode === 'source') {
       const sourceId = this.state.viewingId;
-      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} />
+      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
     } else if (this.state.viewingMode === 'set') {
       return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
     }

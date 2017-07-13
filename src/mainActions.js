@@ -21,6 +21,7 @@ const MainStateRecord = new Record({
 const SourceRecord = new Record({
   id: undefined,
   kind: undefined,
+  name: undefined,
   media: new List(),
   texts: new List(),
   viewPosition: 0,
@@ -88,6 +89,7 @@ export default class MainActions {
           newState = newState.setIn(['sources', source.id], new SourceRecord({
             id: source.id,
             kind: source.kind,
+            name: source.name,
             media: new List(media),
             texts: new List(texts),
             viewPosition: source.viewPosition,
@@ -129,6 +131,7 @@ export default class MainActions {
       const saveSource = {
         id: source.id,
         kind: source.kind,
+        name: source.name,
         media: [],
         texts: [],
         viewPosition: source.viewPosition,
@@ -179,6 +182,7 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['sources', sourceId], new SourceRecord({
       id: sourceId,
       kind,
+      name: 'source_' + sourceId,
       timeCreated: Date.now(),
     })));
     this._saveToStorage();
@@ -186,6 +190,11 @@ export default class MainActions {
 
   deleteSource = (sourceId) => {
     this.state.set(this.state.get().deleteIn(['sources', sourceId]));
+    this._saveToStorage();
+  };
+
+  sourceSetName = (sourceId, name) => {
+    this.state.set(this.state.get().setIn(['sources', sourceId, 'name'], name));
     this._saveToStorage();
   };
 
