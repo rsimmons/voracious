@@ -298,6 +298,18 @@ class AnnoText extends PureComponent {
     this.clearSelection();
   };
 
+  handleSetLemma = () => {
+    const { annoText, onUpdate } = this.props;
+    const lemmaText = this.setLemmaTextInput.value.trim();
+    if (lemmaText === '') {
+      return;
+    }
+    const {cpBegin, cpEnd} = this.state.selectionRange;
+    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'lemma', lemmaText);
+    onUpdate(newAnnoText);
+    this.clearSelection();
+  };
+
   handleAddHighlight = () => {
     const { annoText, onUpdate } = this.props;
     const {cpBegin, cpEnd} = this.state.selectionRange;
@@ -402,6 +414,7 @@ class AnnoText extends PureComponent {
           {(this.state.selectionRange && onUpdate) ? (
             <form>
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
+              <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
               <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
                 {setBriefs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
