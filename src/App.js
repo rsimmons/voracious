@@ -734,11 +734,11 @@ class App extends Component {
           <div>
             <h2>Highlights</h2>
             <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
-            {mainState.highlightSets.valueSeq().map((s) => (
+            {expandedHighlightSetsList.map((s) => (
               <div key={s.id}>
-                {s.name} <small>[{s.id}]</small>
+                {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
                 <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
-                <button onClick={() => { if (window.confirm('Delete set "' + s.name + '"?')) { actions.deleteHighlightSet(s.id); } }} disabled>Delete</button>
+                <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
               </div>
             ))}
           </div>
