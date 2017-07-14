@@ -625,7 +625,8 @@ class HighlightSet extends Component {
 
     return (
       <div>
-        <div>{highlightSet.name} <small>{highlightSet.id}</small></div>
+        <div>Id: {highlightSet.id}</div>
+        <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
         <div>
           <button onClick={this.handleExportTSV} disabled>Export TSV</button>
           <button onClick={onExit}>Exit To Top</button>
@@ -737,7 +738,8 @@ class App extends Component {
       const sourceId = this.state.viewingId;
       return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
     } else if (this.state.viewingMode === 'set') {
-      return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(this.state.viewingId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} />
+      const setId = this.state.viewingId;
+      return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(setId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
     }
   }
 }

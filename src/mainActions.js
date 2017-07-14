@@ -278,6 +278,11 @@ export default class MainActions {
     this._saveToStorage();
   };
 
+  highlightSetRename = (setId, name) => {
+    this.state.set(this.state.get().setIn(['highlightSets', setId, 'name'], name));
+    this._saveToStorage();
+  };
+
   setActiveHighlightSetId = (setId) => {
     // TODO: verify setId exists
     this.state.set(this.state.get().set('activeHighlightSetId', setId));
