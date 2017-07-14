@@ -6,3 +6,5 @@ export const removePrefix = (s, prefix) => {
   assert(startsWith(s, prefix));
   return s.substr(prefix.length);
 }
+
+export const cpSlice = (s, cpBegin, cpEnd) => [...s].slice(cpBegin, cpEnd).join('');

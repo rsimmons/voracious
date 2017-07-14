@@ -1,6 +1,7 @@
 import { hiraToKata, kataToHira, anyCharIsKana } from '../util/japanese';
 import DiffMatchPatch from 'diff-match-patch';
 import { Annotation, create as createAnnoText } from './annotext';
+import { cpSlice } from '../util/string';
 const kuromoji = window.kuromoji; // loaded by script tag in index.html, we do this to avoid lint warning
 
 const dmp = new DiffMatchPatch();
@@ -32,7 +33,7 @@ const analyzeJAKuromoji = (text) => {
     cpEnd = cpBegin + [...t.surface_form].length;
 
     // sanity checks
-    if ([...text].slice(cpBegin, cpEnd).join('') !== t.surface_form) {
+    if (cpSlice(text, cpBegin, cpEnd) !== t.surface_form) {
       throw new Error('Input text token does not match surface_form');
     }
 

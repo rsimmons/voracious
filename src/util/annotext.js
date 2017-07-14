@@ -38,6 +38,10 @@ export const clearKindInRange = (annoText, cpBegin, cpEnd, kind) => {
   return annoText.update('annotations', annotations => annotations.filter(anno => ((anno.kind !== kind) || (anno.cpEnd <= cpBegin) || (anno.cpBegin >= cpEnd))));
 };
 
+export const removeAnnoIndex = (annoText, annoIndex) => {
+  return annoText.deleteIn(['annotations', annoIndex]);
+};
+
 export const getKindAtIndex = (annoText, kind, cpIndex) => {
   const annos = [];
 
@@ -58,6 +62,22 @@ export const getKind = (annoText, kind) => {
       annos.push(anno);
     }
   });
+
+  return annos;
+};
+
+export const getInRangeAsJS = (annoText, cpBegin, cpEnd) => {
+  const annos = [];
+
+  annoText.annotations.forEach((anno, i) => {
+    if ((cpEnd > anno.cpBegin) && (cpBegin < anno.cpEnd)) {
+      const a = anno.toJS();
+      a.annoIndex = i;
+      annos.push(a);
+    }
+  });
+
+  annos.sort(nestingAnnoSortFunc);
 
   return annos;
 };

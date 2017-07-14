@@ -5,8 +5,9 @@ import escape from 'escape-html';
 import Immutable, { Record } from 'immutable';
 // import { createSelector } from 'reselect';
 
-import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange } from './util/annotext';
+import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRangeAsJS, removeAnnoIndex } from './util/annotext';
 import { getChunksAtTime, getChunksInRange, iteratableChunks } from './util/chunk';
+import { cpSlice } from './util/string';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -340,6 +341,11 @@ class AnnoText extends PureComponent {
       }
     }
 
+    let annosInSelection = [];
+    if (this.state.selectionRange) {
+      annosInSelection = getInRangeAsJS(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
+    }
+
     const annoTextChildren = annoTextCustomRender(
       annoText,
       (a, inner) => {
@@ -388,10 +394,10 @@ class AnnoText extends PureComponent {
       (c, i) => (c === '\n' ? '<br/>' : escape(c))
     ).join('');
 
-    const floatWidth = '10em';
+    const floatWidth = '240px';
     return (
       <div>
-        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px' }}>
+        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
           <ClipboardCopier text={annoTextHTML} buttonText="Copy HTML" />
           {(this.state.selectionRange && onUpdate) ? (
             <form>
@@ -400,6 +406,13 @@ class AnnoText extends PureComponent {
                 {setBriefs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <button type="button" onClick={this.handleAddHighlight} {...(setBriefs.isEmpty() ? {disabled: true} : {})}>Highlight</button>
+              <br />
+              {annosInSelection.map(a => (
+                <div key={a.annoIndex}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={typeof(a.data) === 'string' ? ('[' + a.data + ']') : '<object>'} <button onClick={(e) => {
+                  e.preventDefault();
+                  onUpdate(removeAnnoIndex(annoText, a.annoIndex));
+                }}>X</button></div>
+              ))}
             </form>
           ) : ''}
         </div>
