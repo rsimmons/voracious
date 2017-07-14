@@ -320,7 +320,7 @@ class AnnoText extends PureComponent {
   };
 
   render() {
-    const { annoText, language, onUpdate, setBriefs, activeSetId, onSetActiveSetId } = this.props;
+    const { annoText, language, onUpdate, highlightSets, activeSetId, onSetActiveSetId } = this.props;
 
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
@@ -416,9 +416,9 @@ class AnnoText extends PureComponent {
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
               <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
               <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
-                {setBriefs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {highlightSets.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
-              <button type="button" onClick={this.handleAddHighlight} {...(setBriefs.isEmpty() ? {disabled: true} : {})}>Highlight</button>
+              <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
               <br />
               {annosInSelection.map(a => (
                 <div key={a.annoIndex}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={typeof(a.data) === 'string' ? ('[' + a.data + ']') : '<object>'} <button onClick={(e) => {
@@ -435,10 +435,10 @@ class AnnoText extends PureComponent {
   }
 }
 
-const TextChunksBox = ({ chunks, language, hidden, onChunkSetAnnoText, setBriefs, activeSetId, onSetActiveSetId }) => (
+const TextChunksBox = ({ chunks, language, hidden, onChunkSetAnnoText, highlightSets, activeSetId, onSetActiveSetId }) => (
   <div className="studied-text-box">
     <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />))}</div>
+    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />))}</div>
   </div>
 );
 
@@ -492,7 +492,7 @@ class Source extends Component {
   };
 
   render() {
-    const { source, onExit, setBriefs, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
+    const { source, onExit, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
 
     return (
       <div>
@@ -517,7 +517,7 @@ class Source extends Component {
         </div>
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} setBriefs={setBriefs} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
       </div>
     );
   }
@@ -619,9 +619,7 @@ class HighlightSet extends Component {
   };
 
   render() {
-    const { highlightSet, sources, onExit } = this.props;
-
-    const contexts = findAllHighlightsWithContext(sources, highlightSet.id);
+    const { highlightSet, onExit } = this.props;
 
     return (
       <div>
@@ -631,7 +629,7 @@ class HighlightSet extends Component {
           <button onClick={this.handleExportTSV} disabled>Export TSV</button>
           <button onClick={onExit}>Exit To Top</button>
         </div>
-        <div>{contexts.map((context, i) => (
+        <div>{highlightSet.contexts.map((context, i) => (
           <div key={i}>
             <p>{i} {/*(new Date(timeCreated)).toLocaleString()*/}</p>
             <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
@@ -686,24 +684,36 @@ class App extends Component {
       viewingMode: 'top',
       viewingId: undefined,
     };
-    this.setBriefsSelector = createSelector(
+    this.expandedHighlightSetsMapSelector = createSelector(
       state => state.highlightSets,
-      sets => sets.valueSeq().map(s => ({id: s.id, name: s.name, }))
+      state => state.sources,
+      (sets, sources) => sets.map(s => ({
+        id: s.id,
+        name: s.name,
+        contexts: findAllHighlightsWithContext(sources.valueSeq(), s.id),
+      }))
+    );
+    this.expandedHighlightSetsListSelector = createSelector(
+      this.expandedHighlightSetsMapSelector,
+      map => map.valueSeq()
     );
   }
 
   render() {
     const { mainState, actions } = this.props;
 
-    const setBriefs = this.setBriefsSelector(mainState);
+    const expandedHighlightSetsMap = this.expandedHighlightSetsMapSelector(mainState);
+    const expandedHighlightSetsList = this.expandedHighlightSetsListSelector(mainState);
 
     // Sanity check on activeSetId integrity
     // TODO: move this into model
-    if (setBriefs.isEmpty()) {
+    /*
+    if (highlightSets.isEmpty()) {
       assert(!mainState.activeHighlightSetId);
     } else {
-      assert(setBriefs.some(s => (s.id === mainState.activeHighlightSetId)));
+      assert(highlightSets.some(s => (s.id === mainState.activeHighlightSetId)));
     }
+    */
 
     if (mainState.loading) {
       return <h1>Loading...</h1>;
@@ -736,10 +746,10 @@ class App extends Component {
       )
     } else if (this.state.viewingMode === 'source') {
       const sourceId = this.state.viewingId;
-      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} setBriefs={setBriefs} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
+      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} highlightSets={expandedHighlightSetsList} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
     } else if (this.state.viewingMode === 'set') {
       const setId = this.state.viewingId;
-      return <HighlightSet actions={actions} sources={mainState.sources.valueSeq()} highlightSet={mainState.highlightSets.get(setId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
+      return <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
     }
   }
 }
