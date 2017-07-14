@@ -146,6 +146,13 @@ class PlayControls extends Component {
   }
 
   handleKeyDown = (e) => {
+    // Only process event if the target is the body,
+    // to avoid messing with typing into input elements, etc.
+    // Should we do this instead? e.target.tagName.toUpperCase() === 'INPUT'
+    if (e.target !== document.body) {
+      return;
+    }
+
     const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
 
     if (!e.repeat) {
