@@ -3,7 +3,7 @@ import './App.css';
 import assert from 'assert';
 import escape from 'escape-html';
 import Immutable, { Record } from 'immutable';
-// import { createSelector } from 'reselect';
+import { createSelector } from 'reselect';
 
 import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRangeAsJS, removeAnnoIndex } from './util/annotext';
 import { getChunksAtTime, getChunksInRange, iteratableChunks } from './util/chunk';
@@ -686,16 +686,16 @@ class App extends Component {
       viewingMode: 'top',
       viewingId: undefined,
     };
+    this.setBriefsSelector = createSelector(
+      state => state.highlightSets,
+      sets => sets.valueSeq().map(s => ({id: s.id, name: s.name, }))
+    );
   }
 
   render() {
     const { mainState, actions } = this.props;
 
-    // TODO: wrap in selector
-    const setBriefs = mainState.highlightSets.valueSeq().map(s => ({
-      id: s.id,
-      name: s.name,
-    }));
+    const setBriefs = this.setBriefsSelector(mainState);
 
     // Sanity check on activeSetId integrity
     // TODO: move this into model
