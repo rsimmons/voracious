@@ -8,6 +8,7 @@ import { createSelector } from 'reselect';
 import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRangeAsJS, removeAnnoIndex } from './util/annotext';
 import { getChunksAtTime, getChunksInRange, iteratableChunks } from './util/chunk';
 import { cpSlice } from './util/string';
+import { downloadFile } from './util/download';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -573,14 +574,6 @@ function findAllHighlightsWithContext(sources, highlightSetId) {
 // HighlightSet
 class HighlightSet extends Component {
   handleExportTSV = () => {
-    function download(content, filename, contentType) {
-      const a = document.createElement('a');
-      const blob = new Blob([content], {'type': contentType});
-      a.href = window.URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-    }
-
     const lines = [];
     for (const snip of this.props.deck.snips.values()) {
       const firstAnnoText = snip.texts.first().annoText; // TODO: unhack
@@ -615,7 +608,7 @@ class HighlightSet extends Component {
 
       lines.push(fields.join('\t') + '\n');
     }
-    download(lines.join(''), 'voracious_' + Date.now() + '.tsv', 'text/tab-separated-values');
+    downloadFile(lines.join(''), 'voracious_' + Date.now() + '.tsv', 'text/tab-separated-values');
   };
 
   render() {
@@ -699,6 +692,12 @@ class App extends Component {
     );
   }
 
+  handleExportBackup = () => {
+    // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
+    const backupData = JSON.stringify(this.props.actions._saveToJSONable());
+    downloadFile(backupData, 'voracious_backup_' + Date.now() + '.json', 'application/json');
+  };
+
   render() {
     const { mainState, actions } = this.props;
 
@@ -741,6 +740,10 @@ class App extends Component {
                 <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
               </div>
             ))}
+          </div>
+          <div>
+            <h2>Other</h2>
+            <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
           </div>
         </div>
       )

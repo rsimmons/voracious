@@ -119,7 +119,7 @@ export default class MainActions {
     });
   };
 
-  _saveToStorageKey = (key) => {
+  _saveToJSONable = () => {
     const saveState = {
       version: 1,
       sources: [],
@@ -162,10 +162,14 @@ export default class MainActions {
       });
     }
 
+    return saveState;
+  }
+
+  _saveToStorageKey = (key) => {
     // NOTE: We don't do anything with the Promise return value,
     //  saving is "fire and forget"
     // TODO: we should check if this fails
-    this.storage.setItem(STORAGE_ACTIVE_KEY, jstr(saveState));
+    this.storage.setItem(STORAGE_ACTIVE_KEY, jstr(this._saveToJSONable()));
   };
 
   _saveToStorage = () => {
