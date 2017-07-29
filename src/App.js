@@ -417,12 +417,12 @@ class AnnoText extends PureComponent {
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
               <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
               <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
-                {highlightSets.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {highlightSets.valueSeq().map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
               <br />
               {annosInSelection.map(a => (
-                <div key={a.annoIndex}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={typeof(a.data) === 'string' ? ('[' + a.data + ']') : '<object>'} <button onClick={(e) => {
+                <div key={a.annoIndex}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
                   e.preventDefault();
                   onUpdate(removeAnnoIndex(annoText, a.annoIndex));
                 }}>X</button></div>
@@ -686,10 +686,6 @@ class App extends Component {
         contexts: findAllHighlightsWithContext(sources.valueSeq(), s.id),
       }))
     );
-    this.expandedHighlightSetsListSelector = createSelector(
-      this.expandedHighlightSetsMapSelector,
-      map => map.valueSeq()
-    );
   }
 
   handleExportBackup = () => {
@@ -701,8 +697,7 @@ class App extends Component {
   render() {
     const { mainState, actions } = this.props;
 
-    const expandedHighlightSetsMap = this.expandedHighlightSetsMapSelector(mainState);
-    const expandedHighlightSetsList = this.expandedHighlightSetsListSelector(mainState);
+    const expandedHighlightSetsMap = this.expandedHighlightSetsMapSelector(mainState); // NOTE: This is an OrderedMap
 
     if (mainState.loading) {
       return <h1>Loading...</h1>;
@@ -723,7 +718,7 @@ class App extends Component {
           <div>
             <h2>Highlights</h2>
             <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
-            {expandedHighlightSetsList.map((s) => (
+            {expandedHighlightSetsMap.valueSeq().map((s) => (
               <div key={s.id}>
                 {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
                 <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
@@ -739,7 +734,7 @@ class App extends Component {
       )
     } else if (this.state.viewingMode === 'source') {
       const sourceId = this.state.viewingId;
-      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} highlightSets={expandedHighlightSetsList} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
+      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
     } else if (this.state.viewingMode === 'set') {
       const setId = this.state.viewingId;
       return <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
