@@ -704,16 +704,6 @@ class App extends Component {
     const expandedHighlightSetsMap = this.expandedHighlightSetsMapSelector(mainState);
     const expandedHighlightSetsList = this.expandedHighlightSetsListSelector(mainState);
 
-    // Sanity check on activeSetId integrity
-    // TODO: move this into model
-    /*
-    if (highlightSets.isEmpty()) {
-      assert(!mainState.activeHighlightSetId);
-    } else {
-      assert(highlightSets.some(s => (s.id === mainState.activeHighlightSetId)));
-    }
-    */
-
     if (mainState.loading) {
       return <h1>Loading...</h1>;
     } else if (this.state.viewingMode === 'top') {

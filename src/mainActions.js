@@ -277,8 +277,14 @@ export default class MainActions {
   };
 
   deleteHighlightSet = (setId) => {
-    this.state.set(this.state.get().deleteIn(['highlightSets', setId]));
-    // TODO: update activeHighlightSetId
+    const state = this.state.get();
+    const sets = state.highlightSets;
+    const newActiveId = (state.activeHighlightSetId === setId) ? ((sets.size > 1) ? sets.first().id : null) : state.activeHighlightSetId;
+    this.state.set(state
+      .deleteIn(['highlightSets', setId])
+      .set('activeHighlightSetId', newActiveId)
+    );
+
     this._saveToStorage();
   };
 
@@ -288,7 +294,14 @@ export default class MainActions {
   };
 
   setActiveHighlightSetId = (setId) => {
-    // TODO: verify setId exists
+    // Ensure that setId is valid
+    const sets = this.state.get().highlightSets;
+    if (sets.isEmpty()) {
+      assert(setId === null);
+    } else {
+      assert(sets.some(s => (s.id === setId)));
+    }
+
     this.state.set(this.state.get().set('activeHighlightSetId', setId));
     this._saveToStorage();
   };
