@@ -277,13 +277,16 @@ export default class MainActions {
   };
 
   deleteHighlightSet = (setId) => {
-    const state = this.state.get();
-    const sets = state.highlightSets;
-    const newActiveId = (state.activeHighlightSetId === setId) ? ((sets.size > 1) ? sets.first().id : null) : state.activeHighlightSetId;
-    this.state.set(state
-      .deleteIn(['highlightSets', setId])
-      .set('activeHighlightSetId', newActiveId)
-    );
+    let state = this.state.get();
+
+    state = state.deleteIn(['highlightSets', setId]);
+
+    // Ensure activeHighlightSetId is valid
+    if (!state.highlightSets.has(state.activeHighlightSetId)) {
+      state = state.set('activeHighlightSetId', state.highlightSets.isEmpty() ? null : state.highlightSets.first().id);
+    }
+
+    this.state.set(state);
 
     this._saveToStorage();
   };
