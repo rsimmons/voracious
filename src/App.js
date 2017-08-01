@@ -5,7 +5,7 @@ import escape from 'escape-html';
 import Immutable, { Record } from 'immutable';
 import { createSelector } from 'reselect';
 
-import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRangeAsJS, removeAnnoIndex } from './util/annotext';
+import { getKindAtIndex, getKind, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from './util/annotext';
 import { getChunksAtTime, getChunksInRange, iteratableChunks } from './util/chunk';
 import { cpSlice } from './util/string';
 import { downloadFile } from './util/download';
@@ -356,7 +356,7 @@ class AnnoText extends PureComponent {
 
     let annosInSelection = [];
     if (this.state.selectionRange) {
-      annosInSelection = getInRangeAsJS(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
+      annosInSelection = getInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
     }
 
     const annoTextChildren = annoTextCustomRender(
@@ -422,9 +422,9 @@ class AnnoText extends PureComponent {
               <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
               <br />
               {annosInSelection.map(a => (
-                <div key={a.annoIndex}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
+                <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
                   e.preventDefault();
-                  onUpdate(removeAnnoIndex(annoText, a.annoIndex));
+                  onUpdate(deleteAnnotation(annoText, a.id));
                 }}>X</button></div>
               ))}
             </form>
@@ -593,8 +593,7 @@ class HighlightSet extends Component {
           if (a.kind === 'ruby') {
             return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
           } else if (a.kind === 'highlight') {
-            console.log('a', a);
-            const clozeNum = a.data.timeCreated % 1000000; // this is hacky, but should work pretty well to generate a unique cloze id
+            const clozeNum = parseInt(a.id, 16) % 1000000000; // this is hacky (relies on uid being hex, etc), but should work pretty well to generate a unique cloze id
             return ['{{c' + clozeNum + '::', ...inner, '}}'];
           } else {
             return inner;

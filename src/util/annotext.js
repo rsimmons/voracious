@@ -1,4 +1,5 @@
 import { Record, List, OrderedMap } from 'immutable';
+import genUID from './uid';
 
 // in order of priority
 const validKinds = new OrderedMap({
@@ -7,7 +8,8 @@ const validKinds = new OrderedMap({
   'lemma': {priority: 2},
 });
 
-export const Annotation = new Record({
+const Annotation = new Record({
+  id: null,
   cpBegin: null, // integer
   cpEnd: null, // integer
   kind: null, // string
@@ -21,8 +23,15 @@ const AnnotatedText = new Record({
 });
 
 export const create = (text, annotations) => {
-  // TODO: validate annotations
-  return new AnnotatedText({text: text, annotations: List(annotations)});
+  let result = new AnnotatedText({text: text, annotations: new List()});
+
+  if (annotations) {
+    for (const a of annotations) {
+      result = addAnnotation(result, a.cpBegin, a.cpEnd, a.kind, a.data);
+    }
+  }
+
+  return result;
 };
 
 export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
@@ -31,15 +40,24 @@ export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
     throw new Error('invalid kind ' + kind);
   }
 
-  return new AnnotatedText({text: annoText.text, annotations: annoText.annotations.push(new Annotation({cpBegin, cpEnd, kind, data}))});
+  return new AnnotatedText({
+    text: annoText.text,
+    annotations: annoText.annotations.push(new Annotation({
+      id: genUID(),
+      cpBegin,
+      cpEnd,
+      kind,
+      data,
+    })),
+  });
 };
 
 export const clearKindInRange = (annoText, cpBegin, cpEnd, kind) => {
   return annoText.update('annotations', annotations => annotations.filter(anno => ((anno.kind !== kind) || (anno.cpEnd <= cpBegin) || (anno.cpBegin >= cpEnd))));
 };
 
-export const removeAnnoIndex = (annoText, annoIndex) => {
-  return annoText.deleteIn(['annotations', annoIndex]);
+export const deleteAnnotation = (annoText, annoId) => {
+  return annoText.update('annotations', annotations => annotations.filter(anno => (anno.id !== annoId)));
 };
 
 export const getKindAtIndex = (annoText, kind, cpIndex) => {
@@ -66,14 +84,12 @@ export const getKind = (annoText, kind) => {
   return annos;
 };
 
-export const getInRangeAsJS = (annoText, cpBegin, cpEnd) => {
+export const getInRange = (annoText, cpBegin, cpEnd) => {
   const annos = [];
 
   annoText.annotations.forEach((anno, i) => {
     if ((cpEnd > anno.cpBegin) && (cpBegin < anno.cpEnd)) {
-      const a = anno.toJS();
-      a.annoIndex = i;
-      annos.push(a);
+      annos.push(anno);
     }
   });
 
@@ -121,6 +137,7 @@ export const concat = (annoTexts) => {
     newText += at.text;
     for (const a of at.annotations) {
       newAnnos.push(new Annotation({
+        id: a.id,
         cpBegin: a.cpBegin + cpOffset,
         cpEnd: a.cpEnd + cpOffset,
         kind: a.kind,
@@ -152,11 +169,11 @@ export const customRender = (annoText, wrap, xformChar) => {
       let beg = a.cpBegin;
       for (let i = a.cpBegin+1; i < a.cpEnd; i++) {
         if (splitPoints.has(i)) {
-          splitAnnos.push({cpBegin: beg, cpEnd: i, kind: a.kind, data: a.data});
+          splitAnnos.push({id: a.id, cpBegin: beg, cpEnd: i, kind: a.kind, data: a.data});
           beg = i;
         }
       }
-      splitAnnos.push({cpBegin: beg, cpEnd: a.cpEnd, kind: a.kind, data: a.data});
+      splitAnnos.push({id: a.id, cpBegin: beg, cpEnd: a.cpEnd, kind: a.kind, data: a.data});
       splitPoints.add(a.cpBegin);
       splitPoints.add(a.cpEnd);
     }

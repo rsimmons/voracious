@@ -1,6 +1,6 @@
 import { hiraToKata, kataToHira, anyCharIsKana } from '../util/japanese';
 import DiffMatchPatch from 'diff-match-patch';
-import { Annotation, create as createAnnoText } from './annotext';
+import { create as createAnnoText } from './annotext';
 import { cpSlice } from '../util/string';
 const kuromoji = window.kuromoji; // loaded by script tag in index.html, we do this to avoid lint warning
 
@@ -51,12 +51,12 @@ const analyzeJAKuromoji = (text) => {
       continue;
     }
 
-    annotations.push(Annotation({
+    annotations.push({
       cpBegin,
       cpEnd,
       kind: 'lemma',
       data: t.basic_form,
-    }));
+    });
 
     if (t.reading !== '*') {
       const kataReading = hiraToKata(t.reading);
@@ -78,12 +78,12 @@ const analyzeJAKuromoji = (text) => {
               if (endOff <= beginOff) {
                 throw new Error('Unexpected');
               }
-              annotations.push(Annotation({
+              annotations.push({
                 cpBegin: cpBegin + beginOff,
                 cpEnd: cpBegin + endOff,
                 kind: 'ruby',
                 data: s,
-              }));
+              });
               beginOff = endOff;
             } else {
               if (action !== 0) {
@@ -98,12 +98,12 @@ const analyzeJAKuromoji = (text) => {
           }
         } else {
           // Simple case
-          annotations.push(Annotation({
+          annotations.push({
             cpBegin,
             cpEnd,
             kind: 'ruby',
             data: hiraReading,
-          }));
+          });
         }
       }
     }
