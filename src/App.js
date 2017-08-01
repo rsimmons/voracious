@@ -553,6 +553,7 @@ function findSourceHighlightsWithContext(source, highlightSetId) {
           primaryAnnoText: chunk.annoText, // this one has highlights
           primaryLanguage: text.language,
           secondaryAnnoTexts: secondaryAnnoTexts, // list of {language, annoTexts: [annoText...]}
+          chunkUID: chunk.uid, // added this for export to Anki
         });
       }
     }
@@ -574,27 +575,27 @@ function findAllHighlightsWithContext(sources, highlightSetId) {
 // HighlightSet
 class HighlightSet extends Component {
   handleExportTSV = () => {
+    const { highlightSet } = this.props;
+
     const lines = [];
-    for (const snip of this.props.deck.snips.values()) {
-      const firstAnnoText = snip.texts.first().annoText; // TODO: unhack
-
-      // If no selection, skip
-      const sortedSelectionAnnos = getKind(firstAnnoText, 'selection');
-      if (!sortedSelectionAnnos.length) {
-        continue;
-      }
-
+    for (const context of highlightSet.contexts) {
       const fields = [];
 
-      fields.push(snip.timeCreated); // Useful as a pseudo-uid and to sort by in Anki
+      fields.push(context.chunkUID); // Useful as a stable UID for Anki
+
+      // Find (latest) timestamp of highlight annotations
+      const latestTimestamp = Math.max(...getKind(context.primaryAnnoText, 'highlight').map(a => a.data.timeCreated));
+      fields.push(latestTimestamp);
 
       const clozedAnnotextHTML = annoTextCustomRender(
-        firstAnnoText,
+        context.primaryAnnoText,
         (a, inner) => {
           if (a.kind === 'ruby') {
             return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
-          } else if (a.kind === 'selection') {
-            return ['{{c1::', ...inner, '}}'];
+          } else if (a.kind === 'highlight') {
+            console.log('a', a);
+            const clozeNum = a.data.timeCreated % 1000000; // this is hacky, but should work pretty well to generate a unique cloze id
+            return ['{{c' + clozeNum + '::', ...inner, '}}'];
           } else {
             return inner;
           }
@@ -603,12 +604,17 @@ class HighlightSet extends Component {
       ).join('');
       fields.push(clozedAnnotextHTML);
 
-      const translations = snip.texts.rest().map(t => t.annoText.text).join('<br/>');
-      fields.push(translations);
+      const translations = [];
+      for (const sec of context.secondaryAnnoTexts) {
+        for (const at of sec.annoTexts) {
+          translations.push(at.text);
+        }
+      }
+      fields.push(translations.join('<br/>'));
 
       lines.push(fields.join('\t') + '\n');
     }
-    downloadFile(lines.join(''), 'voracious_' + Date.now() + '.tsv', 'text/tab-separated-values');
+    downloadFile(lines.join(''), 'voracious_export-' + highlightSet.name + '-' + Date.now() + '.tsv', 'text/tab-separated-values');
   };
 
   render() {
@@ -619,7 +625,7 @@ class HighlightSet extends Component {
         <div>Id: {highlightSet.id}</div>
         <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
         <div>
-          <button onClick={this.handleExportTSV} disabled>Export TSV</button>
+          <button onClick={this.handleExportTSV}>Export TSV</button>
           <button onClick={onExit}>Exit To Top</button>
         </div>
         <div>{highlightSet.contexts.map((context, i) => (
