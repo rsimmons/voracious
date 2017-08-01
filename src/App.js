@@ -1,6 +1,6 @@
 import React, { Component, PureComponent } from 'react';
 import './App.css';
-import assert from 'assert';
+// import assert from 'assert';
 import escape from 'escape-html';
 import Immutable, { Record } from 'immutable';
 import { createSelector } from 'reselect';
