@@ -40,7 +40,7 @@ export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
     throw new Error('invalid kind ' + kind);
   }
 
-  return new AnnotatedText({
+  const newAnnoText = new AnnotatedText({
     text: annoText.text,
     annotations: annoText.annotations.push(new Annotation({
       id: genUID(),
@@ -50,6 +50,15 @@ export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
       data,
     })),
   });
+
+  // TODO: Handle this better
+  // If the new annotation has caused nesting to fail, we don't add it.
+  if (!annotationsNest(newAnnoText)) {
+    console.warn('New annotation failed to nest, not adding');
+    return annoText;
+  }
+
+  return newAnnoText;
 };
 
 export const clearKindInRange = (annoText, cpBegin, cpEnd, kind) => {
@@ -158,30 +167,54 @@ export const fromJS = (obj) => {
   return new AnnotatedText({text: obj.text, annotations: new List(obj.annotations.map(a => new Annotation(a)))});
 };
 
+// Determine whether the given annotations nest properly without splitting.
+const annotationsNest = (annoText) => {
+  const sortedAnnos = annoText.annotations.toArray();
+  sortedAnnos.sort(nestingAnnoSortFunc);
+
+  const annoStack = [];
+  let idx = 0;
+
+  for (const a of sortedAnnos) {
+    // Sanity check
+    if (a.cpBegin < idx) {
+      throw new Error('Internal error');
+    }
+
+    // Pop any annotations that we exit before this next annotation begins
+    while (annoStack.length && (annoStack[annoStack.length-1].cpEnd <= a.cpBegin)) {
+      annoStack.pop();
+    }
+
+    // Advance index to the beginning of this next annotation
+    idx = a.cpBegin;
+
+    // The anno we're about to push onto the stack should be fully
+    //  contained within anno at current top of stack. Otherwise that
+    //  means we fail to nest.
+    if (annoStack.length) {
+      const topAnno = annoStack[annoStack.length-1];
+      if ((a.cpBegin < topAnno.cpBegin) || (a.cpEnd > topAnno.cpEnd)) {
+        return false;
+      }
+    }
+
+    annoStack.push(a);
+  }
+
+  // NOTE: Stack is not supposed to end empty, and we don't care about
+  //  end state of stack.
+
+  return true;
+};
+
 // wrap takes an anno and list of pieces, and must return a list of pieces
 // xformChar takes a char and index, and must return a single piece
 export const customRender = (annoText, wrap, xformChar) => {
-  const splitPoints = new Set(); // mutable Set
-  const splitAnnos = [];
+  const sortedAnnos = annoText.annotations.toArray();
+  sortedAnnos.sort(nestingAnnoSortFunc);
 
-  for (const kind of validKinds.keys()) {
-    for (const a of getKind(annoText, kind)) {
-      let beg = a.cpBegin;
-      for (let i = a.cpBegin+1; i < a.cpEnd; i++) {
-        if (splitPoints.has(i)) {
-          splitAnnos.push({id: a.id, cpBegin: beg, cpEnd: i, kind: a.kind, data: a.data});
-          beg = i;
-        }
-      }
-      splitAnnos.push({id: a.id, cpBegin: beg, cpEnd: a.cpEnd, kind: a.kind, data: a.data});
-      splitPoints.add(a.cpBegin);
-      splitPoints.add(a.cpEnd);
-    }
-  }
-
-  splitAnnos.sort(nestingAnnoSortFunc);
-
-  const textArr = [...annoText.text.trim()]; // split up by unicode chars
+  const textArr = [...annoText.text]; // split up by unicode chars
   let idx = 0;
 
   // Advance idx up to cpEnd, pushing pieces onto top of pieces stack
@@ -209,7 +242,7 @@ export const customRender = (annoText, wrap, xformChar) => {
     }
   }
 
-  for (const a of splitAnnos) {
+  for (const a of sortedAnnos) {
     // Sanity check
     if (a.cpBegin < idx) {
       throw new Error('Internal error');
