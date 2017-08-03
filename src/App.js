@@ -15,7 +15,7 @@ const languageOptions = [
   { value: 'en', label: 'English' },
 ];
 
-// const newlinesToBrs = s => s.split('\n').map((o, i) => <span key={i}>{o}<br/></span>);
+const newlinesToBrs = s => s.replace(/\n/g, '<br/>');
 
 // Select, "uncontrolled" but watches changes
 class Select extends Component {
@@ -606,7 +606,7 @@ class HighlightSet extends Component {
       const translations = [];
       for (const sec of context.secondaryAnnoTexts) {
         for (const at of sec.annoTexts) {
-          translations.push(at.text);
+          translations.push(newlinesToBrs(escape(at.text)));
         }
       }
       fields.push(translations.join('<br/>'));
