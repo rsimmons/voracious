@@ -1,11 +1,11 @@
-import { createSelector } from 'reselect';
+import { createSelector, createSelectorCreator, defaultMemoize } from 'reselect';
 
 import { getChunksInRange, iteratableChunks } from './util/chunk';
 import { getKind } from './util/annotext';
 
-function findSourceHighlightsWithContext(source, highlightSetId) {
+function findSourceHighlightsWithContext(texts, highlightSetId) {
   const contexts = [];
-  for (const text of source.texts) {
+  for (const text of texts) {
     for (const chunk of iteratableChunks(text.chunkSet)) {
       const hls = getKind(chunk.annoText, 'highlight');
       if (hls.some(a => (a.data.setId === highlightSetId))) {
@@ -13,7 +13,7 @@ function findSourceHighlightsWithContext(source, highlightSetId) {
 
         // Pull related chunks+texts from other text tracks (translations, generally)
         const secondaryAnnoTexts = []; // list of {language, annoTexts: [annoText...]}
-        for (const otherText of source.texts) {
+        for (const otherText of texts) {
           if (otherText === text) {
             continue;
           }
@@ -41,24 +41,36 @@ function findSourceHighlightsWithContext(source, highlightSetId) {
   return contexts;
 }
 
-function findAllHighlightsWithContext(sources, highlightSetId) {
+function findAllHighlightsWithContext(sourceTexts, highlightSetId) {
   let result = [];
 
-  for (const source of sources) {
-    result = result.concat(findSourceHighlightsWithContext(source, highlightSetId));
+  for (const texts of sourceTexts) {
+    result = result.concat(findSourceHighlightsWithContext(texts, highlightSetId));
   }
 
   return result;
 }
 
+function arraysShallowEqual(a, b) {
+  return (a.length === b.length) && a.every((v,i) => v === b[i]);
+}
+
+const createShallowArraySelector = createSelectorCreator(
+  defaultMemoize,
+  arraysShallowEqual
+);
+
 export function createExpandedHighlightSetsMapSelector() {
   return createSelector(
     state => state.highlightSets,
-    state => state.sources,
-    (sets, sources) => sets.map(s => ({
+    createShallowArraySelector(
+      state => state.sources.toArray().map(s => s.texts),
+      sourceTexts => sourceTexts,
+    ),
+    (sets, sourceTexts) => sets.map(s => ({
       id: s.id,
       name: s.name,
-      contexts: findAllHighlightsWithContext(sources.valueSeq(), s.id),
+      contexts: findAllHighlightsWithContext(sourceTexts, s.id),
     }))
   );
 };

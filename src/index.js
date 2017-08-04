@@ -11,6 +11,10 @@ import { SubscribableState, StateMapper } from './ruxx';
 import { loadKuromoji } from './util/analysis';
 loadKuromoji();
 
+if (process.env.NODE_ENV !== 'production') {
+  window.Perf = require('react-addons-perf');
+}
+
 // Create state, actions
 const subscribableMainState = new SubscribableState();
 const actions = new MainActions(subscribableMainState);
