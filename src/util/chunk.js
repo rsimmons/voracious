@@ -57,7 +57,7 @@ export const getChunksAtTime = (chunkSet, time) => {
   const index = chunkSet.index;
 
   if (!index.has(it)) {
-    return List();
+    return [];
   }
 
   const result = [];
@@ -68,7 +68,7 @@ export const getChunksAtTime = (chunkSet, time) => {
     }
   }
 
-  return List(result);
+  return result;
 };
 
 export const getChunksInRange = (chunkSet, begin, end) => {

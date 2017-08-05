@@ -53,6 +53,14 @@ class VideoMedia extends Component {
     }
   }
 
+  play() {
+    this.videoElem.play();
+  }
+
+  pause() {
+    this.videoElem.pause();
+  }
+
   togglePause() {
     if (this.videoElem) {
       if (this.videoElem.paused) {
@@ -64,10 +72,10 @@ class VideoMedia extends Component {
   }
 
   render() {
-    const { media, initialTime, onTimeUpdate } = this.props;
+    const { media, initialTime, onTimeUpdate, onSeeking } = this.props;
     return (
       <div style={{ textAlign: 'center', backgroundColor: 'black' }}>{media.size ? (
-        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
+        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
       ) : ''
       }</div>
     );
@@ -91,7 +99,7 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
+    const { onBack, onTogglePause, onContinue } = this.props;
 
     if (!e.repeat) {
       switch (e.keyCode) {
@@ -99,16 +107,13 @@ class PlayControls extends Component {
           onBack();
           break;
 
-        case 68: // d
-          onHideText();
-          break;
-
-        case 70: // f
-          onRevealMoreText();
-          break;
-
         case 32: // space
           onTogglePause();
+          e.preventDefault();
+          break;
+
+        case 13: // ener
+          onContinue();
           e.preventDefault();
           break;
 
@@ -120,13 +125,16 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onTogglePause, onHideText, onRevealMoreText } = this.props;
+    const { onBack, onTogglePause, onContinue, onSetQuizMode } = this.props;
     return (
       <form style={{ textAlign: 'center', margin: '10px auto' }}>
         <button type="button" onClick={onBack}>Jump Back [A]</button>
-        <button type="button" onClick={onHideText}>Hide Texts [D]</button>
-        <button type="button" onClick={onRevealMoreText}>Reveal Next Text [F]</button>
         <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
+        <button type="button" onClick={onContinue}>Continue [Enter]</button>
+        <Select options={[
+          {value: 'none', label: 'None'},
+          {value: 'listen', label: 'Listen'},
+        ]} onSet={onSetQuizMode} />
       </form>
     );
   }
@@ -145,8 +153,12 @@ export default class Source extends Component {
     super(props);
     this.videoMediaComponent = undefined;
     this.state = {
-      textRevelation: props.source.texts.size + 1, // reveal all texts to start
+      textViewPosition: props.source.viewPosition,
+      quizMode: 'none',
+      quizPause: false, // are we paused (or have requested pause) for quiz?
+      quizState: null,
     };
+    this.videoTime = null;
   }
 
   handleImportVideoURL = (url, language) => {
@@ -165,8 +177,88 @@ export default class Source extends Component {
   };
 
   handleVideoTimeUpdate = (time) => {
-    this.props.onUpdateViewPosition(time);
+    this.videoTime = time;
+
+    if (this.state.quizPause) {
+      // We're either paused or in the process of pausing for question,
+      //  so should ignore this time update.
+      return;
+    }
+
+    const { source } = this.props;
+
+    let pauseForQuiz = false;
+
+    // Determine if we need to pause for a quiz
+    // Is there at least one text track?
+    if (this.state.quizMode === 'none') {
+    } else if (this.state.quizMode === 'listen') {
+      if (source.texts.size >= 1) {
+        const firstText = source.texts.first();
+
+        // Compute chunks before and after this time change
+        const oldChunks = getChunksAtTime(firstText.chunkSet, this.state.textViewPosition);
+        const newChunks = getChunksAtTime(firstText.chunkSet, time);
+
+        // Are the chunks changing in a way that makes us want to pause?
+        if ((this.state.quizMode === 'listen') && (oldChunks.length >= 1) && ((newChunks.length === 0) || (oldChunks[0].uid !== newChunks[0].uid))) {
+          pauseForQuiz = true;
+          this.setState({
+            quizState: {
+              textRevelation: 0,
+            }
+          });
+        }
+      }
+    } else {
+      throw new Error('internal error');
+    }
+
+    if (pauseForQuiz) {
+      this.setState({
+        quizPause: true,
+      });
+      this.videoMediaComponent.pause();
+    } else {
+      this.setState({textViewPosition: time});
+    }
   };
+
+  releaseQuizPause = () => {
+    this.setState({
+      quizPause: false,
+      // Resync displayed text with video time, since they may have gotten
+      //  very slightly out of sync if we were paused for question
+      textViewPosition: this.videoTime,
+    });
+  }
+
+  handleVideoSeeking = () => {
+    this.releaseQuizPause();
+  };
+
+  handleSetQuizMode = (mode) => {
+    switch (mode) {
+      case 'none':
+        this.setState({
+          quizMode: mode,
+          quizPause: false,
+          quizState: null,
+        });
+        break;
+
+      case 'listen':
+        this.setState({
+          quizMode: mode,
+          quizPause: false,
+          quizState: null,
+        });
+        break;
+
+      default:
+        throw new Error('internal error');
+    }
+  }
 
   handleBack = () => {
     if (this.videoMediaComponent) {
@@ -174,22 +266,98 @@ export default class Source extends Component {
     }
   };
 
-  handlePause = () => {
+  handleTogglePause = () => {
+    this.releaseQuizPause();
     if (this.videoMediaComponent) {
       this.videoMediaComponent.togglePause();
     }
   };
 
-  handleHideText = () => {
-    this.setState({textRevelation: 0});
+  handleContinue = () => {
+    switch (this.state.quizMode) {
+      case 'none':
+        // ignore
+        break;
+
+      case 'listen':
+        if (this.state.quizPause) {
+          switch (this.state.quizState.textRevelation) {
+            case 0:
+              this.setState((s) => { s.quizState.textRevelation++; });
+              break;
+
+            case 1:
+              this.setState((s) => { s.quizState.textRevelation++; });
+              break;
+
+            case 2:
+              // Continue playing video
+              this.videoMediaComponent.play();
+              this.releaseQuizPause();
+              this.setState({
+                quizState: null,
+              });
+              break;
+
+            default:
+              throw new Error('internal error');
+          }
+        }
+        break;
+
+      default:
+        throw new Error('internal error');
+    }
   };
 
-  handleRevealMoreText = () => {
-    this.setState({textRevelation: Math.min(this.state.textRevelation + 1, this.props.source.texts.size)});
-  };
+  handleExit = () => {
+    // TODO: this should probably be last-reported time,
+    //  slightly different than textViewPosition?
+    this.props.onUpdateViewPosition(this.state.textViewPosition);
+    this.props.onExit();
+  }
 
   render() {
-    const { source, onExit, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
+    const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
+
+    // Based on quiz mode and state, determine what texts are shown
+    let showFirstText = true;
+    let showRestTexts = true;
+    switch (this.state.quizMode) {
+      case 'none':
+        // don't change
+        break;
+
+      case 'listen':
+        if (this.state.quizPause) {
+          switch (this.state.quizState.textRevelation) {
+            case 0:
+              showFirstText = false;
+              showRestTexts = false;
+              break;
+
+            case 1:
+              showFirstText = true;
+              showRestTexts = false;
+              break;
+
+            case 2:
+              showFirstText = true;
+              showRestTexts = true;
+              break;
+
+            default:
+              throw new Error('internal error');
+          }
+        } else {
+          showFirstText = false;
+          showRestTexts = false;
+        }
+        break;
+
+      default:
+        throw new Error('internal error');
+    }
 
     return (
       <div>
@@ -210,11 +378,11 @@ export default class Source extends Component {
               <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
             </li>
           ))}</ul>
-          <button onClick={onExit}>Exit To Top</button>
+          <button onClick={this.handleExit}>Exit To Top</button>
         </div>
-        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} ref={(c) => { this.videoMediaComponent = c; }} />
-        <PlayControls onBack={this.handleBack} onTogglePause={this.handlePause} onHideText={this.handleHideText} onRevealMoreText={this.handleRevealMoreText} />
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.props.source.viewPosition)} language={text.language} hidden={this.state.textRevelation <= i}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
+        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+        <PlayControls onBack={this.handleBack} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
+        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.textViewPosition)} language={text.language} hidden={((i === 0) && !showFirstText) || ((i > 0) && !showRestTexts)}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
       </div>
     );
   }
