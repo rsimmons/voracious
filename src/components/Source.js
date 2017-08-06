@@ -72,10 +72,10 @@ class VideoMedia extends Component {
   }
 
   render() {
-    const { media, initialTime, onTimeUpdate, onSeeking } = this.props;
+    const { media, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
       <div style={{ textAlign: 'center', backgroundColor: 'black' }}>{media.size ? (
-        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
+        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
       ) : ''
       }</div>
     );
@@ -159,6 +159,7 @@ export default class Source extends Component {
       quizState: null,
     };
     this.videoTime = null;
+    this.videoIsPlaying = false;
   }
 
   handleImportVideoURL = (url, language) => {
@@ -190,28 +191,31 @@ export default class Source extends Component {
     let pauseForQuiz = false;
 
     // Determine if we need to pause for a quiz
-    // Is there at least one text track?
-    if (this.state.quizMode === 'none') {
-    } else if (this.state.quizMode === 'listen') {
-      if (source.texts.size >= 1) {
-        const firstText = source.texts.first();
+    // Is the video playing? Don't want to mis-trigger pause upon seeking
+    if (this.videoIsPlaying) {
+      // Is there at least one text track?
+      if (this.state.quizMode === 'none') {
+      } else if (this.state.quizMode === 'listen') {
+        if (source.texts.size >= 1) {
+          const firstText = source.texts.first();
 
-        // Compute chunks before and after this time change
-        const oldChunks = getChunksAtTime(firstText.chunkSet, this.state.textViewPosition);
-        const newChunks = getChunksAtTime(firstText.chunkSet, time);
+          // Compute chunks before and after this time change
+          const oldChunks = getChunksAtTime(firstText.chunkSet, this.state.textViewPosition);
+          const newChunks = getChunksAtTime(firstText.chunkSet, time);
 
-        // Are the chunks changing in a way that makes us want to pause?
-        if ((this.state.quizMode === 'listen') && (oldChunks.length >= 1) && ((newChunks.length === 0) || (oldChunks[0].uid !== newChunks[0].uid))) {
-          pauseForQuiz = true;
-          this.setState({
-            quizState: {
-              textRevelation: 0,
-            }
-          });
+          // Are the chunks changing in a way that makes us want to pause?
+          if ((this.state.quizMode === 'listen') && (oldChunks.length >= 1) && ((newChunks.length === 0) || (oldChunks[0].uid !== newChunks[0].uid))) {
+            pauseForQuiz = true;
+            this.setState({
+              quizState: {
+                textRevelation: 0,
+              }
+            });
+          }
         }
+      } else {
+        throw new Error('internal error');
       }
-    } else {
-      throw new Error('internal error');
     }
 
     if (pauseForQuiz) {
@@ -233,7 +237,20 @@ export default class Source extends Component {
     });
   }
 
+  handleVideoPlaying = () => {
+    this.videoIsPlaying = true;
+  };
+
+  handleVideoPause = () => {
+    this.videoIsPlaying = false;
+  };
+
+  handleVideoEnded = () => {
+    this.videoIsPlaying = false;
+  };
+
   handleVideoSeeking = () => {
+    this.videoIsPlaying = false;
     this.releaseQuizPause();
   };
 
@@ -380,7 +397,7 @@ export default class Source extends Component {
           ))}</ul>
           <button onClick={this.handleExit}>Exit To Top</button>
         </div>
-        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
         {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.textViewPosition)} language={text.language} hidden={((i === 0) && !showFirstText) || ((i > 0) && !showRestTexts)}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
       </div>
