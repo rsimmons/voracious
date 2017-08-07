@@ -71,6 +71,15 @@ export const getChunksAtTime = (chunkSet, time) => {
   return result;
 };
 
+export const getLastChunkAtTime = (chunkSet, time) => {
+  const chunks = getChunksAtTime(chunkSet, time);
+  if (chunks.length === 0) {
+    return null;
+  } else {
+    return chunks[chunks.length-1];
+  }
+};
+
 export const getChunksInRange = (chunkSet, begin, end) => {
   const iBegin = Math.floor(begin);
   const iEnd = Math.floor(end);

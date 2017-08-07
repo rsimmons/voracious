@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 
-import { getChunksAtTime } from '../util/chunk';
+import { getLastChunkAtTime } from '../util/chunk';
 
 const languageOptions = [
   { value: 'ja', label: 'Japanese' },
@@ -140,13 +140,6 @@ class PlayControls extends Component {
   }
 }
 
-const TextChunksBox = ({ chunks, language, hidden, onChunkSetAnnoText, highlightSets, activeSetId, onSetActiveSetId }) => (
-  <div className="studied-text-box">
-    <div className="language-tag">{language.toUpperCase()}</div>
-    <div>{chunks.map(c => (hidden ? <div key={c.uid} style={{color: '#ccc'}}>(hidden)</div> : <AnnoText key={c.uid} annoText={c.annoText} language={language} onUpdate={newAnnoText => { onChunkSetAnnoText(c.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />))}</div>
-  </div>
-);
-
 // Source
 export default class Source extends Component {
   constructor(props) {
@@ -199,12 +192,12 @@ export default class Source extends Component {
         if (source.texts.size >= 1) {
           const firstText = source.texts.first();
 
-          // Compute chunks before and after this time change
-          const oldChunks = getChunksAtTime(firstText.chunkSet, this.state.textViewPosition);
-          const newChunks = getChunksAtTime(firstText.chunkSet, time);
+          // Compute chunk (if any) before and after this time change
+          const oldChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
+          const newChunk = getLastChunkAtTime(firstText.chunkSet, time);
 
           // Are the chunks changing in a way that makes us want to pause?
-          if ((this.state.quizMode === 'listen') && (oldChunks.length >= 1) && ((newChunks.length === 0) || (oldChunks[0].uid !== newChunks[0].uid))) {
+          if ((this.state.quizMode === 'listen') && oldChunk && (!newChunk || (oldChunk.uid !== newChunk.uid))) {
             pauseForQuiz = true;
             this.setState({
               quizState: {
@@ -399,7 +392,28 @@ export default class Source extends Component {
         </div>
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
-        {source.texts.map((text, i) => <TextChunksBox key={i} chunks={getChunksAtTime(text.chunkSet, this.state.textViewPosition)} language={text.language} hidden={((i === 0) && !showFirstText) || ((i > 0) && !showRestTexts)}  onChunkSetAnnoText={(chunkId, newAnnoText) => { onSetChunkAnnoText(i, chunkId, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />)}
+        {source.texts.map((text, textNum) => (
+          <div className="studied-text-box" key={textNum}>
+            <div className="language-tag">{text.language.toUpperCase()}</div>
+            <div>{(() => {
+              const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
+
+              if (chunk) {
+                const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
+
+                if (textHidden) {
+                  return (
+                    <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
+                  );
+                } else {
+                  return (
+                    <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
+                  );
+                }
+              }
+            })()}</div>
+          </div>
+        ))}
       </div>
     );
   }
