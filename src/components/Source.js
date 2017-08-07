@@ -192,18 +192,22 @@ export default class Source extends Component {
         if (source.texts.size >= 1) {
           const firstText = source.texts.first();
 
-          // Compute chunk (if any) before and after this time change
-          const oldChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
-          const newChunk = getLastChunkAtTime(firstText.chunkSet, time);
+          // Look up chunk (if any) before this time change
+          const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
 
-          // Are the chunks changing in a way that makes us want to pause?
-          if ((this.state.quizMode === 'listen') && oldChunk && (!newChunk || (oldChunk.uid !== newChunk.uid))) {
-            pauseForQuiz = true;
-            this.setState({
-              quizState: {
-                textRevelation: 0,
-              }
-            });
+          if (currentChunk) {
+            // Are we passing the time that would trigger a pause for quiz?
+            const PAUSE_DELAY = 0.3;
+            const triggerTime = currentChunk.position.end - PAUSE_DELAY;
+
+            if ((this.state.textViewPosition < triggerTime) && (time >= triggerTime)) {
+              pauseForQuiz = true;
+              this.setState({
+                quizState: {
+                  textRevelation: 0,
+                }
+              });
+            }
           }
         }
       } else {
