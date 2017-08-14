@@ -46,6 +46,12 @@ class VideoMedia extends Component {
     this.videoElem = null;
   }
 
+  seek(t) {
+    if (this.videoElem) {
+      this.videoElem.currentTime = t;
+    }
+  }
+
   seekRelative(dt) {
     if (this.videoElem) {
       const nt = this.videoElem.currentTime + dt;
@@ -99,12 +105,16 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onTogglePause, onContinue } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue } = this.props;
 
     if (!e.repeat) {
       switch (e.keyCode) {
         case 65: // a
           onBack();
+          break;
+
+        case 82: // r
+          onReplay();
           break;
 
         case 32: // space
@@ -125,10 +135,11 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onTogglePause, onContinue, onSetQuizMode } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onSetQuizMode } = this.props;
     return (
       <form style={{ textAlign: 'center', margin: '10px auto' }}>
         <button type="button" onClick={onBack}>Jump Back [A]</button>
+        <button type="button" onClick={onReplay}>Replay [R]</button>
         <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
         <button type="button" onClick={onContinue}>Continue [Enter]</button>
         <Select options={[
@@ -280,6 +291,18 @@ export default class Source extends Component {
     }
   };
 
+  handleReplay = () => {
+    if (this.videoMediaComponent) {
+      const firstText = this.props.source.texts.first();
+      const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
+
+      if (currentChunk) {
+        this.videoMediaComponent.seek(currentChunk.position.begin);
+        this.videoMediaComponent.play();
+      }
+    }
+  };
+
   handleTogglePause = () => {
     this.releaseQuizPause();
     if (this.videoMediaComponent) {
@@ -395,7 +418,7 @@ export default class Source extends Component {
           <button onClick={this.handleExit}>Exit To Top</button>
         </div>
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
-        <PlayControls onBack={this.handleBack} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
+        <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
         {source.texts.map((text, textNum) => (
           <div className="studied-text-box" key={textNum}>
             <div className="language-tag">{text.language.toUpperCase()}</div>
