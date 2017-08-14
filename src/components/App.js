@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Infinite from 'react-infinite';
 
 import './App.css';
 
@@ -78,6 +79,7 @@ class HighlightSet extends Component {
 
   render() {
     const { highlightSet, onExit } = this.props;
+    const ELEMENT_HEIGHT = 150;
 
     return (
       <div>
@@ -87,17 +89,19 @@ class HighlightSet extends Component {
           <button onClick={this.handleExportTSV}>Export TSV</button>
           <button onClick={onExit}>Exit To Top</button>
         </div>
-        <div>{highlightSet.contexts.map((context, i) => (
-          <div key={i}>
-            <p>{i} {/*(new Date(timeCreated)).toLocaleString()*/}</p>
-            <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
-            <div>{context.secondaryAnnoTexts.map((sec, i) => (
-              <div key={i}>{sec.annoTexts.map((t, i) => (
-                <AnnoText key={i} annoText={t} language={sec.language} />
+        <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
+          {highlightSet.contexts.map((context, i) => (
+            <div key={i} style={{height: ELEMENT_HEIGHT, overflow: 'hidden'}}>
+              <p>{i} {/*(new Date(timeCreated)).toLocaleString()*/}</p>
+              <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
+              <div>{context.secondaryAnnoTexts.map((sec, i) => (
+                <div key={i}>{sec.annoTexts.map((t, i) => (
+                  <AnnoText key={i} annoText={t} language={sec.language} />
+                ))}</div>
               ))}</div>
-            ))}</div>
-          </div>
-        ))}</div>
+            </div>
+          ))}
+        </Infinite>
       </div>
     );
   }
