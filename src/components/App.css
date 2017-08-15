@@ -3,7 +3,14 @@
 }
 
 .App-main-nav {
-  margin-bottom: 20px;
+  position: fixed;
+  width: 100%;
+  height: 60px;
+  background: white;
+}
+
+.App-below-main-nav {
+  padding-top: 60px;
 }
 
 .App-main-nav > a {

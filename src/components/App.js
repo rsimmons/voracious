@@ -171,66 +171,68 @@ class App extends Component {
                   <NavLink to={'/highlights'} activeClassName="selected">Highlights</NavLink>
                   <NavLink to={'/settings'} activeClassName="selected">Settings</NavLink>
                 </nav>
-                <Switch>
-                  <Route path="/library" render={() => (
-                    <div>
-                      <div>
-                        <NewSourceForm onNewSource={actions.createSource} />
-                        <ul>
-                          {mainState.sources.valueSeq().map((s) => (
-                            <li key={s.id} className="App-library-list-item">
-                              <Link to={'/source/' + s.id}>
-                                {s.name}
-                                <button onClick={(e) => { e.preventDefault(); if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}/>
-                  <Route path="/highlights" render={() => {
-                    return (
+                <div className="App-below-main-nav">
+                  <Switch>
+                    <Route path="/library" render={() => (
                       <div>
                         <div>
-                          <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
-                          <ul className="App-highlight-set-list">
-                            {expandedHighlightSetsMap.valueSeq().map((s) => (
-                              <li key={s.id}>
-                                <NavLink to={'/highlights/' + s.id} activeClassName="selected">{s.name} [{s.contexts.length}]</NavLink>
-                                <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
+                          <NewSourceForm onNewSource={actions.createSource} />
+                          <ul>
+                            {mainState.sources.valueSeq().map((s) => (
+                              <li key={s.id} className="App-library-list-item">
+                                <Link to={'/source/' + s.id}>
+                                  {s.name}
+                                  <button onClick={(e) => { e.preventDefault(); if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
+                                </Link>
                               </li>
                             ))}
                           </ul>
                         </div>
-                        <Switch>
-                          <Route path="/highlights/:setid" render={({ match }) => {
-                            const setId = match.params.setid;
-                            return (
-                              <div>
-                                <hr/>
-                                <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
-                              </div>
-                            );
-                          }}/>
-                          <Route path="/highlights" render={() => {
-                            if (mainState.activeHighlightSetId) {
-                              return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
-                            } else {
-                              return <div>No sets</div>
-                            }
-                          }}/>
-                        </Switch>
                       </div>
-                    );
-                  }}/>
-                  <Route path="/settings" render={() => (
-                    <div>
-                      <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
-                    </div>
-                  )}/>
-                  <Redirect to="/library"/>
-                </Switch>
+                    )}/>
+                    <Route path="/highlights" render={() => {
+                      return (
+                        <div>
+                          <div>
+                            <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
+                            <ul className="App-highlight-set-list">
+                              {expandedHighlightSetsMap.valueSeq().map((s) => (
+                                <li key={s.id}>
+                                  <NavLink to={'/highlights/' + s.id} activeClassName="selected">{s.name} [{s.contexts.length}]</NavLink>
+                                  <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <Switch>
+                            <Route path="/highlights/:setid" render={({ match }) => {
+                              const setId = match.params.setid;
+                              return (
+                                <div>
+                                  <hr/>
+                                  <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
+                                </div>
+                              );
+                            }}/>
+                            <Route path="/highlights" render={() => {
+                              if (mainState.activeHighlightSetId) {
+                                return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
+                              } else {
+                                return <div>No sets</div>
+                              }
+                            }}/>
+                          </Switch>
+                        </div>
+                      );
+                    }}/>
+                    <Route path="/settings" render={() => (
+                      <div>
+                        <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
+                      </div>
+                    )}/>
+                    <Redirect to="/library"/>
+                  </Switch>
+                </div>
               </div>
             )}/>
           </Switch>
