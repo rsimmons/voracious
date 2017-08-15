@@ -26,7 +26,7 @@ class NewSourceForm extends Component {
     ];
     const { onNewSource } = this.props;
     return (
-      <form onSubmit={e => { e.preventDefault(); onNewSource(this.kindVal); }}>
+      <form className="App-new-source-form" onSubmit={e => { e.preventDefault(); onNewSource(this.kindVal); }}>
         <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
         <button type="submit">Create New Source</button>
       </form>
@@ -84,15 +84,13 @@ class HighlightSet extends Component {
 
     return (
       <div>
-        <div>Id: {highlightSet.id}</div>
         <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
         <div>
-          <button onClick={this.handleExportTSV}>Export TSV</button>
+          <button onClick={this.handleExportTSV}>Export As TSV</button>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
             <div key={i} style={{height: ELEMENT_HEIGHT, overflow: 'hidden'}}>
-              <p>{i} {/*(new Date(timeCreated)).toLocaleString()*/}</p>
               <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
               <div>{context.secondaryAnnoTexts.map((sec, i) => (
                 <div key={i}>{sec.annoTexts.map((t, i) => (
@@ -130,7 +128,7 @@ class NewHighlightSetForm extends Component {
     const nameIsValid = this.state.setName && (this.state.setName.trim() !== '');
 
     return (
-      <form onSubmit={this.handleSubmit}>
+      <form className="App-new-set-form" onSubmit={this.handleSubmit}>
         <input type="text" placeholder="New Set Name" value={this.state.setName} onChange={this.handleNameChange} />
         <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Set</button>
       </form>
@@ -167,7 +165,7 @@ class App extends Component {
               return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
             }}/>
             <Route render={() => (
-              <div>
+              <div className="App-main-wrapper">
                 <nav className="App-main-nav header-font">
                   <NavLink to={'/library'} activeClassName="selected">Library</NavLink>
                   <NavLink to={'/highlights'} activeClassName="selected">Highlights</NavLink>
@@ -178,13 +176,16 @@ class App extends Component {
                     <div>
                       <div>
                         <NewSourceForm onNewSource={actions.createSource} />
-                        {mainState.sources.valueSeq().map((s) => (
-                          <div key={s.id}>
-                            {s.name} <small>[{s.id}]</small>
-                            <Link to={'/source/' + s.id}>View</Link>
-                            <button onClick={() => { if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
-                          </div>
-                        ))}
+                        <ul>
+                          {mainState.sources.valueSeq().map((s) => (
+                            <li key={s.id} className="App-library-list-item">
+                              <Link to={'/source/' + s.id}>
+                                {s.name}
+                                <button onClick={(e) => { e.preventDefault(); if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
                   )}/>
@@ -193,13 +194,14 @@ class App extends Component {
                       <div>
                         <div>
                           <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
-                          {expandedHighlightSetsMap.valueSeq().map((s) => (
-                            <div key={s.id}>
-                              {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
-                              <Link to={'/highlights/' + s.id}>View</Link>
-                              <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
-                            </div>
-                          ))}
+                          <ul className="App-highlight-set-list">
+                            {expandedHighlightSetsMap.valueSeq().map((s) => (
+                              <li key={s.id}>
+                                <NavLink to={'/highlights/' + s.id} activeClassName="selected">{s.name} [{s.contexts.length}]</NavLink>
+                                <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                         <Switch>
                           <Route path="/highlights/:setid" render={({ match }) => {

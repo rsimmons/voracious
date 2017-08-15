@@ -1,3 +1,7 @@
+.App-main-wrapper {
+  margin: 0 10px;
+}
+
 .App-main-nav {
   margin-bottom: 20px;
 }
@@ -5,11 +9,11 @@
 .App-main-nav > a {
   display: inline-block;
   text-decoration: none;
-  padding: 0.3em 0.5em;
-  margin: 0 2px;
+  padding: 0.2em 0.1em;
+  margin-right: 0.4em;
   border-bottom: 2px solid black;
-  color: black;
-  font-size: 24px;
+  color: inherit;
+  font-size: 28px;
 }
 
 .App-main-nav > a.selected {
@@ -17,5 +21,54 @@
 }
 
 .App-main-nav > a:hover {
-  background: #ccc;
+  background: #eee;
+}
+
+.App-library-list-item {
+  font-size: 18px;
+  padding: 0.3em 0;
+}
+
+.App-library-list-item:hover {
+  background: #ddd;
+}
+
+.App-library-list-item > a {
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.App-new-source-form {
+  background: #cce;
+  padding: 1em;
+  margin: 10px 0;
+}
+
+.App-new-set-form {
+  background: #cce;
+  padding: 1em;
+  margin: 10px 0;
+}
+
+.App-highlight-set-list a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.App-highlight-set-list a:hover {
+  text-decoration: underline;
+}
+
+.App-highlight-set-list a:not(.selected)::before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+}
+
+.App-highlight-set-list a.selected::before {
+  display: inline-block;
+  width: 1em;
+  content: "> ";
+  color: red;
 }

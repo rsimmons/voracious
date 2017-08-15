@@ -29,6 +29,12 @@ form {
 
 ul {
   margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+li {
+  padding: 0;
 }
 
 .studied-text-box {
