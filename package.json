@@ -12,6 +12,7 @@
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-infinite": "^0.12.1",
+    "react-router-dom": "^4.1.2",
     "react-scripts": "1.0.10",
     "reselect": "^3.0.1"
   },

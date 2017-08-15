@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { BrowserRouter as Router, Link, Switch, Route, Redirect } from 'react-router-dom';
 import Infinite from 'react-infinite';
 
 import './App.css';
@@ -78,7 +79,7 @@ class HighlightSet extends Component {
   };
 
   render() {
-    const { highlightSet, onExit } = this.props;
+    const { highlightSet } = this.props;
     const ELEMENT_HEIGHT = 150;
 
     return (
@@ -87,7 +88,6 @@ class HighlightSet extends Component {
         <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
         <div>
           <button onClick={this.handleExportTSV}>Export TSV</button>
-          <button onClick={onExit}>Exit To Top</button>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
@@ -142,10 +142,6 @@ class NewHighlightSetForm extends Component {
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      viewingMode: 'top',
-      viewingId: undefined,
-    };
     this.expandedHighlightSetsMapSelector = createExpandedHighlightSetsMapSelector();
   }
 
@@ -162,43 +158,85 @@ class App extends Component {
 
     if (mainState.loading) {
       return <h1>Loading...</h1>;
-    } else if (this.state.viewingMode === 'top') {
+    } else {
       return (
-        <div>
-          <div>
-            <h2>Sources</h2>
-            <NewSourceForm onNewSource={actions.createSource} />
-            {mainState.sources.valueSeq().map((s) => (
-              <div key={s.id}>
-                {s.name} <small>[{s.id}]</small>
-                <button onClick={() => {this.setState({viewingMode: 'source', viewingId: s.id})}}>View</button>
-                <button onClick={() => { if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
+        <Router>
+          <Switch>
+            <Route path="/source/:id" render={({ match, history }) => {
+              const sourceId = match.params.id;
+              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
+            }}/>
+            <Route render={() => (
+              <div>
+                <nav>
+                  <Link to={'/library'}>Library</Link>
+                  <Link to={'/highlights'}>Highlights</Link>
+                  <Link to={'/settings'}>Settings</Link>
+                </nav>
+                <Switch>
+                  <Route path="/library" render={() => (
+                    <div>
+                      <h2>Library</h2>
+                      <div>
+                        <NewSourceForm onNewSource={actions.createSource} />
+                        {mainState.sources.valueSeq().map((s) => (
+                          <div key={s.id}>
+                            {s.name} <small>[{s.id}]</small>
+                            <Link to={'/source/' + s.id}>View</Link>
+                            <button onClick={() => { if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}/>
+                  <Route path="/highlights" render={() => {
+                    return (
+                      <div>
+                        <h2>Highlights</h2>
+                        <div>
+                          <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
+                          {expandedHighlightSetsMap.valueSeq().map((s) => (
+                            <div key={s.id}>
+                              {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
+                              <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
+                              <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
+                            </div>
+                          ))}
+                        </div>
+                        <Switch>
+                          <Route path="/highlights/:setid" render={({ match }) => {
+                            const setId = match.params.setid;
+                            return (
+                              <div>
+                                <hr/>
+                                <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
+                              </div>
+                            );
+                          }}/>
+                          <Route path="/highlights" render={() => {
+                            if (mainState.activeHighlightSetId) {
+                              return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
+                            } else {
+                              return <div>No sets</div>
+                            }
+                          }}/>
+                        </Switch>
+                      </div>
+                    );
+                  }}/>
+                  <Route path="/settings" render={() => (
+                    <div>
+                      <h2>Settings</h2>
+                      <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
+                    </div>
+                  )}/>
+                  <Redirect to="/library"/>
+                </Switch>
               </div>
-            ))}
-          </div>
-          <div>
-            <h2>Highlights</h2>
-            <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
-            {expandedHighlightSetsMap.valueSeq().map((s) => (
-              <div key={s.id}>
-                {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
-                <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
-                <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
-              </div>
-            ))}
-          </div>
-          <div>
-            <h2>Other</h2>
-            <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
-          </div>
-        </div>
-      )
-    } else if (this.state.viewingMode === 'source') {
-      const sourceId = this.state.viewingId;
-      return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />
-    } else if (this.state.viewingMode === 'set') {
-      const setId = this.state.viewingId;
-      return <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onExit={() => { this.setState({viewingMode: 'top', viewingId: undefined})}} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
+            )}/>
+          </Switch>
+        </Router>
+      );
     }
   }
 }
