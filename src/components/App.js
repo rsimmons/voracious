@@ -198,7 +198,7 @@ class App extends Component {
                           {expandedHighlightSetsMap.valueSeq().map((s) => (
                             <div key={s.id}>
                               {s.name} [{s.contexts.length}] <small>[{s.id}]</small>
-                              <button onClick={() => { this.setState({viewingMode: 'set', viewingId: s.id}); }}>View</button>
+                              <Link to={'/highlights/' + s.id}>View</Link>
                               <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
                             </div>
                           ))}
