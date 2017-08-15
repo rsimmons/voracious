@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Link, Switch, Route, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Link, NavLink, Switch, Route, Redirect } from 'react-router-dom';
 import Infinite from 'react-infinite';
 
 import './App.css';
@@ -168,15 +168,14 @@ class App extends Component {
             }}/>
             <Route render={() => (
               <div>
-                <nav>
-                  <Link to={'/library'}>Library</Link>
-                  <Link to={'/highlights'}>Highlights</Link>
-                  <Link to={'/settings'}>Settings</Link>
+                <nav className="App-main-nav">
+                  <NavLink to={'/library'} activeClassName="selected">Library</NavLink>
+                  <NavLink to={'/highlights'} activeClassName="selected">Highlights</NavLink>
+                  <NavLink to={'/settings'} activeClassName="selected">Settings</NavLink>
                 </nav>
                 <Switch>
                   <Route path="/library" render={() => (
                     <div>
-                      <h2>Library</h2>
                       <div>
                         <NewSourceForm onNewSource={actions.createSource} />
                         {mainState.sources.valueSeq().map((s) => (
@@ -192,7 +191,6 @@ class App extends Component {
                   <Route path="/highlights" render={() => {
                     return (
                       <div>
-                        <h2>Highlights</h2>
                         <div>
                           <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
                           {expandedHighlightSetsMap.valueSeq().map((s) => (
@@ -226,7 +224,6 @@ class App extends Component {
                   }}/>
                   <Route path="/settings" render={() => (
                     <div>
-                      <h2>Settings</h2>
                       <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
                     </div>
                   )}/>

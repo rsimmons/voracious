@@ -1,0 +1,21 @@
+.App-main-nav {
+  margin-bottom: 20px;
+}
+
+.App-main-nav > a {
+  display: inline-block;
+  text-decoration: none;
+  padding: 0.3em 0.5em;
+  margin: 0 2px;
+  border-bottom: 2px solid black;
+  color: black;
+  font-size: 24px;
+}
+
+.App-main-nav > a.selected {
+  border-bottom: 2px solid red;
+}
+
+.App-main-nav > a:hover {
+  background: #ccc;
+}
