@@ -13,8 +13,14 @@ html {
   box-sizing: inherit;
 }
 
+@import url('https://fonts.googleapis.com/css?family=Nunito|Quicksand');
+
 body {
-  font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-family: 'Nunito', sans-serif;
+}
+
+.header-font {
+  font-family: 'Quicksand', sans-serif;
 }
 
 form {

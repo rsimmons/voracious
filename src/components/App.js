@@ -168,7 +168,7 @@ class App extends Component {
             }}/>
             <Route render={() => (
               <div>
-                <nav className="App-main-nav">
+                <nav className="App-main-nav header-font">
                   <NavLink to={'/library'} activeClassName="selected">Library</NavLink>
                   <NavLink to={'/highlights'} activeClassName="selected">Highlights</NavLink>
                   <NavLink to={'/settings'} activeClassName="selected">Settings</NavLink>
