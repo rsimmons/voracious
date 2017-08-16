@@ -434,7 +434,7 @@ export default class Source extends Component {
                   );
                 } else {
                   return (
-                    <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
+                    <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} alignment="center" />
                   );
                 }
               }

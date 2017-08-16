@@ -150,7 +150,7 @@ export default class AnnoText extends PureComponent {
   };
 
   render() {
-    const { annoText, language, onUpdate, highlightSets, activeSetId, onSetActiveSetId } = this.props;
+    const { annoText, language, onUpdate, highlightSets, activeSetId, onSetActiveSetId, alignment } = this.props;
 
     const inspectedIndex = this.state.inspectedIndex;
     const hitLemmaInfoElems = [];
@@ -237,6 +237,28 @@ export default class AnnoText extends PureComponent {
     ).join('');
 
     const floatWidth = '240px';
+
+    let textContainerStyle;
+    switch (alignment) {
+      case 'left':
+        textContainerStyle = {
+          textAlign: 'left',
+          marginRight: floatWidth,
+        };
+        break;
+
+      case 'center':
+        textContainerStyle = {
+          textAlign: 'center',
+          marginLeft: floatWidth,
+          marginRight: floatWidth,
+        };
+        break;
+
+      default:
+        throw new Error('bad alignment value');
+    }
+
     return (
       <div>
         <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
@@ -259,7 +281,7 @@ export default class AnnoText extends PureComponent {
             </form>
           ) : ''}
         </div>
-        <div style={{ margin: '0 ' + floatWidth }} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
+        <div style={textContainerStyle} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
       </div>
     );
   }

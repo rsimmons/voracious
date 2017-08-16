@@ -79,10 +79,10 @@ class HighlightSet extends Component {
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
             <div key={i} style={{height: ELEMENT_HEIGHT, overflow: 'hidden'}}>
-              <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
+              <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} alignment="left" />
               <div>{context.secondaryAnnoTexts.map((sec, i) => (
                 <div key={i}>{sec.annoTexts.map((t, i) => (
-                  <AnnoText key={i} annoText={t} language={sec.language} />
+                  <AnnoText key={i} annoText={t} language={sec.language} alignment="left" />
                 ))}</div>
               ))}</div>
             </div>
