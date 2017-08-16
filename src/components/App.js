@@ -62,14 +62,19 @@ class HighlightSet extends Component {
   };
 
   render() {
-    const { highlightSet } = this.props;
+    const { highlightSet, onDelete } = this.props;
     const ELEMENT_HEIGHT = 150;
 
     return (
       <div>
-        <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
-        <div>
-          <Button onClick={this.handleExportTSV}>Export As TSV</Button>
+        <div style={{ marginBottom: 20 }}>
+          <span style={{ float: 'right', fontSize: 14 }}>
+            <Button onClick={this.handleExportTSV}>&darr; Export Set As TSV</Button>
+            &nbsp;
+            <Button onClick={onDelete}>× Delete Set</Button>
+          </span>
+          <span style={{ fontSize: 24 }}>{highlightSet.name}</span><br/>
+          <span>Rename <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></span>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
@@ -88,7 +93,7 @@ class HighlightSet extends Component {
   }
 }
 
-// NewDeckForm
+// NewHighlightSetForm
 class NewHighlightSetForm extends Component {
   constructor(props) {
     super(props);
@@ -112,8 +117,8 @@ class NewHighlightSetForm extends Component {
 
     return (
       <form onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="New Set Name" value={this.state.setName} onChange={this.handleNameChange} />
-        <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Set</button>
+        <input type="text" placeholder="Set Name" value={this.state.setName} onChange={this.handleNameChange} />
+        <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>+ Create Set</button>
       </form>
     );
   }
@@ -186,7 +191,6 @@ class App extends Component {
                               {expandedHighlightSetsMap.valueSeq().map((s) => (
                                 <li key={s.id}>
                                   <NavLink to={'/highlights/' + s.id} activeClassName="selected">{s.name} [{s.contexts.length}]</NavLink>
-                                  <button onClick={() => { actions.deleteHighlightSet(s.id); }} {...(s.contexts.length > 0 ? {disabled: true} : {})}>Delete</button>
                                 </li>
                               ))}
                             </ul>
@@ -194,11 +198,19 @@ class App extends Component {
                           </div>
                           <div className="App-highlight-set-main-area">
                             <Switch>
-                              <Route path="/highlights/:setid" render={({ match }) => {
+                              <Route path="/highlights/:setid" render={({ match, history }) => {
                                 const setId = match.params.setid;
+                                const expandedSet = expandedHighlightSetsMap.get(setId);
                                 return (
                                   <div>
-                                    <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetNamec={(name) => { actions.highlightSetRename(setId, name); }} />
+                                    <HighlightSet actions={actions} highlightSet={expandedSet} onSetName={(name) => { actions.highlightSetRename(setId, name); }} onDelete={() => {
+                                      if (expandedSet.contexts.length > 0) {
+                                        window.alert('Only empty sets can be deleted');
+                                      } else {
+                                        actions.deleteHighlightSet(setId);
+                                        history.push('/highlights');
+                                      }
+                                    }} />
                                   </div>
                                 );
                               }}/>

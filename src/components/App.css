@@ -69,6 +69,10 @@
   margin: 10px 0;
 }
 
+.App-highlight-set-list {
+  margin-bottom: 10px;
+}
+
 .App-highlight-set-list a {
   text-decoration: none;
   color: inherit;

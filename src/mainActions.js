@@ -278,6 +278,9 @@ export default class MainActions {
   };
 
   deleteHighlightSet = (setId) => {
+    // TODO: If we want to disallow deleting non-empty sets,
+    //  we should enforce that here. Not sure how to do that
+    //  if the selectors are held elsewhere.
     let state = this.state.get();
 
     state = state.deleteIn(['highlightSets', setId]);
