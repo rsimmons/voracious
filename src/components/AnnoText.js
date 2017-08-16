@@ -4,27 +4,6 @@ import Immutable, { Record } from 'immutable';
 import { cpSlice } from '../util/string';
 import { getKindAtIndex, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from '../util/annotext';
 
-// ClipboardCopier
-class ClipboardCopier extends PureComponent {
-  onSubmit = (e) => {
-    e.preventDefault();
-    // TODO: could check input is set and input.select is truthy, and wrap copy+blur in a try block
-    this.inputElem.select();
-    document.execCommand('copy');
-    this.inputElem.blur();
-  }
-
-  render() {
-    const { text, buttonText } = this.props;
-    return (
-      <form onSubmit={this.onSubmit}>
-        <input style={{ /*width: '2em'*/ }} type="text" value={text} readOnly ref={(el) => { this.inputElem = el; }} />
-        <button type="submit">{buttonText}</button>
-      </form>
-    );
-  }
-}
-
 const CPRange = new Record({
   cpBegin: null,
   cpEnd: null,
@@ -224,6 +203,7 @@ export default class AnnoText extends PureComponent {
       }
     );
 
+/*
     const annoTextHTML = annoTextCustomRender(
       annoText,
       (a, inner) => {
@@ -235,6 +215,7 @@ export default class AnnoText extends PureComponent {
       },
       (c, i) => (c === '\n' ? '<br/>' : escape(c))
     ).join('');
+*/
 
     const floatWidth = '240px';
 
@@ -261,9 +242,8 @@ export default class AnnoText extends PureComponent {
 
     return (
       <div>
-        <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
-          <ClipboardCopier text={annoTextHTML} buttonText="Copy HTML" />
-          {(this.state.selectionRange && onUpdate) ? (
+        {(this.state.selectionRange && onUpdate) ? (
+          <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
             <form>
               <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
               <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
@@ -279,8 +259,8 @@ export default class AnnoText extends PureComponent {
                 }}>X</button></div>
               ))}
             </form>
-          ) : ''}
-        </div>
+          </div>
+        ) : ''}
         <div style={textContainerStyle} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
       </div>
     );
