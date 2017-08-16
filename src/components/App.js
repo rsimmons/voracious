@@ -69,7 +69,7 @@ class HighlightSet extends Component {
       <div>
         <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
         <div>
-          <button onClick={this.handleExportTSV}>Export As TSV</button>
+          <Button onClick={this.handleExportTSV}>Export As TSV</Button>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
@@ -111,7 +111,7 @@ class NewHighlightSetForm extends Component {
     const nameIsValid = this.state.setName && (this.state.setName.trim() !== '');
 
     return (
-      <form className="App-new-set-form" onSubmit={this.handleSubmit}>
+      <form onSubmit={this.handleSubmit}>
         <input type="text" placeholder="New Set Name" value={this.state.setName} onChange={this.handleNameChange} />
         <button type="submit" {...(nameIsValid ? {} : {disabled: true})}>Create New Set</button>
       </form>
@@ -181,8 +181,7 @@ class App extends Component {
                     <Route path="/highlights" render={() => {
                       return (
                         <div>
-                          <div>
-                            <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
+                          <div className="App-highlight-set-left-panel">
                             <ul className="App-highlight-set-list">
                               {expandedHighlightSetsMap.valueSeq().map((s) => (
                                 <li key={s.id}>
@@ -191,25 +190,27 @@ class App extends Component {
                                 </li>
                               ))}
                             </ul>
+                            <NewHighlightSetForm onNewHighlightSet={actions.createHighlightSet} />
                           </div>
-                          <Switch>
-                            <Route path="/highlights/:setid" render={({ match }) => {
-                              const setId = match.params.setid;
-                              return (
-                                <div>
-                                  <hr/>
-                                  <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetNamec={(name) => { actions.highlightSetRename(setId, name); }} />
-                                </div>
-                              );
-                            }}/>
-                            <Route path="/highlights" render={() => {
-                              if (mainState.activeHighlightSetId) {
-                                return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
-                              } else {
-                                return <div>No sets</div>
-                              }
-                            }}/>
-                          </Switch>
+                          <div className="App-highlight-set-main-area">
+                            <Switch>
+                              <Route path="/highlights/:setid" render={({ match }) => {
+                                const setId = match.params.setid;
+                                return (
+                                  <div>
+                                    <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetNamec={(name) => { actions.highlightSetRename(setId, name); }} />
+                                  </div>
+                                );
+                              }}/>
+                              <Route path="/highlights" render={() => {
+                                if (mainState.activeHighlightSetId) {
+                                  return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
+                                } else {
+                                  return <div>No sets</div>
+                                }
+                              }}/>
+                            </Switch>
+                          </div>
                         </div>
                       );
                     }}/>

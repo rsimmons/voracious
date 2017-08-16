@@ -54,10 +54,13 @@
   color: inherit;
 }
 
-.App-new-source-form {
-  background: #cce;
-  padding: 1em;
-  margin: 10px 0;
+.App-highlight-set-left-panel {
+  position: fixed;
+  width: 300px;
+}
+
+.App-highlight-set-main-area {
+  padding-left: 300px;
 }
 
 .App-new-set-form {
@@ -72,18 +75,18 @@
 }
 
 .App-highlight-set-list a:hover {
-  text-decoration: underline;
+  background: #eee;
+  /*text-decoration: underline;*/
 }
 
-.App-highlight-set-list a:not(.selected)::before {
-  content: "";
-  display: inline-block;
-  width: 1em;
+.App-highlight-set-list a.selected {
+  color: #c00;
 }
 
 .App-highlight-set-list a.selected::before {
   display: inline-block;
+  content: "►";
+  color: #c00;
   width: 1em;
-  content: "> ";
-  color: red;
+  margin-left: -1em;
 }
