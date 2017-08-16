@@ -1,5 +1,7 @@
 .App-main-wrapper {
-  margin: 0 10px;
+  max-width: 960px;
+  padding: 0 10px;
+  margin: 0 auto;
 }
 
 .App-main-nav {
@@ -7,10 +9,11 @@
   width: 100%;
   height: 60px;
   background: white;
+  font-size: 28px;
 }
 
 .App-below-main-nav {
-  padding-top: 60px;
+  padding-top: 70px;
 }
 
 .App-main-nav > a {
@@ -20,11 +23,11 @@
   margin-right: 0.4em;
   border-bottom: 2px solid black;
   color: inherit;
-  font-size: 28px;
 }
 
 .App-main-nav > a.selected {
-  border-bottom: 2px solid red;
+  color: #c00;
+  border-bottom: 2px solid #c00;
 }
 
 .App-main-nav > a:hover {
@@ -33,11 +36,16 @@
 
 .App-library-list-item {
   font-size: 18px;
-  padding: 0.3em 0;
+  padding: 0.5em 0;
+  border-top: 1px solid #ddd;
+}
+
+.App-library-list-item:last-child {
+  border-bottom: 1px solid #ddd;
 }
 
 .App-library-list-item:hover {
-  background: #ddd;
+  background: #eee;
 }
 
 .App-library-list-item > a {

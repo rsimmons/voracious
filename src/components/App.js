@@ -4,9 +4,9 @@ import Infinite from 'react-infinite';
 
 import './App.css';
 
+import Button from './Button.js';
 import AnnoText from './AnnoText.js';
 import Source from './Source.js';
-import Select from './Select.js';
 
 // import assert from 'assert';
 import escape from 'escape-html';
@@ -16,23 +16,6 @@ import { getKind, customRender as annoTextCustomRender } from '../util/annotext'
 import { downloadFile } from '../util/download';
 
 const newlinesToBrs = s => s.replace(/\n/g, '<br/>');
-
-// NewSourceForm
-class NewSourceForm extends Component {
-  render() {
-    const kindOptions = [
-      { value: 'video', label: 'Video' },
-      { value: 'comic', label: 'Comic' },
-    ];
-    const { onNewSource } = this.props;
-    return (
-      <form className="App-new-source-form" onSubmit={e => { e.preventDefault(); onNewSource(this.kindVal); }}>
-        <Select options={kindOptions} onSet={v => { this.kindVal = v; }} />
-        <button type="submit">Create New Source</button>
-      </form>
-    );
-  }
-};
 
 // HighlightSet
 class HighlightSet extends Component {
@@ -143,6 +126,9 @@ class App extends Component {
     this.expandedHighlightSetsMapSelector = createExpandedHighlightSetsMapSelector();
   }
 
+  handleCreateSource = () => {
+  };
+
   handleExportBackup = () => {
     // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
     const backupData = JSON.stringify(this.props.actions._saveToJSONable());
@@ -173,10 +159,12 @@ class App extends Component {
                 </nav>
                 <div className="App-below-main-nav">
                   <Switch>
-                    <Route path="/library" render={() => (
+                    <Route path="/library" render={({ history }) => (
                       <div>
                         <div>
-                          <NewSourceForm onNewSource={actions.createSource} />
+                          <div style={{marginBottom: 20}}>
+                            <Button onClick={() => { const newSourceId = actions.createSource(); history.push('/source/' + newSourceId); }}>+ Add Source</Button>
+                          </div>
                           <ul>
                             {mainState.sources.valueSeq().map((s) => (
                               <li key={s.id} className="App-library-list-item">
@@ -210,7 +198,7 @@ class App extends Component {
                               return (
                                 <div>
                                   <hr/>
-                                  <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetName={(name) => { actions.highlightSetRename(setId, name); }} />
+                                  <HighlightSet actions={actions} highlightSet={expandedHighlightSetsMap.get(setId)} onSetNamec={(name) => { actions.highlightSetRename(setId, name); }} />
                                 </div>
                               );
                             }}/>
@@ -227,7 +215,7 @@ class App extends Component {
                     }}/>
                     <Route path="/settings" render={() => (
                       <div>
-                        <div><button onClick={this.handleExportBackup}>Export Backup</button></div>
+                        <Button onClick={this.handleExportBackup}>Export Backup</Button>
                       </div>
                     )}/>
                     <Redirect to="/library"/>
