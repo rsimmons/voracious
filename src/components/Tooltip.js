@@ -18,7 +18,7 @@ function getPageRect(el) {
 
 export default class Tooltip extends PureComponent {
   render() {
-    const { anchorElems, children } = this.props;
+    const { anchorElems, onMouseEnter, onMouseLeave, children } = this.props;
 
     const rects = anchorElems.map(el => getPageRect(el));
     const minY = Math.min(...rects.map(r => r.top));
@@ -30,7 +30,7 @@ export default class Tooltip extends PureComponent {
 
     return (
       <RenderUnderBody>
-        <div className="Tooltip" style={{ top: minY+offsetY, left: centerX }}>
+        <div className="Tooltip" style={{ top: minY+offsetY, left: centerX }} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           <div className="Tooltip-content">
             {children}
           </div>

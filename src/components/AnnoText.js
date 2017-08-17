@@ -149,6 +149,14 @@ export default class AnnoText extends PureComponent {
     this.clearSelection();
   };
 
+  handleTooltipMouseEnter = () => {
+    this.clearHoverTimeout();
+  };
+
+  handleTooltipMouseLeave = () => {
+    this.setHoverTimeout();
+  };
+
   renderTooltip = () => {
     const { annoText } = this.props;
 
@@ -169,7 +177,7 @@ export default class AnnoText extends PureComponent {
       }
 
       return (
-        <Tooltip anchorElems={anchorElems}>
+        <Tooltip anchorElems={anchorElems} onMouseEnter={this.handleTooltipMouseEnter} onMouseLeave={this.handleTooltipMouseLeave}>
           <div className="AnnoText-tooltip">
             <ul>
               {hitLemmaAnnos.map(lemmaAnno => {
