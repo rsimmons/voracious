@@ -70,6 +70,14 @@ export default class AnnoText extends PureComponent {
     document.removeEventListener('mouseup', this.handleMouseUp);
   };
 
+  lemmasRangeFromIndex = (cpIndex) => {
+    const hitLemmaAnnos = getKindAtIndex(this.props.annoText, 'lemma', cpIndex);
+    const hitBegin = Math.min(...hitLemmaAnnos.map(a => a.cpBegin));
+    const hitEnd = Math.max(...hitLemmaAnnos.map(a => a.cpEnd));
+
+    return new CPRange({cpBegin: hitBegin, cpEnd: hitEnd});
+  }
+
   handleCharMouseDown = (e) => {
     e.preventDefault();
     const cpIndex = +e.currentTarget.getAttribute('data-index');
@@ -85,11 +93,7 @@ export default class AnnoText extends PureComponent {
   handleCharMouseEnter = (e) => {
     const cpIndex = +e.currentTarget.getAttribute('data-index');
 
-    const hitLemmaAnnos = getKindAtIndex(this.props.annoText, 'lemma', cpIndex);
-    const hitBegin = Math.min(...hitLemmaAnnos.map(a => a.cpBegin));
-    const hitEnd = Math.max(...hitLemmaAnnos.map(a => a.cpEnd));
-
-    this.setState({hoverRange: new CPRange({cpBegin: hitBegin, cpEnd: hitEnd})});
+    this.setState({hoverRange: this.lemmasRangeFromIndex(cpIndex)});
 
     if (this.dragStartIndex !== null) {
       let a = this.dragStartIndex;
@@ -104,6 +108,12 @@ export default class AnnoText extends PureComponent {
 
   handleCharMouseLeave = (e) => {
     this.setHoverTimeout();
+  };
+
+  handleCharDoubleClick = (e) => {
+    const cpIndex = +e.currentTarget.getAttribute('data-index');
+
+    this.setState({selectionRange: this.lemmasRangeFromIndex(cpIndex)});
   };
 
   handleSetRuby = () => {
@@ -215,7 +225,7 @@ export default class AnnoText extends PureComponent {
             classNames.push('AnnoText-hover');
           }
 
-          return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`} ref={(el) => { this.charElem[i] = el; }}>{c}</span>;
+          return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} onDoubleClick={this.handleCharDoubleClick} data-index={i} key={`char-${i}`} ref={(el) => { this.charElem[i] = el; }}>{c}</span>;
         }
       }
     );
