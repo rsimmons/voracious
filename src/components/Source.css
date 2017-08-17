@@ -1,0 +1,25 @@
+.Source-studied-text-box {
+  font-size: 1.6em;
+  text-align: center;
+  min-height: 5em;
+  padding: 0.5em 0;
+  border-top: 1px solid #ccc;
+  margin: 0 auto;
+  max-width: 40em;
+}
+
+.Source-settings {
+  position: absolute;
+  right: 0;
+  background-color: #ddd;
+  padding: 10px;
+  z-index: 100;
+}
+
+.Source-language-tag {
+  float: left;
+  color: white;
+  font-size: 14px;
+  padding: 5px 10px;
+  background-color: #ccc;
+}

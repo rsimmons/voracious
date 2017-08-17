@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import './Source.css';
+
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 
@@ -398,7 +400,7 @@ export default class Source extends Component {
 
     return (
       <div>
-        <div id="source-settings">
+        <div className="Source-settings">
           <div>Id: {source.id}</div>
           <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
           <div>Kind: {source.kind}</div>
@@ -420,8 +422,8 @@ export default class Source extends Component {
         <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
         <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
         {source.texts.map((text, textNum) => (
-          <div className="studied-text-box" key={textNum}>
-            <div className="language-tag">{text.language.toUpperCase()}</div>
+          <div className="Source-studied-text-box" key={textNum}>
+            <div className="Source-language-tag">{text.language.toUpperCase()}</div>
             <div>{(() => {
               const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
 
