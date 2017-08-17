@@ -1,8 +1,12 @@
 import React, { PureComponent } from 'react';
 import Immutable, { Record } from 'immutable';
 
+import './AnnoText.css';
+
+import Tooltip from './Tooltip';
+
 import { cpSlice } from '../util/string';
-import { getKindAtIndex, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from '../util/annotext';
+import { getKindAtIndex, getKindInRange, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from '../util/annotext';
 
 const CPRange = new Record({
   cpBegin: null,
@@ -14,9 +18,10 @@ export default class AnnoText extends PureComponent {
     super(props);
     this.state = {
       selectionRange: null,
-      inspectedIndex: null, // codepoint index of char we're doing a "tooltip" for
+      hoverRange: null,
     };
-    this.tooltipTimeout = null; // it does not work to have this in state
+    this.charElem = {}; // map from cpIndex to element wrapping character
+    this.hoverTimeout = null;
     this.dragStartIndex = null; // codepoint index of character that mousedown happened on, if mouse is still down
   }
 
@@ -26,22 +31,22 @@ export default class AnnoText extends PureComponent {
   componentWillUnmount() {
     document.removeEventListener('mouseup', this.handleMouseUp);
 
-    this.clearTooltipTimeout();
+    this.clearHoverTimeout();
   }
 
-  clearTooltipTimeout() {
-    if (this.tooltipTimeout) {
-      window.clearTimeout(this.tooltipTimeout);
-      this.tooltipTimeout = null;
+  clearHoverTimeout() {
+    if (this.hoverTimeout) {
+      window.clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
     }
   }
 
-  setTooltipTimeout() {
-    if (this.tooltipTimeout) {
-      window.clearTimeout(this.tooltipTimeout);
+  setHoverTimeout() {
+    if (this.hoverTimeout) {
+      window.clearTimeout(this.hoverTimeout);
     }
-    this.tooltipTimeout = window.setTimeout(
-      () => { this.setState({ inspectedIndex: null }); this.tooltipTimeout = null; },
+    this.hoverTimeout = window.setTimeout(
+      () => { this.setState({ hoverRange: null }); this.hoverTimeout = null; },
       500
     );
   }
@@ -79,7 +84,13 @@ export default class AnnoText extends PureComponent {
 
   handleCharMouseEnter = (e) => {
     const cpIndex = +e.currentTarget.getAttribute('data-index');
-    this.setState({inspectedIndex: cpIndex});
+
+    const hitLemmaAnnos = getKindAtIndex(this.props.annoText, 'lemma', cpIndex);
+    const hitBegin = Math.min(...hitLemmaAnnos.map(a => a.cpBegin));
+    const hitEnd = Math.max(...hitLemmaAnnos.map(a => a.cpEnd));
+
+    this.setState({hoverRange: new CPRange({cpBegin: hitBegin, cpEnd: hitEnd})});
+
     if (this.dragStartIndex !== null) {
       let a = this.dragStartIndex;
       let b = cpIndex;
@@ -88,11 +99,11 @@ export default class AnnoText extends PureComponent {
       }
       this.setSelection(a, b+1);
     }
-    this.clearTooltipTimeout();
+    this.clearHoverTimeout();
   };
 
   handleCharMouseLeave = (e) => {
-    this.setTooltipTimeout();
+    this.setHoverTimeout();
   };
 
   handleSetRuby = () => {
@@ -128,39 +139,54 @@ export default class AnnoText extends PureComponent {
     this.clearSelection();
   };
 
+  renderTooltip = () => {
+    const { annoText } = this.props;
+
+    const tooltipRange = this.state.selectionRange || this.state.hoverRange;
+
+    let hitLemmaAnnos = [];
+    if (tooltipRange !== null) {
+      hitLemmaAnnos = getKindInRange(annoText, 'lemma', tooltipRange.cpBegin, tooltipRange.cpEnd);
+    }
+
+    if (hitLemmaAnnos.length > 0) {
+      const anchorElems = [];
+      for (let i = tooltipRange.cpBegin; i < tooltipRange.cpEnd; i++) {
+        const el = this.charElem[i];
+        if (el) {
+          anchorElems.push(el);
+        }
+      }
+
+      return (
+        <Tooltip anchorElems={anchorElems}>
+          <div className="AnnoText-tooltip">
+            <ul>
+              {hitLemmaAnnos.map(lemmaAnno => {
+                const encLemma = encodeURIComponent(lemmaAnno.data);
+                return (
+                  <li key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`} className="AnnoText-tooltip-item">
+                    <div className="AnnoText-tooltip-word">{lemmaAnno.data}</div>
+                    <div className="AnnoText-tooltip-links">
+                      <a className="AnnoText-dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
+                      <a className="AnnoText-dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
+                      <a className="AnnoText-dict-linkout" href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'} target="_blank">goo</a>{' '}
+                      <a className="AnnoText-dict-linkout" href={'http://tangorin.com/general/' + encLemma} target="_blank">Tangorin</a>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </Tooltip>
+      );
+    } else {
+      return null;
+    }
+  };
+
   render() {
     const { annoText, language, onUpdate, highlightSets, activeSetId, onSetActiveSetId, alignment } = this.props;
-
-    const inspectedIndex = this.state.inspectedIndex;
-    const hitLemmaInfoElems = [];
-    const hitLemmaIndexes = new Set();
-    if (inspectedIndex !== null) {
-      const hitLemmaAnnos = getKindAtIndex(annoText, 'lemma', inspectedIndex);
-      hitLemmaAnnos.forEach((lemmaAnno) => {
-        var encLemma = encodeURIComponent(lemmaAnno.data);
-        hitLemmaInfoElems.push(
-          <span key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`}>{lemmaAnno.data}<br />
-            <span style={{ fontSize: '0.5em' }}>
-              <a className="dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
-              <a className="dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
-              <a className="dict-linkout" href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'} target="_blank">goo</a>{' '}
-              <a className="dict-linkout" href={'http://tangorin.com/general/' + encLemma} target="_blank">Tangorin</a>
-            </span>
-          </span>
-        );
-      });
-      hitLemmaAnnos.forEach((lemmaAnno) => {
-        for (let i = lemmaAnno.cpBegin; i < lemmaAnno.cpEnd; i++) {
-          hitLemmaIndexes.add(i);
-        }
-      });
-    }
-    const selectedIndexes = new Set();
-    if (this.state.selectionRange) {
-      for (let i = this.state.selectionRange.cpBegin; i < this.state.selectionRange.cpEnd; i++) {
-        selectedIndexes.add(i);
-      }
-    }
 
     let annosInSelection = [];
     if (this.state.selectionRange) {
@@ -173,7 +199,7 @@ export default class AnnoText extends PureComponent {
         if (a.kind === 'ruby') {
           return [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>];
         } else if (a.kind === 'highlight') {
-          return [<span key={`highlight-${a.cpBegin}:${a.cpEnd}`} className='annotext-highlight'>{inner}</span>];
+          return [<span key={`highlight-${a.cpBegin}:${a.cpEnd}`} className='AnnoText-highlight'>{inner}</span>];
         } else {
           return inner;
         }
@@ -182,23 +208,14 @@ export default class AnnoText extends PureComponent {
         if (c === '\n') {
           return <br key={`char-${i}`} />;
         } else {
-          const isInspected = (i === inspectedIndex);
-
-          const toolTipElem = (isInspected && (hitLemmaInfoElems.length > 0))
-            ? <span style={{zIndex: 100}}><span className="textchar-tooltip">{hitLemmaInfoElems}</span><span className="textchar-tooltip-triangle"> </span></span>
-            : '';
-
-          const classNames = ['textchar'];
-          if (isInspected) {
-            classNames.push('inspected');
-          }
-          if (selectedIndexes.has(i)) {
-            classNames.push('selected');
-          } else if (hitLemmaIndexes.has(i)) {
-            classNames.push('word');
+          const classNames = ['AnnoText-textchar'];
+          if ((this.state.selectionRange !== null) && (i >= this.state.selectionRange.cpBegin) && (i < this.state.selectionRange.cpEnd)) {
+            classNames.push('AnnoText-selected');
+          } else if ((this.state.hoverRange !== null) && (i >= this.state.hoverRange.cpBegin) && (i < this.state.hoverRange.cpEnd)) {
+            classNames.push('AnnoText-hover');
           }
 
-          return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`}>{toolTipElem}{c}</span>;
+          return <span className={classNames.join(' ')} onMouseDown={this.handleCharMouseDown} onMouseEnter={this.handleCharMouseEnter} onMouseLeave={this.handleCharMouseLeave} data-index={i} key={`char-${i}`} ref={(el) => { this.charElem[i] = el; }}>{c}</span>;
         }
       }
     );
@@ -241,7 +258,7 @@ export default class AnnoText extends PureComponent {
     }
 
     return (
-      <div>
+      <div className="AnnoText">
         {(this.state.selectionRange && onUpdate) ? (
           <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
             <form>
@@ -262,6 +279,7 @@ export default class AnnoText extends PureComponent {
           </div>
         ) : ''}
         <div style={textContainerStyle} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
+        {this.renderTooltip()}
       </div>
     );
   }

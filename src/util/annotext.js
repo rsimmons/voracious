@@ -107,6 +107,20 @@ export const getInRange = (annoText, cpBegin, cpEnd) => {
   return annos;
 };
 
+export const getKindInRange = (annoText, kind, cpBegin, cpEnd) => {
+  const annos = [];
+
+  annoText.annotations.forEach((anno, i) => {
+    if ((anno.kind === kind) && (cpEnd > anno.cpBegin) && (cpBegin < anno.cpEnd)) {
+      annos.push(anno);
+    }
+  });
+
+  annos.sort(nestingAnnoSortFunc);
+
+  return annos;
+};
+
 const nestingAnnoSortFunc = (a, b) => {
   if (a.cpBegin < b.cpBegin) {
     return -1;

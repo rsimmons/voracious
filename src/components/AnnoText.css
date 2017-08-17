@@ -1,0 +1,44 @@
+.AnnoText {
+  overflow: hidden;
+}
+
+.AnnoText-textchar {
+}
+
+.AnnoText-textchar.AnnoText-selected {
+  background-color: #33ff33;
+}
+
+.AnnoText-textchar.AnnoText-hover {
+  background-color: #afa;
+}
+
+.AnnoText-highlight {
+  background-color: #8ff;
+}
+
+.AnnoText-tooltip {
+  font-size: 24px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.AnnoText-tooltip-item:not(:last-child) {
+  margin-bottom: 0.6em;
+}
+
+.AnnoText-tooltip-word {
+  margin-bottom: 0.1em;
+}
+
+.AnnoText-tooltip-links {
+  font-size: 0.5em;
+}
+
+a.AnnoText-dict-linkout, a.AnnoText-dict-linkout:link, a.AnnoText-dict-linkout:visited {
+  color: white;
+}
+
+a.AnnoText-dict-linkout:hover, a.AnnoText-dict-linkout:focus, a.AnnoText-dict-linkout:active {
+  color: #ddd;
+}

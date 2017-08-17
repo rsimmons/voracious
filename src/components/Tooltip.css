@@ -1,0 +1,28 @@
+.Tooltip {
+  z-index: 100;
+  position: absolute;
+  width: 200px;
+  margin-left: -100px;
+  transform: translateY(-100%);
+}
+
+.Tooltip-content {
+  padding: 20px;
+  border-radius: 5px;
+  background-color: hsla(0, 0%, 20%, 0.95);
+  color: #fff;
+}
+
+.Tooltip-triangle {
+  position: relative;
+  left: 50%;
+  margin-top: -1px;
+  margin-left: -10px;
+  width: 0;
+  border-top: 10px solid #000;
+  border-top: 10px solid hsla(0, 0%, 20%, 0.95);
+  border-right: 10px solid transparent;
+  border-left: 10px solid transparent;
+  font-size: 0;
+  line-height: 0;
+}
