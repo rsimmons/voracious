@@ -13,10 +13,10 @@ html {
   box-sizing: inherit;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Nunito|Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Lato|Quicksand');
 
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Lato', sans-serif;
 }
 
 .header-font {
