@@ -1,13 +1,3 @@
-.Source-studied-text-box {
-  font-size: 1.6em;
-  text-align: center;
-  min-height: 5em;
-  padding: 0.5em 0;
-  border-top: 1px solid #ccc;
-  margin: 0 auto;
-  max-width: 40em;
-}
-
 .Source-settings {
   position: absolute;
   right: 0;
@@ -16,10 +6,48 @@
   z-index: 100;
 }
 
-.Source-language-tag {
-  float: left;
+.Source-main {
+  display: flex;
+  flex-flow: column nowrap;
+  height: 100vh;
+}
+
+.Source-video-area {
+  display: flex;
+  flex-flow: column nowrap;
+  flex: auto;
+  position: relative;
+  background: black;
+}
+
+.Source-text-chunks {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+}
+
+.Source-text-chunk {
+  font-size: 1.6em;
+  text-align: center;
+  overflow: hidden;
+  padding: 0.3em 0;
+  margin: 10px auto;
+
   color: white;
-  font-size: 14px;
-  padding: 5px 10px;
-  background-color: #ccc;
+  background: rgba(0,0,0,0.5);
+  text-shadow: 0 0 5px black;
+}
+
+.Source video {
+  display: block;
+  flex: auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.PlayControls {
+  flex: initial;
+  text-align: center;
+  margin: 10px auto;
 }

@@ -82,10 +82,7 @@ class VideoMedia extends Component {
   render() {
     const { media, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
-      <div style={{ textAlign: 'center', backgroundColor: 'black' }}>{media.size ? (
-        <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
-      ) : ''
-      }</div>
+      <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
     );
   }
 }
@@ -139,7 +136,7 @@ class PlayControls extends Component {
   render() {
     const { onBack, onReplay, onTogglePause, onContinue, onSetQuizMode } = this.props;
     return (
-      <form style={{ textAlign: 'center', margin: '10px auto' }}>
+      <form className="PlayControls">
         <button type="button" onClick={onBack}>Jump Back [A]</button>
         <button type="button" onClick={onReplay}>Replay [R]</button>
         <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
@@ -399,7 +396,7 @@ export default class Source extends Component {
     }
 
     return (
-      <div>
+      <div className="Source">
         <div className="Source-settings">
           <div>Id: {source.id}</div>
           <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
@@ -419,30 +416,37 @@ export default class Source extends Component {
           ))}</ul>
           <button onClick={this.handleExit}>Exit To Top</button>
         </div>
-        <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
-        <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
-        {source.texts.map((text, textNum) => (
-          <div className="Source-studied-text-box" key={textNum}>
-            <div className="Source-language-tag">{text.language.toUpperCase()}</div>
-            <div>{(() => {
-              const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
+        {source.media.size ? (
+          <div className="Source-main">
+            <div className="Source-video-area">
+              <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+              <div className="Source-text-chunks">
+                {source.texts.map((text, textNum) => {
+                  const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
 
-              if (chunk) {
-                const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
+                  if (chunk) {
+                    return (
+                      <div className="Source-text-chunk" key={textNum}>{(() => {
+                        const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
 
-                if (textHidden) {
-                  return (
-                    <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
-                  );
-                } else {
-                  return (
-                    <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} alignment="center" />
-                  );
-                }
-              }
-            })()}</div>
+                        if (textHidden) {
+                          return (
+                            <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
+                          );
+                        } else {
+                          return (
+                            <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} alignment="center" />
+                          );
+                        }
+                      })()}</div>
+                    );
+                  }
+                })}
+              </div>
+            </div>
+            <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
           </div>
-        ))}
+        ) : null}
       </div>
     );
   }
