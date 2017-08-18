@@ -1,15 +1,23 @@
 .Tooltip {
-  z-index: 100;
   position: absolute;
+  z-index: 100;
+
   width: 200px;
-  margin-left: -100px;
+  margin-left: -100px; /* half of width */
+
+  /* Moves the tooltip up by its own height, so that its bottom
+     is at the same height of the top of its anchor element(s) */
   transform: translateY(-100%);
+
+  /* This pushes the visible part of tooltip upward while avoiding problems
+     with losing hover */
+  padding-bottom: 20px;
 }
 
 .Tooltip-content {
   padding: 20px;
   border-radius: 5px;
-  background-color: hsla(0, 0%, 20%, 0.95);
+  background-color: rgba(0,0,0,0.95);
   color: #fff;
 }
 
@@ -19,8 +27,7 @@
   margin-top: -1px;
   margin-left: -10px;
   width: 0;
-  border-top: 10px solid #000;
-  border-top: 10px solid hsla(0, 0%, 20%, 0.95);
+  border-top: 10px solid rgba(0,0,0,0.95);
   border-right: 10px solid transparent;
   border-left: 10px solid transparent;
   font-size: 0;

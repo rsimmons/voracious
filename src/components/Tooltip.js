@@ -26,11 +26,10 @@ export default class Tooltip extends PureComponent {
     const minX = Math.min(...topmostRects.map(r => r.left));
     const maxX = Math.max(...topmostRects.map(r => r.right));
     const centerX = 0.5*(minX + maxX);
-    const offsetY = -20; // TOOD: could be a prop
 
     return (
       <RenderUnderBody>
-        <div className="Tooltip" style={{ top: minY+offsetY, left: centerX }} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+        <div className="Tooltip" style={{ top: minY, left: centerX }} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           <div className="Tooltip-content">
             {children}
           </div>
