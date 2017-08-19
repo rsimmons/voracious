@@ -426,19 +426,23 @@ export default class Source extends Component {
 
                   if (chunk) {
                     return (
-                      <div className="Source-text-chunk" key={textNum}>{(() => {
-                        const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
+                      <div className="Source-text-chunk-outer" key={textNum}>
+                        <div className="Source-text-chunk-inner">
+                          {(() => {
+                            const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
 
-                        if (textHidden) {
-                          return (
-                            <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
-                          );
-                        } else {
-                          return (
-                            <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
-                          );
-                        }
-                      })()}</div>
+                            if (textHidden) {
+                              return (
+                                <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
+                              );
+                            } else {
+                              return (
+                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
+                              );
+                            }
+                          })()}
+                        </div>
+                      </div>
                     );
                   } else {
                     return null;

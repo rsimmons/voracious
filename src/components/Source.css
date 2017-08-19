@@ -27,16 +27,19 @@
   right: 0;
 }
 
-.Source-text-chunk {
+.Source-text-chunk-outer {
+  background: rgba(0,0,0,0.5);
+  color: white;
+  text-shadow: 0 0 5px black;
+}
+
+.Source-text-chunk-inner {
   font-size: 1.6em;
   text-align: center;
   overflow: hidden;
-  padding: 0.3em 0;
+  padding: 0.3em 0.5em;
   margin: 10px auto;
-
-  color: white;
-  background: rgba(0,0,0,0.5);
-  text-shadow: 0 0 5px black;
+  max-width: 25em;
 }
 
 .Source video {
