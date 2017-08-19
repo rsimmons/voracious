@@ -414,7 +414,6 @@ export default class Source extends Component {
               <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
             </li>
           ))}</ul>
-          <button onClick={this.handleExit}>Exit To Top</button>
         </div>
         {source.media.size ? (
           <div className="Source-main">
@@ -453,6 +452,7 @@ export default class Source extends Component {
             <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
           </div>
         ) : null}
+        <button className="Source-exit-button" onClick={this.handleExit}>↩</button>
       </div>
     );
   }
