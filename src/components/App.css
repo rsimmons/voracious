@@ -36,7 +36,6 @@
 
 .App-library-list-item {
   font-size: 18px;
-  padding: 0.5em 0;
   border-top: 1px solid #ddd;
 }
 
@@ -49,7 +48,8 @@
 }
 
 .App-library-list-item > a {
-  display: inline-block;
+  display: block;
+  padding: 0.5em 0;
   text-decoration: none;
   color: inherit;
 }
