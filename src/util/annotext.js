@@ -78,6 +78,8 @@ export const getKindAtIndex = (annoText, kind, cpIndex) => {
     }
   });
 
+  annos.sort(nestingAnnoSortFunc);
+
   return annos;
 };
 
