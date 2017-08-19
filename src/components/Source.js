@@ -354,7 +354,7 @@ export default class Source extends Component {
   }
 
   render() {
-    const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteMedia, onDeleteText } = this.props;
+    const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteSource, onDeleteMedia, onDeleteText } = this.props;
 
     // Based on quiz mode and state, determine what texts are shown
     let showFirstText = true;
@@ -398,7 +398,7 @@ export default class Source extends Component {
     return (
       <div className="Source">
         <div className="Source-settings">
-          <div>Id: {source.id}</div>
+          <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
           <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
           <div>Kind: {source.kind}</div>
           <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />

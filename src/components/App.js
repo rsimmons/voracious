@@ -131,9 +131,6 @@ class App extends Component {
     this.expandedHighlightSetsMapSelector = createExpandedHighlightSetsMapSelector();
   }
 
-  handleCreateSource = () => {
-  };
-
   handleExportBackup = () => {
     // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
     const backupData = JSON.stringify(this.props.actions._saveToJSONable());
@@ -153,7 +150,7 @@ class App extends Component {
           <Switch>
             <Route path="/source/:id" render={({ match, history }) => {
               const sourceId = match.params.id;
-              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
+              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onDeleteMedia={(mediaNum) => { actions.sourceDeleteMedia(sourceId, mediaNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
@@ -175,7 +172,6 @@ class App extends Component {
                               <li key={s.id} className="App-library-list-item">
                                 <Link to={'/source/' + s.id}>
                                   {s.name}
-                                  <button onClick={(e) => { e.preventDefault(); if (window.confirm('Delete source "' + s.name + '" (' + s.id + ')?')) { actions.deleteSource(s.id); } }}>Delete</button>
                                 </Link>
                               </li>
                             ))}
