@@ -1,26 +1,36 @@
-.Source-exit-button {
+.Source-big-button {
   display: block;
   position: absolute;
-  left: 0;
-  top: 0;
   color: #aaa;
   border: none;
   background: rgba(0,0,0,0.75);
   font-size: 48px;
   padding: 0.2em;
   cursor: pointer;
+  line-height: 1;
 }
 
-.Source-exit-button:hover {
+.Source-big-button:hover {
   color: white;
 }
 
-.Source-settings {
+.Source-exit-button {
+  top: 0;
+  left: 0;
+}
+
+.Source-toggle-info-button {
+  top: 0;
+  right: 0;
+}
+
+.Source-info {
   position: absolute;
+  top: 0;
   right: 0;
   background-color: #ddd;
-  padding: 10px;
-  z-index: 100;
+  padding: 20px;
+  padding-right: 64px;
 }
 
 .Source-main {

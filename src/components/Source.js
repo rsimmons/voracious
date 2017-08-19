@@ -160,6 +160,7 @@ export default class Source extends Component {
       quizMode: 'none',
       quizPause: false, // are we paused (or have requested pause) for quiz?
       quizState: null,
+      showingInfo: !props.source.media.size || !props.source.texts.size,
     };
     this.videoTime = null;
     this.videoIsPlaying = false;
@@ -346,6 +347,10 @@ export default class Source extends Component {
     }
   };
 
+  handleToggleInfo = () => {
+    this.setState(state => ({ ...state, showingInfo: !state.showingInfo}));
+  }
+
   handleExit = () => {
     // TODO: this should probably be last-reported time,
     //  slightly different than textViewPosition?
@@ -397,24 +402,6 @@ export default class Source extends Component {
 
     return (
       <div className="Source">
-        <div className="Source-settings">
-          <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
-          <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
-          <div>Kind: {source.kind}</div>
-          <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
-          <div>Media:</div>
-          <ul>{source.media.map((o, i) => (
-            <li key={i}>#{i} [{o.language}]
-              <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
-            </li>
-          ))}</ul>
-          <div>Texts:</div>
-          <ul>{source.texts.map((o, i) => (
-            <li key={i}>#{i} [{o.language}]
-              <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
-            </li>
-          ))}</ul>
-        </div>
         {source.media.size ? (
           <div className="Source-main">
             <div className="Source-video-area">
@@ -452,7 +439,26 @@ export default class Source extends Component {
             <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
           </div>
         ) : null}
-        <button className="Source-exit-button" onClick={this.handleExit}>↩</button>
+        <div className="Source-info" style={{display: this.state.showingInfo ? 'block' : 'none'}}>
+          <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
+          <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
+          <div>Kind: {source.kind}</div>
+          <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
+          <div>Media:</div>
+          <ul>{source.media.map((o, i) => (
+            <li key={i}>#{i} [{o.language}]
+              <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
+            </li>
+          ))}</ul>
+          <div>Texts:</div>
+          <ul>{source.texts.map((o, i) => (
+            <li key={i}>#{i} [{o.language}]
+              <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
+            </li>
+          ))}</ul>
+        </div>
+        <button className="Source-big-button Source-exit-button" onClick={this.handleExit}>↩</button>
+        <button className="Source-big-button Source-toggle-info-button" onClick={this.handleToggleInfo}>ⓘ</button>
       </div>
     );
   }
