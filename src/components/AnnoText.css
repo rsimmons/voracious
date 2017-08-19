@@ -19,11 +19,14 @@
 
 .AnnoText-tooltip {
   font-size: 24px;
-  text-align: center;
   line-height: 1.2;
 }
 
-.AnnoText-tooltip-item:not(:last-child) {
+.AnnoText-tooltip-dictionary-hits {
+  text-align: center;
+}
+
+.AnnoText-tooltip-dictionary-hit:not(:last-child) {
   margin-bottom: 0.6em;
 }
 
@@ -41,4 +44,9 @@ a.AnnoText-dict-linkout, a.AnnoText-dict-linkout:link, a.AnnoText-dict-linkout:v
 
 a.AnnoText-dict-linkout:hover, a.AnnoText-dict-linkout:focus, a.AnnoText-dict-linkout:active {
   color: #ddd;
+}
+
+.AnnoText-edit-controls {
+  font-size: 12px;
+  margin-top: 20px;
 }

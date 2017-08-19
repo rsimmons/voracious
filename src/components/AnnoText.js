@@ -157,6 +157,37 @@ export default class AnnoText extends PureComponent {
     this.setHoverTimeout();
   };
 
+
+  renderEditControls = () => {
+    const { annoText, onUpdate, activeSetId, onSetActiveSetId, highlightSets } = this.props;
+
+    if (!onUpdate || !this.state.selectionRange) {
+      return null;
+    }
+
+    const annosInSelection = getInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
+
+    return (
+      <div className="AnnoText-edit-controls">
+        <form>
+          <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
+          <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
+          <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
+            {highlightSets.valueSeq().map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
+          <br />
+          {annosInSelection.map(a => (
+            <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
+              e.preventDefault();
+              onUpdate(deleteAnnotation(annoText, a.id));
+            }}>X</button></div>
+          ))}
+        </form>
+      </div>
+    );
+  }
+
   renderTooltip = () => {
     const { annoText } = this.props;
 
@@ -179,11 +210,11 @@ export default class AnnoText extends PureComponent {
       return (
         <Tooltip anchorElems={anchorElems} onMouseEnter={this.handleTooltipMouseEnter} onMouseLeave={this.handleTooltipMouseLeave}>
           <div className="AnnoText-tooltip">
-            <ul>
+            <ul className="AnnoText-tooltip-dictionary-hits">
               {hitLemmaAnnos.map(lemmaAnno => {
                 const encLemma = encodeURIComponent(lemmaAnno.data);
                 return (
-                  <li key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`} className="AnnoText-tooltip-item">
+                  <li key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
                     <div className="AnnoText-tooltip-word">{lemmaAnno.data}</div>
                     <div className="AnnoText-tooltip-links">
                       <a className="AnnoText-dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
@@ -195,6 +226,7 @@ export default class AnnoText extends PureComponent {
                 );
               })}
             </ul>
+            {this.renderEditControls()}
           </div>
         </Tooltip>
       );
@@ -204,12 +236,7 @@ export default class AnnoText extends PureComponent {
   };
 
   render() {
-    const { annoText, language, onUpdate, highlightSets, activeSetId, onSetActiveSetId, alignment } = this.props;
-
-    let annosInSelection = [];
-    if (this.state.selectionRange) {
-      annosInSelection = getInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
-    }
+    const { annoText, language } = this.props;
 
     const annoTextChildren = annoTextCustomRender(
       annoText,
@@ -251,52 +278,9 @@ export default class AnnoText extends PureComponent {
       (c, i) => (c === '\n' ? '<br/>' : escape(c))
     ).join('');
 */
-
-    const floatWidth = '240px';
-
-    let textContainerStyle;
-    switch (alignment) {
-      case 'left':
-        textContainerStyle = {
-          textAlign: 'left',
-          marginRight: floatWidth,
-        };
-        break;
-
-      case 'center':
-        textContainerStyle = {
-          textAlign: 'center',
-          marginLeft: floatWidth,
-          marginRight: floatWidth,
-        };
-        break;
-
-      default:
-        throw new Error('bad alignment value');
-    }
-
     return (
       <div className="AnnoText">
-        {(this.state.selectionRange && onUpdate) ? (
-          <div style={{ float: 'right', width: floatWidth, textAlign: 'left', backgroundColor: '#eee', padding: '10px', fontSize: '12px' }}>
-            <form>
-              <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
-              <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
-              <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
-                {highlightSets.valueSeq().map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
-              <br />
-              {annosInSelection.map(a => (
-                <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
-                  e.preventDefault();
-                  onUpdate(deleteAnnotation(annoText, a.id));
-                }}>X</button></div>
-              ))}
-            </form>
-          </div>
-        ) : ''}
-        <div style={textContainerStyle} lang={language} ref={(el) => { this.textContainerElem = el; }}>{annoTextChildren}</div>
+        <div lang={language}>{annoTextChildren}</div>
         {this.renderTooltip()}
       </div>
     );

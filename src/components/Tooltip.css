@@ -2,8 +2,8 @@
   position: absolute;
   z-index: 100;
 
-  width: 200px;
-  margin-left: -100px; /* half of width */
+  width: 250px;
+  margin-left: -125px; /* half of width */
 
   /* Moves the tooltip up by its own height, so that its bottom
      is at the same height of the top of its anchor element(s) */
