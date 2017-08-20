@@ -417,15 +417,16 @@ export default class Source extends Component {
                           {(() => {
                             const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
 
-                            if (textHidden) {
-                              return (
-                                <div key={chunk.uid} style={{color: '#ccc'}}>(hidden)</div>
-                              );
-                            } else {
-                              return (
-                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
-                              );
-                            }
+                            return (
+                              <div style={{position: 'relative'}}>
+                                {textHidden ? (
+                                  <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, color: '#aaa'}}>(hidden)</div>
+                                ) : null}
+                                <div style={{visibility: textHidden ? 'hidden' : 'visible'}}>
+                                  <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
+                                </div>
+                              </div>
+                            );
                           })()}
                         </div>
                       </div>
