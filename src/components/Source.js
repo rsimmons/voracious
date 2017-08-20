@@ -420,7 +420,9 @@ export default class Source extends Component {
                             return (
                               <div style={{position: 'relative'}}>
                                 {textHidden ? (
-                                  <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, color: '#aaa'}}>(hidden)</div>
+                                  <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                    <div style={{color: '#aaa'}}>(hidden)</div>
+                                  </div>
                                 ) : null}
                                 <div style={{visibility: textHidden ? 'hidden' : 'visible'}}>
                                   <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} activeSetId={activeSetId} onSetActiveSetId={onSetActiveSetId} />
