@@ -1,0 +1,19 @@
+.Modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.75);
+}
+
+.Modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* Without this, width will only be up to 50% of viewport,
+     which is usually OK but not ideal */
+  width: fit-content;
+}

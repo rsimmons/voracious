@@ -1,9 +1,10 @@
 .Source-big-button {
   display: block;
   position: absolute;
-  color: #aaa;
+  color: white;
   border: none;
-  background: rgba(0,0,0,0.75);
+  text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black, 0 0 5px black;
+  background: transparent;
   font-size: 48px;
   padding: 0.2em;
   cursor: pointer;
@@ -11,7 +12,7 @@
 }
 
 .Source-big-button:hover {
-  color: white;
+  color: #aaa;
 }
 
 .Source-exit-button {
@@ -24,13 +25,10 @@
   right: 0;
 }
 
-.Source-info {
-  position: absolute;
-  top: 0;
-  right: 0;
+.Source-info-modal {
   background-color: #ddd;
   padding: 20px;
-  padding-right: 64px;
+  border-radius: 5px;
 }
 
 .Source-main {

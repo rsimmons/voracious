@@ -4,6 +4,7 @@ import './Source.css';
 
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
+import Modal from './Modal.js';
 
 import { getLastChunkAtTime } from '../util/chunk';
 
@@ -442,24 +443,28 @@ export default class Source extends Component {
             <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
           </div>
         ) : null}
-        <div className="Source-info" style={{display: this.state.showingInfo ? 'block' : 'none'}}>
-          <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
-          <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
-          <div>Kind: {source.kind}</div>
-          <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
-          <div>Media:</div>
-          <ul>{source.media.map((o, i) => (
-            <li key={i}>#{i} [{o.language}]
-              <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
-            </li>
-          ))}</ul>
-          <div>Texts:</div>
-          <ul>{source.texts.map((o, i) => (
-            <li key={i}>#{i} [{o.language}]
-              <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
-            </li>
-          ))}</ul>
-        </div>
+        {this.state.showingInfo ? (
+          <Modal onClickOutside={() => { this.setState({showingInfo: false}) }}>
+            <div className="Source-info-modal">
+              <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
+              <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
+              <div>Kind: {source.kind}</div>
+              <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
+              <div>Media:</div>
+              <ul>{source.media.map((o, i) => (
+                <li key={i}>#{i} [{o.language}]
+                  <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
+                </li>
+              ))}</ul>
+              <div>Texts:</div>
+              <ul>{source.texts.map((o, i) => (
+                <li key={i}>#{i} [{o.language}]
+                  <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
+                </li>
+              ))}</ul>
+            </div>
+          </Modal>
+        ) : null}
         <button className="Source-big-button Source-exit-button" onClick={this.handleExit}>↩</button>
         <button className="Source-big-button Source-toggle-info-button" onClick={this.handleToggleInfo}>ⓘ</button>
       </div>
