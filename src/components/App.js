@@ -165,7 +165,7 @@ class App extends Component {
                       <div>
                         <div>
                           <div style={{marginBottom: 20}}>
-                            <Button onClick={() => { const newSourceId = actions.createSource(); history.push('/source/' + newSourceId); }}>+ Add Source</Button>
+                            <Button onClick={() => { const newSourceId = actions.createVideoSource(); history.push('/source/' + newSourceId); }}>+ Add Video</Button>
                           </div>
                           <ul>
                             {mainState.sources.valueSeq().map((s) => (

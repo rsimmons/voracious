@@ -181,7 +181,7 @@ export default class MainActions {
     this._saveToStorageKey(backupKey);
   };
 
-  createSource = () => {
+  createVideoSource = () => {
     const sourceId = genUID();
     this.state.set(this.state.get().setIn(['sources', sourceId], new SourceRecord({
       id: sourceId,
