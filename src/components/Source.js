@@ -5,6 +5,7 @@ import './Source.css';
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 import Modal from './Modal.js';
+import Editable from './Editable.js';
 
 import { getLastChunkAtTime } from '../util/chunk';
 
@@ -446,8 +447,8 @@ export default class Source extends Component {
         {this.state.showingInfo ? (
           <Modal onClickOutside={() => { this.setState({showingInfo: false}) }}>
             <div className="Source-info-modal">
-              <div>Id: {source.id} <button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
-              <div>Name: <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={source.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></div>
+              <div style={{float: 'right'}}><button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
+              <div>Name: <Editable value={source.name} onUpdate={(v) => { this.props.onSetName(v); }}/></div>
               <div>Kind: {source.kind}</div>
               <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
               <div>Media:</div>

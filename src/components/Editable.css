@@ -1,0 +1,11 @@
+.Editable input {
+  font-size: inherit;
+  width: 8em;
+  font-family: inherit;
+  padding: 0;
+  border: 0;
+}
+
+.Editable button {
+  vertical-align: text-bottom;
+}
