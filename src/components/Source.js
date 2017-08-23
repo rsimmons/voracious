@@ -2,47 +2,12 @@ import React, { Component } from 'react';
 
 import './Source.css';
 
+import SourceSettings from './SourceSettings.js';
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 import Modal from './Modal.js';
-import Editable from './Editable.js';
 
 import { getLastChunkAtTime } from '../util/chunk';
-
-const languageOptions = [
-  { value: 'ja', label: 'Japanese' },
-  { value: 'en', label: 'English' },
-];
-
-// FileChooserForm
-const FileChooser = ({ label, accept, onChoose }) => (
-  <label>{label} <input type="file" accept={accept} onChange={e => { onChoose(e.target.files[0]); e.target.value = null; }} /></label>
-);
-
-// VideoImportControls
-class VideoImportControls extends Component {
-  render() {
-    const { onImportVideoFile, onImportVideoURL, onImportSubsFile } = this.props;
-    return (
-      <div>
-        <form>
-          <FileChooser label="Import Video File" accept="video/*" onChoose={(file) => { onImportVideoFile(file, this.videoFileLanguageVal); }} />
-          <Select options={languageOptions} onSet={v => { this.videoFileLanguageVal = v; }} />
-        </form>
-        <form>
-          <label>Import Video URL <input type="text" placeholder="Video URL" onChange={(e) => { this.videoURLVal = e.target.value; }} />
-          <Select options={languageOptions} onSet={v => { this.videoURLLanguageVal = v; }} />
-          <button type="submit" onClick={(e) => { e.preventDefault(); onImportVideoURL(this.videoURLVal, this.videoURLLanguageVal); }}>Import</button>
-          </label>
-        </form>
-        <form>
-          <FileChooser label="Import Subs (SRT)" accept=".srt" onChoose={(file) => { onImportSubsFile(file, this.subLanguageVal); }} />
-          <Select options={languageOptions} onSet={v => { this.subLanguageVal = v; }} />
-        </form>
-      </div>
-    );
-  }
-}
 
 class VideoMedia extends Component {
   constructor(props) {
@@ -136,7 +101,7 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onReplay, onTogglePause, onContinue, onSetQuizMode } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onChangeQuizMode } = this.props;
     return (
       <form className="PlayControls">
         <button type="button" onClick={onBack}>Jump Back [A]</button>
@@ -146,7 +111,7 @@ class PlayControls extends Component {
         <Select options={[
           {value: 'none', label: 'None'},
           {value: 'listen', label: 'Listen'},
-        ]} onSet={onSetQuizMode} />
+        ]} onChange={onChangeQuizMode} />
       </form>
     );
   }
@@ -162,26 +127,11 @@ export default class Source extends Component {
       quizMode: 'none',
       quizPause: false, // are we paused (or have requested pause) for quiz?
       quizState: null,
-      showingInfo: !props.source.media.size || !props.source.texts.size,
+      showingSettings: !props.source.media.size || !props.source.texts.size,
     };
     this.videoTime = null;
     this.videoIsPlaying = false;
   }
-
-  handleImportVideoURL = (url, language) => {
-    const {source, actions} = this.props;
-    actions.sourceAddVideoURL(source.id, url, language);
-  };
-
-  handleImportVideoFile = (file, language) => {
-    const {source, actions} = this.props;
-    actions.sourceAddVideoFile(source.id, file, language);
-  };
-
-  handleImportSubsFile = (file, language) => {
-    const {source, actions} = this.props;
-    actions.sourceAddSubsFile(source.id, file, language);
-  };
 
   handleVideoTimeUpdate = (time) => {
     this.videoTime = time;
@@ -349,8 +299,8 @@ export default class Source extends Component {
     }
   };
 
-  handleToggleInfo = () => {
-    this.setState(state => ({ ...state, showingInfo: !state.showingInfo}));
+  handleToggleSettings = () => {
+    this.setState(state => ({ ...state, showingSettings: !state.showingSettings}));
   }
 
   handleExit = () => {
@@ -361,7 +311,7 @@ export default class Source extends Component {
   }
 
   render() {
-    const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onDeleteSource, onDeleteMedia, onDeleteText } = this.props;
+    const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onDeleteText } = this.props;
 
     // Based on quiz mode and state, determine what texts are shown
     let showFirstText = true;
@@ -441,33 +391,18 @@ export default class Source extends Component {
                 })}
               </div>
             </div>
-            <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onSetQuizMode={this.handleSetQuizMode} />
+            <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
           </div>
         ) : null}
-        {this.state.showingInfo ? (
-          <Modal onClickOutside={() => { this.setState({showingInfo: false}) }}>
-            <div className="Source-info-modal">
-              <div style={{float: 'right'}}><button onClick={() => { if (window.confirm('Delete source "' + source.name + '"?')) { onDeleteSource(); } }}>Delete Source</button></div>
-              <div>Name: <Editable value={source.name} onUpdate={(v) => { this.props.onSetName(v); }}/></div>
-              <div>Kind: {source.kind}</div>
-              <VideoImportControls onImportVideoURL={this.handleImportVideoURL} onImportVideoFile={this.handleImportVideoFile} onImportSubsFile={this.handleImportSubsFile} />
-              <div>Media:</div>
-              <ul>{source.media.map((o, i) => (
-                <li key={i}>#{i} [{o.language}]
-                  <button onClick={() => { if (window.confirm('Delete media?')) { onDeleteMedia(i); } }}>Delete</button>
-                </li>
-              ))}</ul>
-              <div>Texts:</div>
-              <ul>{source.texts.map((o, i) => (
-                <li key={i}>#{i} [{o.language}]
-                  <button onClick={() => { if (window.confirm('Delete text?')) { onDeleteText(i); } }}>Delete</button>
-                </li>
-              ))}</ul>
+        {this.state.showingSettings ? (
+          <Modal onClickOutside={() => { this.setState({showingSettings: false}) }}>
+            <div className="Source-settings-wrapper">
+              <SourceSettings source={source} onSetName={onSetName} onSetVideoURL={onSetVideoURL} onClearVideoURL={onClearVideoURL} onImportSubsFile={onImportSubsFile} onDeleteText={onDeleteText} onDeleteSource={onDeleteSource} />
             </div>
           </Modal>
         ) : null}
         <button className="Source-big-button Source-exit-button" onClick={this.handleExit}>↩</button>
-        <button className="Source-big-button Source-toggle-info-button" onClick={this.handleToggleInfo}>ⓘ</button>
+        <button className="Source-big-button Source-toggle-settings-button" onClick={this.handleToggleSettings}>ⓘ</button>
       </div>
     );
   }

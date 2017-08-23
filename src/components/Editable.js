@@ -41,7 +41,7 @@ export default class Editable extends PureComponent {
         {this.state.editing ? (
           <span>
             <input type="text" defaultValue={value} ref={el => { this.inputElem = el }}/>
-            <button onClick={this.handleClickSet}>Set</button>
+            {' '}<button onClick={this.handleClickSet}>Set</button>
             <button onClick={this.handleClickCancel}>Cancel</button>
           </span>
         ) : (

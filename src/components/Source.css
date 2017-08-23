@@ -20,12 +20,12 @@
   left: 0;
 }
 
-.Source-toggle-info-button {
+.Source-toggle-settings-button {
   top: 0;
   right: 0;
 }
 
-.Source-info-modal {
+.Source-settings-wrapper {
   background-color: #ddd;
   padding: 20px;
   border-radius: 5px;

@@ -7,6 +7,7 @@ import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, chunkSetToJS, chunkSetFromJS } from './util/chunk';
 import { startsWith } from './util/string';
 import createStorageBackend from './storage';
+import { detectWithinSupported } from './util/languages';
 
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
@@ -186,7 +187,7 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['sources', sourceId], new SourceRecord({
       id: sourceId,
       kind: 'video',
-      name: 'unnamed',
+      name: 'untitled video',
       timeCreated: Date.now(),
     })));
     this._saveToStorage();
@@ -203,16 +204,18 @@ export default class MainActions {
     this._saveToStorage();
   };
 
-  sourceAddVideoURL = (sourceId, url, language) => {
-    this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.push(new VideoMediaRecord({
-      language,
+  sourceSetVideoURL = (sourceId, url) => {
+    this.state.set(this.state.get().setIn(['sources', sourceId, 'media'], new List([new VideoMediaRecord({
+      language: null, // don't set this field for now
       videoURL: url,
-    }))));
+    })])));
     this._saveToStorage();
   };
 
-  sourceAddVideoFile = (sourceId, file, language) => {
-    this.sourceAddVideoURL(sourceId, URL.createObjectURL(file), language);
+  sourceClearVideoURL = (sourceId) => {
+    // TODO: verify that source type is video
+
+    this.state.set(this.state.get().setIn(['sources', sourceId, 'media'], new List()));
     this._saveToStorage();
   };
 
@@ -221,12 +224,16 @@ export default class MainActions {
     this._saveToStorage();
   };
 
-  sourceAddSubsFile = (sourceId, file, language) => {
+  sourceImportSubsFile = (sourceId, file) => {
     // Start async file load and parse
     const reader = new FileReader();
     reader.onload = (e) => {
       // Parse loaded file data
       const subs = parseSRT(e.target.result);
+
+      // Autodetect language
+      const combinedText = subs.map(s => s.lines).join();
+      const language = detectWithinSupported(combinedText);
 
       const chunks = [];
       for (const sub of subs) {
@@ -236,7 +243,7 @@ export default class MainActions {
       const chunkSet = createTimeRangeChunkSet(chunks);
 
       this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
-        language: language,
+        language,
         chunkSet,
       }))));
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
