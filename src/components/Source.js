@@ -313,6 +313,10 @@ export default class Source extends Component {
   render() {
     const { source, highlightSets, activeSetId, onSetActiveSetId, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onDeleteText } = this.props;
 
+    // Is source ready to be used? Not very useful if there isn't
+    //  at least a video and subs.
+    const sourceReady = source.media.size && source.texts.size;
+
     // Based on quiz mode and state, determine what texts are shown
     let showFirstText = true;
     let showRestTexts = true;
@@ -354,7 +358,7 @@ export default class Source extends Component {
 
     return (
       <div className="Source">
-        {source.media.size ? (
+        {sourceReady ? (
           <div className="Source-main">
             <div className="Source-video-area">
               <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
@@ -393,7 +397,9 @@ export default class Source extends Component {
             </div>
             <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
           </div>
-        ) : null}
+        ) : (
+          <div className="Source-blackfill"></div>
+        )}
         {this.state.showingSettings ? (
           <Modal onClickOutside={() => { this.setState({showingSettings: false}) }}>
             <div className="Source-settings-wrapper">
