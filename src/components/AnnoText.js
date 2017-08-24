@@ -139,13 +139,19 @@ export default class AnnoText extends PureComponent {
     onUpdate(newAnnoText);
   };
 
-  handleAddHighlight = () => {
+  addHighlightOnRange = (setId, range) => {
     const { annoText, onUpdate } = this.props;
-    const {cpBegin, cpEnd} = this.state.selectionRange;
+    const {cpBegin, cpEnd} = range;
     // TODO: the data for the annotation should be immutable, a Record
-    let newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'highlight', {timeCreated: Date.now(), setId: this.props.activeSetId});
+    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'highlight', {timeCreated: Date.now(), setId: setId});
     onUpdate(newAnnoText);
-    this.clearSelection();
+  };
+
+  removeHighlightOnRange = (setId, range) => {
+    const { annoText, onUpdate } = this.props;
+    const {cpBegin, cpEnd} = range;
+    const newAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'highlight');
+    onUpdate(newAnnoText);
   };
 
   handleTooltipMouseEnter = () => {
@@ -162,21 +168,32 @@ export default class AnnoText extends PureComponent {
   };
 
   renderTooltipEditControls = (tooltipRange) => {
-    const { annoText, onUpdate, activeSetId, onSetActiveSetId, highlightSets } = this.props;
+    const { annoText, onUpdate, highlightSets } = this.props;
 
     if (!onUpdate) {
       return null;
     }
 
-    const annosInSelection = getInRange(annoText, tooltipRange.cpBegin, tooltipRange.cpEnd);
+    const annosInRange = getInRange(annoText, tooltipRange.cpBegin, tooltipRange.cpEnd);
+
+    // For each highlight set, determine if there are any highlight
+    //  annos that intersect tooltipRange.
+    const existingHighlight = {};
+    const rangeHighlights = getKindInRange(annoText, 'highlight', tooltipRange.cpBegin, tooltipRange.cpEnd);
+    for (const s of highlightSets.values()) {
+      existingHighlight[s.id] = rangeHighlights.some(h => h.data.setId === s.id);
+    }
 
     return (
       <div className="AnnoText-edit-controls">
         <div style={{textAlign: 'center'}}>
-          <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
-            {highlightSets.valueSeq().map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
+          <span>
+            {highlightSets.valueSeq().map(s => existingHighlight[s.id] ? (
+              <button key={s.id} onClick={() => { this.removeHighlightOnRange(s.id, tooltipRange) }}>- {s.name}</button>
+            ) : (
+              <button key={s.id} onClick={() => { this.addHighlightOnRange(s.id, tooltipRange) }}>+ {s.name}</button>
+            ))}
+          </span>
           &nbsp;&nbsp;<button onClick={this.handleTooltipExpandedEditClick}>Edit</button>
         </div>
         {this.state.tooltipExpandedEditing ? (
@@ -184,7 +201,7 @@ export default class AnnoText extends PureComponent {
             <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
             <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
             <br />
-            {annosInSelection.map(a => (
+            {annosInRange.map(a => (
               <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
                 e.preventDefault();
                 onUpdate(deleteAnnotation(annoText, a.id));

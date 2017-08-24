@@ -278,9 +278,6 @@ export default class MainActions {
       name: name,
     })));
 
-    if (!this.state.get().activeHighlightSetId) {
-      this.state.set(this.state.get().set('activeHighlightSetId', setId));
-    }
     this._saveToStorage();
   };
 
@@ -292,11 +289,6 @@ export default class MainActions {
 
     state = state.deleteIn(['highlightSets', setId]);
 
-    // Ensure activeHighlightSetId is valid
-    if (!state.highlightSets.has(state.activeHighlightSetId)) {
-      state = state.set('activeHighlightSetId', state.highlightSets.isEmpty() ? null : state.highlightSets.first().id);
-    }
-
     this.state.set(state);
 
     this._saveToStorage();
@@ -304,19 +296,6 @@ export default class MainActions {
 
   highlightSetRename = (setId, name) => {
     this.state.set(this.state.get().setIn(['highlightSets', setId, 'name'], name));
-    this._saveToStorage();
-  };
-
-  setActiveHighlightSetId = (setId) => {
-    // Ensure that setId is valid
-    const sets = this.state.get().highlightSets;
-    if (sets.isEmpty()) {
-      assert(setId === null);
-    } else {
-      assert(sets.some(s => (s.id === setId)));
-    }
-
-    this.state.set(this.state.get().set('activeHighlightSetId', setId));
     this._saveToStorage();
   };
 };

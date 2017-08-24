@@ -150,7 +150,7 @@ class App extends Component {
           <Switch>
             <Route path="/source/:id" render={({ match, history }) => {
               const sourceId = match.params.id;
-              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} activeSetId={mainState.activeHighlightSetId} onSetActiveSetId={actions.setActiveHighlightSetId} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onSetVideoURL={(url) => { actions.sourceSetVideoURL(sourceId, url) }} onClearVideoURL={() => { actions.sourceClearVideoURL(sourceId) }} onImportSubsFile={(file) => { actions.sourceImportSubsFile(sourceId, file) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
+              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onSetVideoURL={(url) => { actions.sourceSetVideoURL(sourceId, url) }} onClearVideoURL={() => { actions.sourceClearVideoURL(sourceId) }} onImportSubsFile={(file) => { actions.sourceImportSubsFile(sourceId, file) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
@@ -211,8 +211,8 @@ class App extends Component {
                                 );
                               }}/>
                               <Route path="/highlights" render={() => {
-                                if (mainState.activeHighlightSetId) {
-                                  return <Redirect to={'/highlights/' + mainState.activeHighlightSetId}/>
+                                if (expandedHighlightSetsMap.size) {
+                                  return <Redirect to={'/highlights/' + expandedHighlightSetsMap.first().id}/>
                                 } else {
                                   return <div>No sets</div>
                                 }
