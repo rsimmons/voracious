@@ -5,6 +5,7 @@ import Infinite from 'react-infinite';
 import './App.css';
 
 import Button from './Button.js';
+import Editable from './Editable.js';
 import AnnoText from './AnnoText.js';
 import Source from './Source.js';
 
@@ -73,8 +74,7 @@ class HighlightSet extends Component {
             &nbsp;
             <Button onClick={onDelete}>× Delete Set</Button>
           </span>
-          <span style={{ fontSize: 24 }}>{highlightSet.name}</span><br/>
-          <span>Rename <input ref={(el) => { this.nameInputElem = el; }} type="text" defaultValue={highlightSet.name} /> <button onClick={() => { this.props.onSetName(this.nameInputElem.value); }}>Set</button></span>
+          <span style={{ fontSize: 24 }}><Editable value={highlightSet.name} onUpdate={newName => { this.props.onSetName(newName); }}/></span>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
