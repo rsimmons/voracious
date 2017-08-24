@@ -54,7 +54,7 @@ export default class SourceSettings extends PureComponent {
           <li key={i}>
             [{o.chunkSet.chunkMap.size} segments]
             {' '}
-            <LanguageSelect value={o.language} onChange={(lang) => { console.log(lang) }}/>
+            <LanguageSelect value={o.language} onChange={(lang) => { }}/>
             {' '}
             <button onClick={() => { if (window.confirm('Delete subtitle track?')) { onDeleteText(i); } }}>Delete</button>
           </li>
