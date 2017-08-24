@@ -13,10 +13,10 @@ html {
   box-sizing: inherit;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Lato|Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Muli|Quicksand');
 
 body {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Muli', sans-serif;
 }
 
 .header-font {
