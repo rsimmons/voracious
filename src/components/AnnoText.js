@@ -302,7 +302,7 @@ export default class AnnoText extends PureComponent {
 */
     return (
       <div className="AnnoText">
-        <div lang={language}>{annoTextChildren}</div>
+        <div {... ((language === 'und' ? {} : {lang: language}))}>{annoTextChildren}</div>
         {this.renderTooltip()}
       </div>
     );
