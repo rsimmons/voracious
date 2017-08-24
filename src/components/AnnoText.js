@@ -220,6 +220,7 @@ export default class AnnoText extends PureComponent {
 
     if (tooltipRange) {
       const hitLemmaAnnos = getKindInRange(annoText, 'lemma', tooltipRange.cpBegin, tooltipRange.cpEnd);
+      const limitedHitLemmaAnnos = hitLemmaAnnos.slice(0, 3);
 
       const anchorElems = [];
       for (let i = tooltipRange.cpBegin; i < tooltipRange.cpEnd; i++) {
@@ -233,7 +234,7 @@ export default class AnnoText extends PureComponent {
         <Tooltip anchorElems={anchorElems} onMouseEnter={this.handleTooltipMouseEnter} onMouseLeave={this.handleTooltipMouseLeave}>
           <div className="AnnoText-tooltip">
             <ul className="AnnoText-tooltip-dictionary-hits">
-              {hitLemmaAnnos.map(lemmaAnno => {
+              {limitedHitLemmaAnnos.map(lemmaAnno => {
                 const encLemma = encodeURIComponent(lemmaAnno.data);
                 return (
                   <li key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
@@ -248,6 +249,9 @@ export default class AnnoText extends PureComponent {
                 );
               })}
             </ul>
+            {(hitLemmaAnnos.length > limitedHitLemmaAnnos.length) ? (
+              <div style={{fontSize: '0.5em', marginTop: 10, textAlign: 'center', fontStyle: 'italic'}}> and {hitLemmaAnnos.length - limitedHitLemmaAnnos.length} more...</div>
+            ) : null}
             {this.renderTooltipEditControls(tooltipRange)}
           </div>
         </Tooltip>
