@@ -19,6 +19,7 @@ export default class AnnoText extends PureComponent {
     this.state = {
       selectionRange: null,
       hoverRange: null,
+      tooltipExpandedEditing: false, // is the tooltip (if any) showing full edit controls?
     };
     this.charElem = {}; // map from cpIndex to element wrapping character
     this.hoverTimeout = null;
@@ -125,7 +126,6 @@ export default class AnnoText extends PureComponent {
       newAnnoText = addAnnotation(newAnnoText, cpBegin, cpEnd, 'ruby', rubyText);
     }
     onUpdate(newAnnoText);
-    this.clearSelection();
   };
 
   handleSetLemma = () => {
@@ -137,7 +137,6 @@ export default class AnnoText extends PureComponent {
     const {cpBegin, cpEnd} = this.state.selectionRange;
     const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'lemma', lemmaText);
     onUpdate(newAnnoText);
-    this.clearSelection();
   };
 
   handleAddHighlight = () => {
@@ -157,33 +156,42 @@ export default class AnnoText extends PureComponent {
     this.setHoverTimeout();
   };
 
+  handleTooltipExpandedEditClick = (e) => {
+    e.preventDefault();
+    this.setState(state => ({ ...state, tooltipExpandedEditing: !state.tooltipExpandedEditing}));
+  };
 
-  renderEditControls = () => {
+  renderTooltipEditControls = (tooltipRange) => {
     const { annoText, onUpdate, activeSetId, onSetActiveSetId, highlightSets } = this.props;
 
-    if (!onUpdate || !this.state.selectionRange) {
+    if (!onUpdate) {
       return null;
     }
 
-    const annosInSelection = getInRange(annoText, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd);
+    const annosInSelection = getInRange(annoText, tooltipRange.cpBegin, tooltipRange.cpEnd);
 
     return (
       <div className="AnnoText-edit-controls">
-        <form>
-          <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
-          <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
+        <div style={{textAlign: 'center'}}>
           <select value={activeSetId} onChange={e => onSetActiveSetId(e.target.value)}>
             {highlightSets.valueSeq().map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
           <button type="button" onClick={this.handleAddHighlight} {...(highlightSets.isEmpty() ? {disabled: true} : {})}>Highlight</button>
-          <br />
-          {annosInSelection.map(a => (
-            <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
-              e.preventDefault();
-              onUpdate(deleteAnnotation(annoText, a.id));
-            }}>X</button></div>
-          ))}
-        </form>
+          &nbsp;&nbsp;<button onClick={this.handleTooltipExpandedEditClick}>Edit</button>
+        </div>
+        {this.state.tooltipExpandedEditing ? (
+          <form style={{marginTop: 10}}>
+            <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
+            <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
+            <br />
+            {annosInSelection.map(a => (
+              <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
+                e.preventDefault();
+                onUpdate(deleteAnnotation(annoText, a.id));
+              }}>X</button></div>
+            ))}
+          </form>
+        ) : null}
       </div>
     );
   }
@@ -193,12 +201,9 @@ export default class AnnoText extends PureComponent {
 
     const tooltipRange = this.state.selectionRange || this.state.hoverRange;
 
-    let hitLemmaAnnos = [];
-    if (tooltipRange !== null) {
-      hitLemmaAnnos = getKindInRange(annoText, 'lemma', tooltipRange.cpBegin, tooltipRange.cpEnd);
-    }
+    if (tooltipRange) {
+      const hitLemmaAnnos = getKindInRange(annoText, 'lemma', tooltipRange.cpBegin, tooltipRange.cpEnd);
 
-    if (hitLemmaAnnos.length > 0) {
       const anchorElems = [];
       for (let i = tooltipRange.cpBegin; i < tooltipRange.cpEnd; i++) {
         const el = this.charElem[i];
@@ -226,7 +231,7 @@ export default class AnnoText extends PureComponent {
                 );
               })}
             </ul>
-            {this.renderEditControls()}
+            {this.renderTooltipEditControls(tooltipRange)}
           </div>
         </Tooltip>
       );
