@@ -16,7 +16,6 @@ const MainStateRecord = new Record({
   loading: false,
   sources: new OrderedMap(), // id -> SourceRecord
   highlightSets: new OrderedMap(), // id -> HighlightSetRecord
-  activeHighlightSetId: undefined, // should be undefined or a valid set id
 });
 
 const SourceRecord = new Record({
@@ -106,8 +105,6 @@ export default class MainActions {
             name: set.name,
           }));
         }
-
-        newState = newState.set('activeHighlightSetId', storedState.activeHighlightSetId);
       } else {
         // Key wasn't present, so we can initialize state to default
 
@@ -133,7 +130,6 @@ export default class MainActions {
       version: 1,
       sources: [],
       highlightSets: [],
-      activeHighlightSetId: this.state.get().activeHighlightSetId,
     };
 
     for (const source of this.state.get().sources.values()) {
