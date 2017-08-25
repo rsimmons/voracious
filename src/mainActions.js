@@ -111,6 +111,12 @@ export default class MainActions {
       } else {
         // Key wasn't present, so we can initialize state to default
 
+        const initSetId = genUID();
+        newState = newState.setIn(['highlightSets', initSetId], new HighlightSetRecord({
+          id: initSetId,
+          name: 'My Highlights',
+        }));
+
         // Save our empty/default state
         this._saveToStorage();
       }
