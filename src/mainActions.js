@@ -37,6 +37,7 @@ const VideoMediaRecord = new Record({
 
 const SourceTextRecord = new Record({
   language: undefined,
+  role: undefined,
   chunkSet: undefined,
 });
 
@@ -83,6 +84,7 @@ export default class MainActions {
           for (const t of source.texts) {
             texts.push(new SourceTextRecord({
               language: t.language,
+              role: t.role,
               chunkSet: chunkSetFromJS(t.chunkSet),
             }));
           }
@@ -150,6 +152,7 @@ export default class MainActions {
       for (const text of source.texts) {
         saveSource.texts.push({
           language: text.language,
+          role: text.role,
           chunkSet: chunkSetToJS(text.chunkSet),
         });
       }
@@ -235,6 +238,9 @@ export default class MainActions {
       const combinedText = subs.map(s => s.lines).join();
       const language = detectWithinSupported(combinedText);
 
+      // Determine default role
+      const role = (this.state.get().sources.get(sourceId).texts.size > 0) ? 'translation' : 'transcription';
+
       const chunks = [];
       for (const sub of subs) {
         const annoText = createAutoAnnotatedText(sub.lines, language);
@@ -244,12 +250,33 @@ export default class MainActions {
 
       this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
         language,
+        role,
         chunkSet,
       }))));
       // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
       this._saveToStorage();
     };
     reader.readAsText(file);
+  };
+
+  sourceSetTextRole = (sourceId, textNum, role) => {
+    // TODO: verify that role is valid string, and valid given textNum
+    this.state.set(this.state.get().setIn(['sources', sourceId, 'texts', textNum, 'role'], role));
+    this._saveToStorage();
+  };
+
+  sourceMoveUpText = (sourceId, textNum) => {
+    // TODO: verify that textNum is valid
+     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => {
+      const moved = texts.get(textNum);
+      return texts
+        .delete(textNum)
+        .insert(textNum-1, moved)
+        // Ensure that moved-down text is a translation
+        .setIn([textNum, 'role'], 'translation');
+     }));
+
+    this._saveToStorage();
   };
 
   sourceDeleteText = (sourceId, textNum) => {

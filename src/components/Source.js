@@ -311,7 +311,7 @@ export default class Source extends Component {
   }
 
   render() {
-    const { source, highlightSets, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onDeleteText } = this.props;
+    const { source, highlightSets, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText } = this.props;
 
     // Is source ready to be used? Not very useful if there isn't
     //  at least a video and subs.
@@ -403,7 +403,7 @@ export default class Source extends Component {
         {this.state.showingSettings ? (
           <Modal onClickOutside={() => { this.setState({showingSettings: false}) }}>
             <div className="Source-settings-wrapper">
-              <SourceSettings source={source} onSetName={onSetName} onSetVideoURL={onSetVideoURL} onClearVideoURL={onClearVideoURL} onImportSubsFile={onImportSubsFile} onDeleteText={onDeleteText} onDeleteSource={onDeleteSource} />
+              <SourceSettings source={source} onSetName={onSetName} onSetVideoURL={onSetVideoURL} onClearVideoURL={onClearVideoURL} onImportSubsFile={onImportSubsFile} onSetTextRole={onSetTextRole} onMoveUpText={onMoveUpText} onDeleteText={onDeleteText} onDeleteSource={onDeleteSource} />
             </div>
           </Modal>
         ) : null}

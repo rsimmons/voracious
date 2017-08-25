@@ -2,10 +2,10 @@ import React, { PureComponent } from 'react';
 
 import './SourceSettings.css';
 
+import Select from './Select.js';
 import LanguageSelect from './LanguageSelect.js';
 import Editable from './Editable.js';
 import Button from './Button.js';
-
 
 class HiddenFileChooser extends PureComponent {
   choose = () => {
@@ -25,13 +25,23 @@ class HiddenFileChooser extends PureComponent {
   }
 }
 
+const FIRST_ROLE_OPTIONS = [
+  {value: 'transcription', label: 'transcription'},
+  {value: 'translation', label: 'translation'},
+];
+
+const REST_ROLE_OPTIONS = [
+  {value: 'transcription', label: 'transcription', disabled: true},
+  {value: 'translation', label: 'translation'},
+];
+
 export default class SourceSettings extends PureComponent {
   handleClickSetVideoURL = () => {
     this.props.onSetVideoURL(this.videoURLInputElem.value);
   };
 
   render() {
-    const { source, onSetName, onClearVideoURL, onImportSubsFile, onDeleteText, onDeleteSource } = this.props;
+    const { source, onSetName, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText, onDeleteSource } = this.props;
 
     return (
       <div className="SourceSettings">
@@ -50,11 +60,15 @@ export default class SourceSettings extends PureComponent {
             <em>none</em>
           ) : null}
         </div>
-        <ul className="SourceSettings-texts-list">{source.texts.map((o, i) => (
+        <ul className="SourceSettings-texts-list">{source.texts.map((text, i) => (
           <li key={i}>
-            [{o.chunkSet.chunkMap.size} segments]
+            [{text.chunkSet.chunkMap.size} segments]
             {' '}
-            <LanguageSelect value={o.language} onChange={(lang) => { }}/>
+            <LanguageSelect value={text.language} onChange={(lang) => { /* don't allow changing yet */ }}/>
+            {' '}
+            <Select value={text.role} options={(i === 0) ? FIRST_ROLE_OPTIONS : REST_ROLE_OPTIONS} onChange={role => { onSetTextRole(i, role) }}/>
+            {' '}
+            <button onClick={() => { onMoveUpText(i) }} disabled={i === 0}>Move Up</button>
             {' '}
             <button onClick={() => { if (window.confirm('Delete subtitle track?')) { onDeleteText(i); } }}>Delete</button>
           </li>
