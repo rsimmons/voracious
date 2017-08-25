@@ -134,7 +134,7 @@ class App extends Component {
   handleExportBackup = () => {
     // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
     const backupData = JSON.stringify(this.props.actions._saveToJSONable());
-    downloadFile(backupData, 'voracious_backup_' + Date.now() + '.json', 'application/json');
+    downloadFile(backupData, 'voracious_backup_' + (new Date()).toISOString() + '.json', 'application/json');
   };
 
   render() {
