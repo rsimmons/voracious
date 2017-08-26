@@ -38,5 +38,6 @@
     "directories": {
       "buildResources": "public"
     }
-  }
+  },
+  "postinstall": "electron-builder install-app-deps"
 }
