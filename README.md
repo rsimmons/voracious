@@ -24,7 +24,7 @@ yarn react-start
 
 Once the React server has started up, **in a separate terminal** run:
 ```
-yarn electron
+yarn electron-start
 ```
 
 ## Building for release

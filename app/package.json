@@ -1,0 +1,9 @@
+{
+  "name": "Voracious",
+  "description": "A tool for foreign language learners to watch videos, read comics, and more.",
+  "author": "Russel Simmons",
+  "license": "MIT",
+  "version": "0.1.0",
+  "repository": "rsimmons/voracious",
+  "main": "electron-main.js"
+}

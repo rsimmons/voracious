@@ -1,0 +1,11 @@
+{
+  "appId": "org.rsimmons.voracious",
+  "files": [
+    "**/*",
+    {
+      "from": "../build",
+      "to": ".",
+      "filter": ["**/*"]
+    }
+  ]
+}

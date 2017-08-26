@@ -26,18 +26,10 @@
   "main": "src/electron-starter.js",
   "scripts": {
     "react-start": "BROWSER=none react-scripts start",
-    "electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
-    "pack": "electron-builder --dir",
+    "electron-start": "ELECTRON_START_URL=http://localhost:3000 electron app",
     "dist": "electron-builder",
     "react-build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
-  },
-  "build": {
-    "appId": "org.rsimmons.voracious",
-    "directories": {
-      "buildResources": "public"
-    }
-  },
-  "postinstall": "electron-builder install-app-deps"
+  }
 }
