@@ -29,6 +29,7 @@
     "react-start": "cross-env BROWSER=none react-scripts start",
     "electron-start": "cross-env ELECTRON_START_URL=http://localhost:3000 electron app",
     "dist": "electron-builder",
+    "dist-mac-dir": "electron-builder --mac -c.mac.target=dir",
     "react-build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
