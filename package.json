@@ -18,6 +18,7 @@
     "reselect": "^3.0.1"
   },
   "devDependencies": {
+    "cross-env": "^5.0.5",
     "electron": "^1.7.5",
     "electron-builder": "^19.24.1",
     "react-addons-perf": "^15.4.2"
@@ -25,8 +26,8 @@
   "homepage": ".",
   "main": "src/electron-starter.js",
   "scripts": {
-    "react-start": "BROWSER=none react-scripts start",
-    "electron-start": "ELECTRON_START_URL=http://localhost:3000 electron app",
+    "react-start": "cross-env BROWSER=none react-scripts start",
+    "electron-start": "cross-env ELECTRON_START_URL=http://localhost:3000 electron app",
     "dist": "electron-builder",
     "react-build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
