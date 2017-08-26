@@ -1,24 +1,38 @@
 # Voracious
 
-Voracious is a power tool for foreign language learners to get the most out of watching videos, readings comics, etc. It lets you easily:
-- toggle the display of transcriptions/translations
-- rewind video to re-listen to tricky speech
+Voracious is a (prototype) tool for foreign language learners to get the most out of watching TV and movies. It lets you easily:
+- simultaneously display foreign and native subtitles
+- train your listen/comprehension with a "quiz mode" that automatically pauses after each subtitle
+- replay the current subtitle to re-listen to tricky speech
+- highlight words/phrases for later study
+- export highlights for SRS in Anki
 - automatically generate furigana for Japanese text
-- _(coming soon)_ look up definitions of unknown words
-- _(coming soon)_ clip excerpts for later SRS study
-- _(coming soon)_ extract text from comics/images with OCR
+- _(coming soon)_ hover over words to see definitions
+- _(coming soon)_ study comics/images as well, with OCR
 
 ## Running in development mode
 
+To install dependencies, first run:
 ```
 yarn
-yarn start
+```
+
+Then start the React development server with:
+```
+yarn react-start
+```
+
+Once the React server has started up, **in a separate terminal** run:
+```
+yarn electron
 ```
 
 ## Getting Started
 
-Voracious is just a rough prototype, but to try it out:
-- Click `Create New Document`
-- By `Import Video` choose a video file to load
-- By `Import Subs` choose one or more subtitle files to load (selecting the language for each one)
-- Use the video controls and buttons/key-shorcuts to play video, hide/reveal subtitles, etc.
+- Click `+ Add Video`
+- Paste a link to a video in the Video URL field and click `Set URL`
+- Click `Import Subs` to add subtitle tracks. Ideally you should add at least two subtitle tracks:
+ - One in the same langauge as the video (transcription)
+ - And then one in your native language (translation)
+- Use the video controls and buttons/key-shorcuts to play video, change quiz modes, etc.
+- (Japanese only) hover/click on words
