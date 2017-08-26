@@ -22,7 +22,7 @@
     "electron-builder": "^19.24.1",
     "react-addons-perf": "^15.4.2"
   },
-  "homepage": "./",
+  "homepage": ".",
   "main": "src/electron-starter.js",
   "scripts": {
     "react-start": "BROWSER=none react-scripts start",
