@@ -1,5 +1,5 @@
 {
-  "name": "voracious",
+  "name": "Voracious",
   "description": "A tool for foreign language learners to watch videos, read comics, and more.",
   "author": "Russel Simmons",
   "license": "MIT",
@@ -17,17 +17,26 @@
     "react-scripts": "1.0.10",
     "reselect": "^3.0.1"
   },
+  "devDependencies": {
+    "electron": "^1.7.5",
+    "electron-builder": "^19.24.1",
+    "react-addons-perf": "^15.4.2"
+  },
   "homepage": "./",
   "main": "src/electron-starter.js",
   "scripts": {
     "react-start": "BROWSER=none react-scripts start",
     "electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
-    "build": "react-scripts build",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "react-build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "devDependencies": {
-    "electron": "^1.7.5",
-    "react-addons-perf": "^15.4.2"
+  "build": {
+    "appId": "org.rsimmons.voracious",
+    "directories": {
+      "buildResources": "public"
+    }
   }
 }

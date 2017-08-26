@@ -27,6 +27,21 @@ Once the React server has started up, **in a separate terminal** run:
 yarn electron
 ```
 
+## Building for release
+
+If you haven't done so already, first install dependencies:
+```
+yarn
+```
+
+Then to build:
+```
+yarn react-build
+yarn dist
+```
+
+The output zip and DMG can then be found in the `dist` dir.
+
 ## Getting Started
 
 - Click `+ Add Video`
@@ -36,3 +51,4 @@ yarn electron
  - And then one in your native language (translation)
 - Use the video controls and buttons/key-shorcuts to play video, change quiz modes, etc.
 - (Japanese only) hover/click on words
+
