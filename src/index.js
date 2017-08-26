@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './components/App';
-import registerServiceWorker from './registerServiceWorker';
 
 import MainActions from './mainActions';
 import { SubscribableState, StateMapper } from './ruxx';
@@ -20,4 +19,3 @@ const subscribableMainState = new SubscribableState();
 const actions = new MainActions(subscribableMainState);
 
 ReactDOM.render(<StateMapper subscribableState={subscribableMainState} renderState={state => <App mainState={state} actions={actions} />} />, document.getElementById('root'));
-registerServiceWorker();
