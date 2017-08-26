@@ -17,13 +17,17 @@
     "react-scripts": "1.0.10",
     "reselect": "^3.0.1"
   },
+  "homepage": "./",
+  "main": "src/electron-starter.js",
   "scripts": {
-    "start": "react-scripts start",
+    "react-start": "BROWSER=none react-scripts start",
+    "electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "electron": "^1.7.5",
     "react-addons-perf": "^15.4.2"
   }
 }
