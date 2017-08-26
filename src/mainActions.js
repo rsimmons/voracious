@@ -4,7 +4,7 @@ import { Record, OrderedMap, List } from 'immutable';
 import genUID from './util/uid';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
-import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, chunkSetToJS, chunkSetFromJS } from './util/chunk';
+import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, getChunkJS, chunkSetToShallowJS, iterableChunkIds, chunkSetToJS, chunkSetFromJS } from './util/chunk';
 import { startsWith } from './util/string';
 import createStorageBackend from './storage';
 import { detectWithinSupported } from './util/languages';
@@ -45,7 +45,7 @@ const HighlightSetRecord = new Record({
   name: undefined,
 });
 
-const STORAGE_ACTIVE_KEY = 'active';
+const ENABLE_NEW_SAVE = false;
 
 export default class MainActions {
   constructor(subscribableState) {
@@ -54,7 +54,7 @@ export default class MainActions {
     this.storage = createStorageBackend('voracious:');
 
     // Start loading from storage, which is async
-    this._loadFromStorageKey(STORAGE_ACTIVE_KEY);
+    this._loadFromStorageKey('active');
   }
 
   // NOTE: This takes a key argument so that we could load from a backup
@@ -116,6 +116,7 @@ export default class MainActions {
 
         // Save our empty/default state
         this._saveToStorage();
+        this._storageFullSave();
       }
 
       newState = newState.set('loading', false);
@@ -171,20 +172,119 @@ export default class MainActions {
     return saveState;
   }
 
-  _saveToStorageKey = (key) => {
+  _saveToStorage = () => {
+    console.time('save');
+
     // NOTE: We don't do anything with the Promise return value,
     //  saving is "fire and forget"
     // TODO: we should check if this fails
-    this.storage.setItem(STORAGE_ACTIVE_KEY, jstr(this._saveToJSONable()));
+    this.storage.setItem('active', jstr(this._saveToJSONable()));
+
+    console.timeEnd('save');
   };
 
-  _saveToStorage = () => {
-    this._saveToStorageKey(STORAGE_ACTIVE_KEY);
+  // This is usually not needed, as we save piecemeal
+  _storageFullSave = () => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this._storageRootSave();
+
+    for (const source of this.state.get().sources.values()) {
+      this._storageSourcePositionSave(source.id, source.viewPosition);
+
+      for (let textNum = 0; textNum < source.texts.size; textNum++) {
+        this._storageSourceTextSaveAllChunks(source.id, textNum);
+      }
+    }
   };
 
-  _saveBackup = () => {
-    const backupKey = 'backup:' + (new Date()).toISOString().replace(/[-:.ZT]/g, ''); // TODO: append :uid?
-    this._saveToStorageKey(backupKey);
+  _storageRootSave = () => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    const rootObj = {
+      sources: [],
+      highlightSets: [],
+    };
+
+    for (const source of this.state.get().sources.values()) {
+      const sourceObj = {
+        id: source.id,
+        kind: source.kind,
+        name: source.name,
+        media: [],
+        texts: [],
+        // NOTE: don't include viewPosition, saved separately
+        timeCreated: source.timeCreated,
+      };
+      for (const media of source.media) {
+        sourceObj.media.push({
+          language: media.language,
+          videoURL: media.videoURL,
+        });
+      }
+      for (const text of source.texts) {
+        sourceObj.texts.push({
+          language: text.language,
+          role: text.role,
+          chunkSet: chunkSetToShallowJS(text.chunkSet),
+        });
+      }
+      rootObj.sources.push(sourceObj);
+    }
+
+    for (const set of this.state.get().highlightSets.values()) {
+      rootObj.highlightSets.push({
+        id: set.id,
+        name: set.name,
+      });
+    }
+
+    this.storage.setItem('root', jstr(rootObj));
+  };
+
+  _storageSourcePositionSave = (sourceId, position) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.setItem('source_position/' + sourceId, jstr(position));
+  };
+
+  _storageSourcePositionDelete = (sourceId) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.removeItem('source_position/' + sourceId);
+  };
+
+  _storageChunkSave = (chunkId, chunkJS) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.setItem('chunk/' + chunkId, jstr(chunkJS));
+  };
+
+  _storageChunkDelete = (chunkId) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.removeItem('chunk/' + chunkId);
+  };
+
+  _storageSourceTextSaveAllChunks = (sourceId, textNum) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    const chunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
+
+    for (const cid of iterableChunkIds(chunkSet)) {
+      const chunkJS = getChunkJS(chunkSet, cid);
+      this._storageChunkSave(cid, chunkJS);
+    }
+  };
+
+  _storageSourceTextDeleteAllChunks = (sourceId, textNum) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    const chunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
+
+    for (const cid of iterableChunkIds(chunkSet)) {
+      this._storageChunkDelete(cid);
+    }
   };
 
   createVideoSource = () => {
@@ -195,18 +295,33 @@ export default class MainActions {
       name: 'untitled video',
       timeCreated: Date.now(),
     })));
+
     this._saveToStorage();
+    this._storageRootSave();
+
     return sourceId;
   };
 
   deleteSource = (sourceId) => {
+    // For each text of this source, delete all chunks
+    const textsCount = this.state.get().getIn(['sources', sourceId, 'texts']).size;
+    for (let textNum = 0; textNum < textsCount; textNum++) {
+      this._storageSourceTextDeleteAllChunks(sourceId, textNum);
+    }
+
     this.state.set(this.state.get().deleteIn(['sources', sourceId]));
+
     this._saveToStorage();
+
+    this._storageRootSave();
+    this._storageSourcePositionDelete(sourceId);
   };
 
   sourceSetName = (sourceId, name) => {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'name'], name));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceSetVideoURL = (sourceId, url) => {
@@ -214,19 +329,25 @@ export default class MainActions {
       language: null, // don't set this field for now
       videoURL: url,
     })])));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceClearVideoURL = (sourceId) => {
     // TODO: verify that source type is video
 
     this.state.set(this.state.get().setIn(['sources', sourceId, 'media'], new List()));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceDeleteMedia = (sourceId, mediaNum) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.delete(mediaNum)));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceImportSubsFile = (sourceId, file) => {
@@ -255,8 +376,10 @@ export default class MainActions {
         role,
         chunkSet,
       }))));
-      // TODO: previously we revealed all texts when new sub track was added, to reduce confusion
+
       this._saveToStorage();
+      this._storageSourceTextSaveAllChunks(sourceId, this.state.get().getIn(['sources', sourceId, 'texts']).size-1);
+      this._storageRootSave();
     };
     reader.readAsText(file);
   };
@@ -265,6 +388,7 @@ export default class MainActions {
     // TODO: verify that role is valid string, and valid given textNum
     this.state.set(this.state.get().setIn(['sources', sourceId, 'texts', textNum, 'role'], role));
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceMoveUpText = (sourceId, textNum) => {
@@ -279,21 +403,32 @@ export default class MainActions {
      }));
 
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   sourceDeleteText = (sourceId, textNum) => {
+    this._storageSourceTextDeleteAllChunks(sourceId, textNum);
+
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.delete(textNum)));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   setSourceViewPosition = (sourceId, position) => {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
-    // NOTE: We don't yet save here, because it would be too frequent
+
+    this._storageSourcePositionSave(sourceId, position);
   };
 
   sourceSetChunkAnnoText = (sourceId, textNum, chunkId, newAnnoText) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
+
     this._saveToStorage();
+
+    const updatedChunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
+    const chunkJS = getChunkJS(updatedChunkSet, chunkId);
+    this._storageChunkSave(chunkId, chunkJS);
   };
 
   createHighlightSet = (name) => {
@@ -308,6 +443,7 @@ export default class MainActions {
     })));
 
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   deleteHighlightSet = (setId) => {
@@ -321,10 +457,13 @@ export default class MainActions {
     this.state.set(state);
 
     this._saveToStorage();
+    this._storageRootSave();
   };
 
   highlightSetRename = (setId, name) => {
     this.state.set(this.state.get().setIn(['highlightSets', setId, 'name'], name));
+
     this._saveToStorage();
+    this._storageRootSave();
   };
 };

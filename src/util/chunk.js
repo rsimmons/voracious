@@ -52,6 +52,10 @@ export const iteratableChunks = (chunkSet) => {
   return chunkSet.chunkMap.values();
 };
 
+export const iterableChunkIds = (chunkSet) => {
+  return chunkSet.chunkMap.keys();
+};
+
 export const getChunksAtTime = (chunkSet, time) => {
   const it = Math.floor(time);
   const index = chunkSet.index;
@@ -106,6 +110,22 @@ export const getChunksInRange = (chunkSet, begin, end) => {
 
 export const setChunkAnnoText = (chunkSet, chunkId, newAnnoText) => {
   return chunkSet.setIn(['chunkMap', chunkId, 'annoText'], newAnnoText);
+};
+
+export const getChunkJS = (chunkSet, chunkId) => {
+  const chunk = chunkSet.getIn(['chunkMap', chunkId]);
+  return {
+    position: chunk.position.toJS(),
+    annoText: annoTextToJS(chunk.annoText),
+  };
+};
+
+export const chunkSetToShallowJS = (chunkSet) => {
+  const chunkIds = [];
+  for (const cid of chunkSet.chunkMap.keys()) {
+    chunkIds.push(cid);
+  }
+  return chunkIds;
 };
 
 export const chunkSetToJS = (chunkSet) => {
