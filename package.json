@@ -21,16 +21,18 @@
     "cross-env": "^5.0.5",
     "electron": "^1.7.5",
     "electron-builder": "^19.24.1",
+    "electron-rebuild": "^1.6.0",
     "react-addons-perf": "^15.4.2"
   },
   "homepage": ".",
   "main": "src/electron-starter.js",
   "scripts": {
     "react-start": "cross-env BROWSER=none react-scripts start",
+    "react-build": "react-scripts build",
     "electron-start": "cross-env NODE_ENV=development ELECTRON_START_URL=http://localhost:3000 electron app",
+    "rebuild-native": "electron-rebuild --module-dir app",
     "dist": "electron-builder",
     "dist-mac-dir": "electron-builder --mac -c.mac.target=dir",
-    "react-build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }
