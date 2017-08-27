@@ -13,7 +13,17 @@ html {
   box-sizing: inherit;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Muli|Quicksand');
+/*@import url('https://fonts.googleapis.com/css?family=Muli|Quicksand');*/
+
+@font-face {
+  font-family: "Muli";
+  src: url("./fonts/Muli-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Quicksand";
+  src: url("./fonts/Quicksand-Regular.ttf");
+}
 
 body {
   font-family: 'Muli', sans-serif;
