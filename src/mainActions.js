@@ -51,7 +51,7 @@ export default class MainActions {
   constructor(subscribableState) {
     this.state = subscribableState;
     this.state.set(new MainStateRecord());
-    this.storage = createStorageBackend('voracious:');
+    this.storage = createStorageBackend();
 
     // Start loading from storage, which is async
     this._loadFromStorageKey('active');

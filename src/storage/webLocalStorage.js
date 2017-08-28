@@ -1,6 +1,6 @@
 import { startsWith, removePrefix } from '../util/string';
 
-export default class WebStorageBackend {
+class WebLocalStorageBackend {
   constructor(prefix) {
     this.prefix = prefix;
   }
@@ -46,4 +46,8 @@ export default class WebStorageBackend {
     }
     return Promise.resolve(result);
   }
+}
+
+export default function createBackend() {
+  return new WebLocalStorageBackend('voracious:');
 }
