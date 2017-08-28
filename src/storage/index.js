@@ -1,5 +1,5 @@
-import WebStorageBackend from './web.js';
+import WebLocalStorageBackend from './webLocalStorage.js';
 
 export default function createStorageBackend(prefix) {
-  return new WebStorageBackend(prefix);
+  return new WebLocalStorageBackend(prefix);
 }

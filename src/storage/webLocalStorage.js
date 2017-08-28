@@ -1,6 +1,6 @@
 import { startsWith, removePrefix } from '../util/string';
 
-class WebStorageBackend {
+export default class WebStorageBackend {
   constructor(prefix) {
     this.prefix = prefix;
   }
@@ -47,5 +47,3 @@ class WebStorageBackend {
     return Promise.resolve(result);
   }
 }
-
-export default WebStorageBackend;
