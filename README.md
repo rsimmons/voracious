@@ -32,7 +32,7 @@ The `app/` dir contains a small amount of code and config related to Electron. T
 
 Most third-party dependencies are pure JS (`react`, `immutable`, etc.) and are declared in the root `package.json`. Those are bundled with the the Voracious code (by webpack) into a single JS file. That means that the root `node_modules/` does _not_ needed to be distributed with the final Electron app. This sort of bundling isn't generally necessary to do for Electron apps, but it's convenient for various reasons.
 
-Dependencies that use native code (e.g. `leveldown`) need to be compiled against the Electron V8 runtime, and are declared in `app/package.json`. The corresponding `app/node_modules/` _is_ packaged into the final distributed Electron app.
+Dependencies that use native code (e.g. `sqlite`) need to be compiled against the Electron V8 runtime, and are declared in `app/package.json`. The corresponding `app/node_modules/` _is_ packaged into the final distributed Electron app.
 
 Electron-builder is configured via `electron-builder.json`. The current config has it basically combine the contents of `build/` and `app/` to form the distributed archive.
 
