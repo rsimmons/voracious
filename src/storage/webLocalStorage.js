@@ -49,5 +49,5 @@ class WebLocalStorageBackend {
 }
 
 export default function createBackend() {
-  return new WebLocalStorageBackend('voracious:');
+  return Promise.resolve(new WebLocalStorageBackend('voracious:'));
 }

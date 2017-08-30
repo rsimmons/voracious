@@ -51,19 +51,21 @@ export default class MainActions {
   constructor(subscribableState) {
     this.state = subscribableState;
     this.state.set(new MainStateRecord());
-    this.storage = createStorageBackend();
 
-    // Start loading from storage, which is async
-    this._loadFromStorageKey('active');
+    this.state.set(this.state.get().set('loading', true));
+
+    this.storage = createStorageBackend().then((backend) => {
+      this.storage = backend;
+      this._loadFromStorageKey('active');
+    });
   }
 
   // NOTE: This takes a key argument so that we could load from a backup
   _loadFromStorageKey = (key) => {
-    this.state.set(this.state.get().set('loading', true));
     this.storage.getItem(key).then(storedStateStr => {
-      let newState = this.state.get();
-
       if (storedStateStr) {
+        let newState = this.state.get();
+
         // Parse and load stored state JSON
         const storedState = jpar(storedStateStr);
 
@@ -105,8 +107,12 @@ export default class MainActions {
             name: set.name,
           }));
         }
+
+        // "Commit" new state
+        this.state.set(newState);
       } else {
         // Key wasn't present, so we can initialize state to default
+        let newState = this.state.get();
 
         const initSetId = genUID();
         newState = newState.setIn(['highlightSets', initSetId], new HighlightSetRecord({
@@ -114,15 +120,16 @@ export default class MainActions {
           name: 'My Highlights',
         }));
 
+        // "Commit" new state
+        this.state.set(newState);
+
         // Save our empty/default state
         this._saveToStorage();
         this._storageFullSave();
       }
 
-      newState = newState.set('loading', false);
-
-      // "Commit" new state
-      this.state.set(newState);
+      // Clear loading flag
+      this.state.set(this.state.get().set('loading', false));
     });
   };
 

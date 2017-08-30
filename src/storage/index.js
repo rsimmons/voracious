@@ -1,5 +1,4 @@
 import createBackend from './webLocalStorage';
+// import createBackend from './electronSqlite';
 
-export default function createStorageBackend() {
-  return createBackend();
-}
+export default createBackend;
