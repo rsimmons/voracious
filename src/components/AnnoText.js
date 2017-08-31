@@ -71,10 +71,10 @@ export default class AnnoText extends PureComponent {
     document.removeEventListener('mouseup', this.handleMouseUp);
   };
 
-  lemmasRangeFromIndex = (cpIndex) => {
-    const hitLemmaAnnos = getKindAtIndex(this.props.annoText, 'lemma', cpIndex);
-    if (hitLemmaAnnos.length > 0) {
-      const a = hitLemmaAnnos[0];
+  wordRangeFromIndex = (cpIndex) => {
+    const hitWordAnnos = getKindAtIndex(this.props.annoText, 'word', cpIndex);
+    if (hitWordAnnos.length > 0) {
+      const a = hitWordAnnos[0];
       return new CPRange({cpBegin: a.cpBegin, cpEnd: a.cpEnd});
     } else {
       return null;
@@ -100,7 +100,7 @@ export default class AnnoText extends PureComponent {
   handleCharMouseEnter = (e) => {
     const cpIndex = +e.currentTarget.getAttribute('data-index');
 
-    this.setState({hoverRange: this.lemmasRangeFromIndex(cpIndex)});
+    this.setState({hoverRange: this.wordRangeFromIndex(cpIndex)});
 
     if (this.dragStartIndex !== null) {
       let a = this.dragStartIndex;
@@ -128,14 +128,12 @@ export default class AnnoText extends PureComponent {
     onUpdate(newAnnoText);
   };
 
-  handleSetLemma = () => {
+  handleSetWord = () => {
     const { annoText, onUpdate } = this.props;
-    const lemmaText = this.setLemmaTextInput.value.trim();
-    if (lemmaText === '') {
-      return;
-    }
+    const lemma = this.setWordLemmaTextInput.value.trim();
+    const data = lemma === '' ? {} : {lemma};
     const {cpBegin, cpEnd} = this.state.selectionRange;
-    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'lemma', lemmaText);
+    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'word', data);
     onUpdate(newAnnoText);
   };
 
@@ -199,10 +197,21 @@ export default class AnnoText extends PureComponent {
         {this.state.tooltipExpandedEditing ? (
           <form style={{marginTop: 10}}>
             <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
-            <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
+            <input ref={(el) => { this.setWordLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetWord} >Set Word</button><br />
             <br />
             {annosInRange.map((a, i) => (
-              <div key={i}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
+              <div key={i}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={(() => {
+                switch (a.kind) {
+                  case 'highlight':
+                    return 'set:' + highlightSets.get(a.data.setId).name;
+                  case 'ruby':
+                    return '[' + a.data + ']';
+                  case 'word':
+                    return JSON.stringify(a.data);
+                  default:
+                    return '';
+                }
+              })()} <button onClick={(e) => {
                 e.preventDefault();
                 onUpdate(deleteAnnotation(annoText, a));
               }}>X</button></div>
@@ -219,8 +228,8 @@ export default class AnnoText extends PureComponent {
     const tooltipRange = this.state.selectionRange || this.state.hoverRange;
 
     if (tooltipRange) {
-      const hitLemmaAnnos = getKindInRange(annoText, 'lemma', tooltipRange.cpBegin, tooltipRange.cpEnd);
-      const limitedHitLemmaAnnos = hitLemmaAnnos.slice(0, 3);
+      const hitWordAnnos = getKindInRange(annoText, 'word', tooltipRange.cpBegin, tooltipRange.cpEnd);
+      const limitedHitWordAnnos = hitWordAnnos.slice(0, 3);
 
       const anchorElems = [];
       for (let i = tooltipRange.cpBegin; i < tooltipRange.cpEnd; i++) {
@@ -234,11 +243,12 @@ export default class AnnoText extends PureComponent {
         <Tooltip anchorElems={anchorElems} onMouseEnter={this.handleTooltipMouseEnter} onMouseLeave={this.handleTooltipMouseLeave}>
           <div className="AnnoText-tooltip">
             <ul className="AnnoText-tooltip-dictionary-hits">
-              {limitedHitLemmaAnnos.map(lemmaAnno => {
-                const encLemma = encodeURIComponent(lemmaAnno.data);
+              {limitedHitWordAnnos.map(wordAnno => {
+                const lemma = wordAnno.data.lemma || cpSlice(annoText.text, wordAnno.cpBegin, wordAnno.cpEnd);
+                const encLemma = encodeURIComponent(lemma);
                 return (
-                  <li key={`wordinfo-${lemmaAnno.cpBegin}:${lemmaAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
-                    <div className="AnnoText-tooltip-word">{lemmaAnno.data}</div>
+                  <li key={`wordinfo-${wordAnno.cpBegin}:${wordAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
+                    <div className="AnnoText-tooltip-word">{lemma}</div>
                     <div className="AnnoText-tooltip-links">
                       <a className="AnnoText-dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
                       <a className="AnnoText-dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
@@ -249,8 +259,8 @@ export default class AnnoText extends PureComponent {
                 );
               })}
             </ul>
-            {(hitLemmaAnnos.length > limitedHitLemmaAnnos.length) ? (
-              <div style={{fontSize: '0.5em', marginTop: 10, textAlign: 'center', fontStyle: 'italic'}}> and {hitLemmaAnnos.length - limitedHitLemmaAnnos.length} more...</div>
+            {(hitWordAnnos.length > limitedHitWordAnnos.length) ? (
+              <div style={{fontSize: '0.5em', marginTop: 10, textAlign: 'center', fontStyle: 'italic'}}> and {hitWordAnnos.length - limitedHitWordAnnos.length} more...</div>
             ) : null}
             {this.renderTooltipEditControls(tooltipRange)}
           </div>

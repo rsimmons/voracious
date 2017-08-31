@@ -32,8 +32,10 @@ const analyzeJAKuromoji = (text) => {
     cpBegin = cpEnd;
     cpEnd = cpBegin + [...t.surface_form].length;
 
+    const textSlice = cpSlice(text, cpBegin, cpEnd);
+
     // sanity checks
-    if (cpSlice(text, cpBegin, cpEnd) !== t.surface_form) {
+    if (textSlice !== t.surface_form) {
       throw new Error('Input text token does not match surface_form');
     }
 
@@ -54,8 +56,8 @@ const analyzeJAKuromoji = (text) => {
     annotations.push({
       cpBegin,
       cpEnd,
-      kind: 'lemma',
-      data: t.basic_form,
+      kind: 'word',
+      data: (t.basic_form === textSlice) ? {} : {lemma: t.basic_form},
     });
 
     if (t.reading !== '*') {
