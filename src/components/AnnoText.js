@@ -201,10 +201,10 @@ export default class AnnoText extends PureComponent {
             <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
             <input ref={(el) => { this.setLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetLemma} >Set Lemma</button><br />
             <br />
-            {annosInRange.map(a => (
-              <div key={a.id}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
+            {annosInRange.map((a, i) => (
+              <div key={i}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={a.kind === 'highlight' ? ('set:' + highlightSets.get(a.data.setId).name) : ('[' + a.data + ']')} <button onClick={(e) => {
                 e.preventDefault();
-                onUpdate(deleteAnnotation(annoText, a.id));
+                onUpdate(deleteAnnotation(annoText, a));
               }}>X</button></div>
             ))}
           </form>

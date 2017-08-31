@@ -1,5 +1,4 @@
 import { Record, List, OrderedMap } from 'immutable';
-import genUID from './uid';
 
 // in order of priority
 const validKinds = new OrderedMap({
@@ -9,7 +8,6 @@ const validKinds = new OrderedMap({
 });
 
 const Annotation = new Record({
-  id: null,
   cpBegin: null, // integer
   cpEnd: null, // integer
   kind: null, // string
@@ -43,7 +41,6 @@ export const addAnnotation = (annoText, cpBegin, cpEnd, kind, data) => {
   const newAnnoText = new AnnotatedText({
     text: annoText.text,
     annotations: annoText.annotations.push(new Annotation({
-      id: genUID(),
       cpBegin,
       cpEnd,
       kind,
@@ -65,8 +62,8 @@ export const clearKindInRange = (annoText, cpBegin, cpEnd, kind) => {
   return annoText.update('annotations', annotations => annotations.filter(anno => ((anno.kind !== kind) || (anno.cpEnd <= cpBegin) || (anno.cpBegin >= cpEnd))));
 };
 
-export const deleteAnnotation = (annoText, annoId) => {
-  return annoText.update('annotations', annotations => annotations.filter(anno => (anno.id !== annoId)));
+export const deleteAnnotation = (annoText, anno) => {
+  return annoText.update('annotations', annotations => annotations.filter(a => (a !== anno)));
 };
 
 export const getKindAtIndex = (annoText, kind, cpIndex) => {
