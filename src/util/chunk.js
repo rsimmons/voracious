@@ -48,12 +48,24 @@ export const createTimeRangeChunkSet = (chunks) => {
   });
 };
 
-export const iteratableChunks = (chunkSet) => {
+export const chunkSetIterableChunks = (chunkSet) => {
   return chunkSet.chunkMap.values();
 };
 
-export const iterableChunkIds = (chunkSet) => {
+export const chunkSetIterableChunkIds = (chunkSet) => {
   return chunkSet.chunkMap.keys();
+};
+
+export const chunkSetChunkIdsArray = (chunkSet) => {
+  const chunkIds = [];
+  for (const cid of chunkSet.chunkMap.keys()) {
+    chunkIds.push(cid);
+  }
+  return chunkIds;
+};
+
+export const getChunkById = (chunkSet, chunkId) => {
+  return chunkSet.chunkMap.get(chunkId);
 };
 
 export const getChunksAtTime = (chunkSet, time) => {
@@ -112,20 +124,19 @@ export const setChunkAnnoText = (chunkSet, chunkId, newAnnoText) => {
   return chunkSet.setIn(['chunkMap', chunkId, 'annoText'], newAnnoText);
 };
 
-export const getChunkJS = (chunkSet, chunkId) => {
-  const chunk = chunkSet.getIn(['chunkMap', chunkId]);
+export const chunkToJSNoID = (chunk) => {
   return {
     position: chunk.position.toJS(),
     annoText: annoTextToJS(chunk.annoText),
   };
 };
 
-export const chunkSetToShallowJS = (chunkSet) => {
-  const chunkIds = [];
-  for (const cid of chunkSet.chunkMap.keys()) {
-    chunkIds.push(cid);
-  }
-  return chunkIds;
+export const chunkFromIdJS = (chunkId, chunkJS) => {
+  return new Chunk({
+    uid: chunkId,
+    position: new RangePosition(chunkJS.position),
+    annoText: annoTextFromJS(chunkJS.annoText),
+  });
 };
 
 export const chunkSetToJS = (chunkSet) => {

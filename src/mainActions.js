@@ -4,7 +4,7 @@ import { Record, OrderedMap, List } from 'immutable';
 import genUID from './util/uid';
 import { parseSRT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
-import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, getChunkJS, chunkSetToShallowJS, iterableChunkIds, chunkSetToJS, chunkSetFromJS } from './util/chunk';
+import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, chunkToJSNoID, chunkFromIdJS, getChunkById, chunkSetChunkIdsArray, chunkSetIterableChunkIds, chunkSetIterableChunks, chunkSetToJS, chunkSetFromJS } from './util/chunk';
 import { startsWith } from './util/string';
 import createStorageBackend from './storage';
 import { detectWithinSupported } from './util/languages';
@@ -46,7 +46,9 @@ const HighlightSetRecord = new Record({
   name: undefined,
 });
 
+const DISABLE_OLD_SAVE = true;
 const ENABLE_NEW_SAVE = true;
+const SWITCH_NEW_LOAD = true;
 
 export default class MainActions {
   constructor(subscribableState) {
@@ -57,13 +59,28 @@ export default class MainActions {
 
     this.storage = createStorageBackend().then((backend) => {
       this.storage = backend;
-      this._loadFromStorageKey('active');
+      if (SWITCH_NEW_LOAD) {
+        this._loadFromStorageNew();
+      } else {
+        this._loadFromStorageOld();
+      }
     });
   }
 
-  // NOTE: This takes a key argument so that we could load from a backup
-  _loadFromStorageKey = (key) => {
-    this.storage.getItem(key).then(storedStateStr => {
+  _generateDefaultState = () => {
+    let newState = new MainStateRecord();
+
+    const initSetId = genUID();
+    newState = newState.setIn(['highlightSets', initSetId], new HighlightSetRecord({
+      id: initSetId,
+      name: 'My Highlights',
+    }));
+
+    return newState;
+  };
+
+  _loadFromStorageOld = () => {
+    this.storage.getItem('active').then(storedStateStr => {
       if (storedStateStr) {
         let newState = this.state.get();
 
@@ -87,7 +104,7 @@ export default class MainActions {
             texts.push(new SourceTextRecord({
               language: t.language,
               role: t.role,
-              chunkSetId: t.chunkSetId || genUID(), // TODO: remove genUID case
+              chunkSetId: t.chunkSetId || genUID(),
               chunkSet: chunkSetFromJS(t.chunkSet),
             }));
           }
@@ -110,29 +127,91 @@ export default class MainActions {
           }));
         }
 
+        // Clear loading flag
+        newState = newState.set('loading', false);
+
         // "Commit" new state
         this.state.set(newState);
+
+        this._storageFullSave(); // TODO: for migration
       } else {
         // Key wasn't present, so we can initialize state to default
-        let newState = this.state.get();
-
-        const initSetId = genUID();
-        newState = newState.setIn(['highlightSets', initSetId], new HighlightSetRecord({
-          id: initSetId,
-          name: 'My Highlights',
-        }));
-
-        // "Commit" new state
-        this.state.set(newState);
+        this.state.set(this._generateDefaultState());
 
         // Save our empty/default state
         this._saveToStorage();
         this._storageFullSave();
       }
-
-      // Clear loading flag
-      this.state.set(this.state.get().set('loading', false));
     });
+  };
+
+  _loadFromStorageNew = async () => {
+    const rootStr = await this.storage.getItem('root');
+
+    if (rootStr) {
+      let newState = new MainStateRecord();
+
+      const root = jpar(rootStr);
+
+      // Load sources
+      for (const source of root.sources) {
+        const media = [];
+        for (const m of source.media) {
+          media.push(new VideoMediaRecord({
+            language: m.language,
+            videoURL: m.videoURL,
+          }));
+        }
+
+        const texts = [];
+        for (const t of source.texts) {
+          const chunkIds = jpar(await this.storage.getItem('chunk_set/' + t.chunkSetId));
+          const chunks = [];
+          // TODO: Should bulk-load these with getItems
+          for (const cid of chunkIds) {
+            const chunkStr = await this.storage.getItem('chunk/' + cid);
+            chunks.push(chunkFromIdJS(cid, jpar(chunkStr)));
+          }
+
+          texts.push(new SourceTextRecord({
+            language: t.language,
+            role: t.role,
+            chunkSetId: t.chunkSetId,
+            chunkSet: createTimeRangeChunkSet(chunks),
+          }));
+        }
+
+        const viewPositionStr = await this.storage.getItem('source_position/' + source.id);
+        const viewPosition = viewPositionStr ? jpar(viewPositionStr) : 0;
+
+        newState = newState.setIn(['sources', source.id], new SourceRecord({
+          id: source.id,
+          kind: source.kind,
+          name: source.name,
+          media: new List(media),
+          texts: new List(texts),
+          viewPosition,
+          timeCreated: source.timeCreated,
+        }));
+      }
+
+      // Load highlight sets
+      for (const set of root.highlightSets) {
+        newState = newState.setIn(['highlightSets', set.id], new HighlightSetRecord({
+          id: set.id,
+          name: set.name,
+        }));
+      }
+
+      // "Commit" new state object we've constructed
+      this.state.set(newState);
+    } else {
+      // Key wasn't present, so initialize to default state
+      this.state.set(this._generateDefaultState());
+
+      // Save our empty/default state
+      this._storageFullSave();
+    }
   };
 
   _saveToJSONable = () => {
@@ -183,14 +262,16 @@ export default class MainActions {
   }
 
   _saveToStorage = () => {
-    console.time('save');
+    if (DISABLE_OLD_SAVE) return;
+
+    console.time('old save');
 
     // NOTE: We don't do anything with the Promise return value,
     //  saving is "fire and forget"
     // TODO: we should check if this fails
     this.storage.setItem('active', jstr(this._saveToJSONable()));
 
-    console.timeEnd('save');
+    console.timeEnd('old save');
   };
 
   // This is usually not needed, as we save piecemeal
@@ -268,7 +349,7 @@ export default class MainActions {
   _storageSaveChunkSet = (chunkSetId, chunkSet) => {
     if (!ENABLE_NEW_SAVE) return;
 
-    this.storage.setItem('chunk_set/' + chunkSetId, jstr(chunkSetToShallowJS(chunkSet)));
+    this.storage.setItem('chunk_set/' + chunkSetId, jstr(chunkSetChunkIdsArray(chunkSet)));
   };
 
   _storageDeleteChunkSet = (chunkSetId) => {
@@ -292,16 +373,16 @@ export default class MainActions {
   _storageSaveAllChunksInSet = (chunkSet) => {
     if (!ENABLE_NEW_SAVE) return;
 
-    for (const cid of iterableChunkIds(chunkSet)) {
-      const chunkJS = getChunkJS(chunkSet, cid);
-      this._storageChunkSave(cid, chunkJS);
+    for (const chunk of chunkSetIterableChunks(chunkSet)) {
+      const chunkJS = chunkToJSNoID(chunk);
+      this._storageChunkSave(chunk.uid, chunkJS);
     }
   };
 
   _storageDeleteAllChunksInSet = (chunkSet) => {
     if (!ENABLE_NEW_SAVE) return;
 
-    for (const cid of iterableChunkIds(chunkSet)) {
+    for (const cid of chunkSetIterableChunkIds(chunkSet)) {
       this._storageChunkDelete(cid);
     }
   };
@@ -452,7 +533,8 @@ export default class MainActions {
     this._saveToStorage();
 
     const updatedChunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
-    const chunkJS = getChunkJS(updatedChunkSet, chunkId);
+    const updatedChunk = getChunkById(updatedChunkSet, chunkId);
+    const chunkJS = chunkToJSNoID(updatedChunk);
     this._storageChunkSave(chunkId, chunkJS);
   };
 

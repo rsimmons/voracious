@@ -1,12 +1,12 @@
 import { createSelector, createSelectorCreator, defaultMemoize } from 'reselect';
 
-import { getChunksInRange, iteratableChunks } from './util/chunk';
+import { getChunksInRange, chunkSetIterableChunks } from './util/chunk';
 import { getKind } from './util/annotext';
 
 function findSourceHighlightsWithContext(texts, highlightSetId) {
   const contexts = [];
   for (const text of texts) {
-    for (const chunk of iteratableChunks(text.chunkSet)) {
+    for (const chunk of chunkSetIterableChunks(text.chunkSet)) {
       const hls = getKind(chunk.annoText, 'highlight');
       if (hls.some(a => (a.data.setId === highlightSetId))) {
         // There are some highlights matching the given set id
