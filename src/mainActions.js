@@ -37,6 +37,7 @@ const VideoMediaRecord = new Record({
 const SourceTextRecord = new Record({
   language: undefined,
   role: undefined,
+  chunkSetId: undefined,
   chunkSet: undefined,
 });
 
@@ -86,6 +87,7 @@ export default class MainActions {
             texts.push(new SourceTextRecord({
               language: t.language,
               role: t.role,
+              chunkSetId: t.chunkSetId || genUID(), // TODO: remove genUID case
               chunkSet: chunkSetFromJS(t.chunkSet),
             }));
           }
@@ -163,6 +165,7 @@ export default class MainActions {
         saveSource.texts.push({
           language: text.language,
           role: text.role,
+          chunkSetId: text.chunkSetId,
           chunkSet: chunkSetToJS(text.chunkSet),
         });
       }
@@ -199,8 +202,9 @@ export default class MainActions {
     for (const source of this.state.get().sources.values()) {
       this._storageSourcePositionSave(source.id, source.viewPosition);
 
-      for (let textNum = 0; textNum < source.texts.size; textNum++) {
-        this._storageSourceTextSaveAllChunks(source.id, textNum);
+      for (const text of source.texts) {
+        this._storageSaveChunkSet(text.chunkSetId, text.chunkSet);
+        this._storageSaveAllChunksInSet(text.chunkSet);
       }
     }
   };
@@ -233,7 +237,7 @@ export default class MainActions {
         sourceObj.texts.push({
           language: text.language,
           role: text.role,
-          chunkSet: chunkSetToShallowJS(text.chunkSet),
+          chunkSetId: text.chunkSetId,
         });
       }
       rootObj.sources.push(sourceObj);
@@ -261,6 +265,18 @@ export default class MainActions {
     this.storage.removeItem('source_position/' + sourceId);
   };
 
+  _storageSaveChunkSet = (chunkSetId, chunkSet) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.setItem('chunk_set/' + chunkSetId, jstr(chunkSetToShallowJS(chunkSet)));
+  };
+
+  _storageDeleteChunkSet = (chunkSetId) => {
+    if (!ENABLE_NEW_SAVE) return;
+
+    this.storage.removeItem('chunk_set/' + chunkSetId);
+  };
+
   _storageChunkSave = (chunkId, chunkJS) => {
     if (!ENABLE_NEW_SAVE) return;
 
@@ -273,10 +289,8 @@ export default class MainActions {
     this.storage.removeItem('chunk/' + chunkId);
   };
 
-  _storageSourceTextSaveAllChunks = (sourceId, textNum) => {
+  _storageSaveAllChunksInSet = (chunkSet) => {
     if (!ENABLE_NEW_SAVE) return;
-
-    const chunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
 
     for (const cid of iterableChunkIds(chunkSet)) {
       const chunkJS = getChunkJS(chunkSet, cid);
@@ -284,10 +298,8 @@ export default class MainActions {
     }
   };
 
-  _storageSourceTextDeleteAllChunks = (sourceId, textNum) => {
+  _storageDeleteAllChunksInSet = (chunkSet) => {
     if (!ENABLE_NEW_SAVE) return;
-
-    const chunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
 
     for (const cid of iterableChunkIds(chunkSet)) {
       this._storageChunkDelete(cid);
@@ -310,10 +322,10 @@ export default class MainActions {
   };
 
   deleteSource = (sourceId) => {
-    // For each text of this source, delete all chunks
-    const textsCount = this.state.get().getIn(['sources', sourceId, 'texts']).size;
-    for (let textNum = 0; textNum < textsCount; textNum++) {
-      this._storageSourceTextDeleteAllChunks(sourceId, textNum);
+    // For each text of this source, delete chunkSet and all chunks
+    for (const text of this.state.get().getIn(['sources', sourceId, 'texts'])) {
+      this._storageDeleteChunkSet(text.chunkSetId);
+      this._storageDeleteAllChunksInSet(text.chunkSet);
     }
 
     this.state.set(this.state.get().deleteIn(['sources', sourceId]));
@@ -376,16 +388,20 @@ export default class MainActions {
         const annoText = createAutoAnnotatedText(sub.lines, language);
         chunks.push(createTimeRangeChunk(sub.begin, sub.end, annoText));
       }
+
+      const chunkSetId = genUID();
       const chunkSet = createTimeRangeChunkSet(chunks);
 
       this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
         language,
         role,
+        chunkSetId,
         chunkSet,
       }))));
 
       this._saveToStorage();
-      this._storageSourceTextSaveAllChunks(sourceId, this.state.get().getIn(['sources', sourceId, 'texts']).size-1);
+      this._storageSaveChunkSet(chunkSetId, chunkSet);
+      this._storageSaveAllChunksInSet(chunkSet);
       this._storageRootSave();
     };
     reader.readAsText(file);
@@ -414,7 +430,9 @@ export default class MainActions {
   };
 
   sourceDeleteText = (sourceId, textNum) => {
-    this._storageSourceTextDeleteAllChunks(sourceId, textNum);
+    const text = this.state.get().getIn(['sources', sourceId, 'texts', textNum]);
+    this._storageDeleteChunkSet(text.chunkSetId);
+    this._storageDeleteAllChunksInSet(text.chunkSet);
 
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.delete(textNum)));
 
