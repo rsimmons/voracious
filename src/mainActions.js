@@ -46,7 +46,7 @@ const HighlightSetRecord = new Record({
   name: undefined,
 });
 
-const DISABLE_OLD_SAVE = false;
+const DISABLE_OLD_SAVE = true;
 const ENABLE_NEW_SAVE = true;
 const SWITCH_NEW_LOAD = true;
 
