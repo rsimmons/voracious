@@ -45,7 +45,7 @@ const HighlightSetRecord = new Record({
   name: undefined,
 });
 
-const ENABLE_NEW_SAVE = false;
+const ENABLE_NEW_SAVE = true;
 
 export default class MainActions {
   constructor(subscribableState) {
