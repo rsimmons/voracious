@@ -161,7 +161,6 @@ export const concat = (annoTexts) => {
     newText += at.text;
     for (const a of at.annotations) {
       newAnnos.push(new Annotation({
-        id: a.id,
         cpBegin: a.cpBegin + cpOffset,
         cpEnd: a.cpEnd + cpOffset,
         kind: a.kind,
