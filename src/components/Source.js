@@ -262,6 +262,14 @@ export default class Source extends Component {
     }
   };
 
+  anyTranscriptionText = () => {
+    return this.props.source.texts.some(text => text.role === 'transcription');
+  };
+
+  anyTranslationText = () => {
+    return this.props.source.texts.some(text => text.role === 'translation');
+  };
+
   handleContinue = () => {
     switch (this.state.quizMode) {
       case 'none':
@@ -270,26 +278,27 @@ export default class Source extends Component {
 
       case 'listen':
         if (this.state.quizPause) {
-          switch (this.state.quizState.textRevelation) {
-            case 0:
-              this.setState((s) => { s.quizState.textRevelation++; });
-              break;
+          const anyTranscription = this.anyTranscriptionText();
+          const anyTranslation = this.anyTranslationText();
+          if (!(anyTranscription || anyTranslation)) {
+            throw new Error('unpossible?');
+          }
 
-            case 1:
-              this.setState((s) => { s.quizState.textRevelation++; });
-              break;
+          const maxRevelation = (+anyTranscription) + (+anyTranslation);
+          const currentRevelation = this.state.quizState.textRevelation;
 
-            case 2:
-              // Continue playing video
-              this.videoMediaComponent.play();
-              this.releaseQuizPause();
-              this.setState({
-                quizState: null,
-              });
-              break;
-
-            default:
-              throw new Error('internal error');
+          if (currentRevelation > maxRevelation) {
+            throw new Error('internal error');
+          } else if (currentRevelation === maxRevelation) {
+            // Continue playing video
+            this.videoMediaComponent.play();
+            this.releaseQuizPause();
+            this.setState({
+              quizState: null,
+            });
+          } else {
+            // Increment state quizState.textRevelation
+            this.setState(s => ({ quizState: { textRevelation: s.quizState.textRevelation + 1 }}));
           }
         }
         break;
@@ -317,9 +326,13 @@ export default class Source extends Component {
     //  at least a video and subs.
     const sourceReady = source.media.size && source.texts.size;
 
-    // Based on quiz mode and state, determine what texts are shown
-    let showFirstText = true;
-    let showRestTexts = true;
+    // Based on quiz mode and state, determine if we override text displays
+    let transcriptionMessage = null;
+    let translationsMessage = null;
+    const REVEAL_MESSAGE = '(press enter to reveal)';
+    const HIDDEN_MESSAGE = '(hidden)';
+    const LISTEN_MESSAGE = '(listen)';
+
     switch (this.state.quizMode) {
       case 'none':
         // don't change
@@ -329,26 +342,32 @@ export default class Source extends Component {
         if (this.state.quizPause) {
           switch (this.state.quizState.textRevelation) {
             case 0:
-              showFirstText = false;
-              showRestTexts = false;
+              if (this.anyTranscriptionText()) {
+                transcriptionMessage = REVEAL_MESSAGE;
+                translationsMessage = HIDDEN_MESSAGE;
+              } else {
+                translationsMessage = REVEAL_MESSAGE;
+              }
               break;
 
             case 1:
-              showFirstText = true;
-              showRestTexts = false;
+              if (this.anyTranscriptionText()) {
+                translationsMessage = REVEAL_MESSAGE;
+              } else {
+                // don't change
+              }
               break;
 
             case 2:
-              showFirstText = true;
-              showRestTexts = true;
+              // don't change
               break;
 
             default:
               throw new Error('internal error');
           }
         } else {
-          showFirstText = false;
-          showRestTexts = false;
+          transcriptionMessage = LISTEN_MESSAGE;
+          translationsMessage = LISTEN_MESSAGE;
         }
         break;
 
@@ -371,16 +390,23 @@ export default class Source extends Component {
                       <div className="Source-text-chunk-outer" key={textNum}>
                         <div className="Source-text-chunk-inner">
                           {(() => {
-                            const textHidden = ((textNum === 0) && !showFirstText) || ((textNum > 0) && !showRestTexts);
+                            let message;
+                            if (text.role === 'transcription') {
+                              message = transcriptionMessage;
+                            } else if (text.role === 'translation') {
+                              message = translationsMessage;
+                            } else {
+                              throw new Error('unpossible?');
+                            }
 
                             return (
                               <div style={{position: 'relative'}}>
-                                {textHidden ? (
+                                {message ? (
                                   <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                    <div style={{color: '#aaa'}}>(hidden)</div>
+                                    <div style={{color: '#aaa'}}>{message}</div>
                                   </div>
                                 ) : null}
-                                <div style={{visibility: textHidden ? 'hidden' : 'visible'}}>
+                                <div style={{visibility: message ? 'hidden' : 'visible'}}>
                                   <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} />
                                 </div>
                               </div>
