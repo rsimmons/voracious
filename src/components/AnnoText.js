@@ -187,9 +187,17 @@ export default class AnnoText extends PureComponent {
         <div style={{textAlign: 'center'}}>
           <span>
             {highlightSets.valueSeq().map(s => existingHighlight[s.id] ? (
-              <button key={s.id} onClick={() => { this.removeHighlightOnRange(s.id, tooltipRange) }}>- {s.name}</button>
+              <button key={s.id} onClick={(e) => {
+                this.removeHighlightOnRange(s.id, tooltipRange);
+                // Blur so that subsequent space/enter to play video doesn't cause button press
+                e.currentTarget.blur();
+              }}>- {s.name}</button>
             ) : (
-              <button key={s.id} onClick={() => { this.addHighlightOnRange(s.id, tooltipRange) }}>+ {s.name}</button>
+              <button key={s.id} onClick={(e) => {
+                this.addHighlightOnRange(s.id, tooltipRange);
+                // Blur so that subsequent space/enter to play video doesn't cause button press
+                e.currentTarget.blur();
+              }}>+ {s.name}</button>
             ))}
           </span>
           &nbsp;&nbsp;<button onClick={this.handleTooltipExpandedEditClick}>Edit</button>
