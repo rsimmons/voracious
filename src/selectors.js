@@ -28,15 +28,20 @@ function findSourceHighlightsWithContext(texts, highlightSetId) {
           }
         }
 
+        const latestHighlightTimestamp = Math.max(...getKind(chunk.annoText, 'highlight').map(a => a.data.timeCreated));
+
         contexts.push({
           primaryAnnoText: chunk.annoText, // this one has highlights
           primaryLanguage: text.language,
           secondaryAnnoTexts: secondaryAnnoTexts, // list of {language, annoTexts: [annoText...]}
           chunkUID: chunk.uid, // added this for export to Anki
+          latestHighlightTimestamp,
         });
       }
     }
   }
+
+  contexts.sort((a, b) => a.latestHighlightTimestamp - b.latestHighlightTimestamp);
 
   return contexts;
 }

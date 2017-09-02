@@ -7,7 +7,7 @@ import './HighlightSet.css';
 import AnnoText from './AnnoText.js';
 import Button from './Button.js';
 import Editable from './Editable.js';
-import { getKind, customRender as annoTextCustomRender } from '../util/annotext';
+import { customRender as annoTextCustomRender } from '../util/annotext';
 import { downloadFile } from '../util/download';
 
 const newlinesToBrs = s => s.replace(/\n/g, '<br/>');
@@ -22,9 +22,7 @@ export default class HighlightSet extends Component {
 
       fields.push(context.chunkUID); // Useful as a stable UID for Anki
 
-      // Find (latest) timestamp of highlight annotations
-      const latestTimestamp = Math.max(...getKind(context.primaryAnnoText, 'highlight').map(a => a.data.timeCreated));
-      fields.push(latestTimestamp);
+      fields.push(context.latestHighlightTimestamp);
 
       const clozedAnnotextHTML = annoTextCustomRender(
         context.primaryAnnoText,
