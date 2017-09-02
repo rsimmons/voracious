@@ -15,7 +15,8 @@
     "react-infinite": "^0.12.1",
     "react-router-dom": "^4.1.2",
     "react-scripts": "1.0.10",
-    "reselect": "^3.0.1"
+    "reselect": "^3.0.1",
+    "sha.js": "^2.4.8"
   },
   "devDependencies": {
     "cross-env": "^5.0.5",

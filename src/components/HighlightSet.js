@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Infinite from 'react-infinite';
 import escape from 'escape-html';
+import shajs from 'sha.js';
 
 import './HighlightSet.css';
 
@@ -9,6 +10,7 @@ import Button from './Button.js';
 import Editable from './Editable.js';
 import { customRender as annoTextCustomRender } from '../util/annotext';
 import { downloadFile } from '../util/download';
+import { cpSlice } from '../util/string';
 
 const newlinesToBrs = s => s.replace(/\n/g, '<br/>');
 
@@ -30,7 +32,10 @@ export default class HighlightSet extends Component {
           if (a.kind === 'ruby') {
             return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
           } else if (a.kind === 'highlight') {
-            const clozeNum = parseInt(a.id, 16) % 1000000000; // this is hacky (relies on uid being hex, etc), but should work pretty well to generate a unique cloze id
+            // Compute cloze number as a hash of contained text.
+            //  Hacky, but will give us stable cloze ids.
+            const textSlice = cpSlice(context.primaryAnnoText.text, a.cpBegin, a.cpEnd);
+            const clozeNum = parseInt(shajs('sha1').update(textSlice).digest('hex'), 16) % 1000000000;
             return ['{{c' + clozeNum + '::', ...inner, '}}'];
           } else {
             return inner;
