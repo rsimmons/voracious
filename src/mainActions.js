@@ -246,7 +246,6 @@ export default class MainActions {
       timeCreated: Date.now(),
     })));
 
-    this._saveToStorage();
     this._storageRootSave();
 
     return sourceId;
@@ -261,7 +260,6 @@ export default class MainActions {
 
     this.state.set(this.state.get().deleteIn(['sources', sourceId]));
 
-    this._saveToStorage();
 
     this._storageRootSave();
     this._storageSourcePositionDelete(sourceId);
@@ -270,7 +268,6 @@ export default class MainActions {
   sourceSetName = (sourceId, name) => {
     this.state.set(this.state.get().setIn(['sources', sourceId, 'name'], name));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -280,7 +277,6 @@ export default class MainActions {
       videoURL: url,
     })])));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -289,14 +285,12 @@ export default class MainActions {
 
     this.state.set(this.state.get().setIn(['sources', sourceId, 'media'], new List()));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
   sourceDeleteMedia = (sourceId, mediaNum) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'media'], media => media.delete(mediaNum)));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -330,7 +324,6 @@ export default class MainActions {
         chunkSet,
       }))));
 
-      this._saveToStorage();
       this._storageSaveChunkSet(chunkSetId, chunkSet);
       this._storageSaveAllChunksInSet(chunkSet);
       this._storageRootSave();
@@ -341,7 +334,6 @@ export default class MainActions {
   sourceSetTextRole = (sourceId, textNum, role) => {
     // TODO: verify that role is valid string, and valid given textNum
     this.state.set(this.state.get().setIn(['sources', sourceId, 'texts', textNum, 'role'], role));
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -356,7 +348,6 @@ export default class MainActions {
         .setIn([textNum, 'role'], 'translation');
      }));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -367,7 +358,6 @@ export default class MainActions {
 
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.delete(textNum)));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -380,7 +370,6 @@ export default class MainActions {
   sourceSetChunkAnnoText = (sourceId, textNum, chunkId, newAnnoText) => {
     this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts', textNum, 'chunkSet'], chunkSet => setChunkAnnoText(chunkSet, chunkId, newAnnoText)));
 
-    this._saveToStorage();
 
     const updatedChunkSet = this.state.get().getIn(['sources', sourceId, 'texts', textNum, 'chunkSet']);
     const updatedChunk = getChunkById(updatedChunkSet, chunkId);
@@ -399,7 +388,6 @@ export default class MainActions {
       name: name,
     })));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
@@ -413,14 +401,12 @@ export default class MainActions {
 
     this.state.set(state);
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 
   highlightSetRename = (setId, name) => {
     this.state.set(this.state.get().setIn(['highlightSets', setId, 'name'], name));
 
-    this._saveToStorage();
     this._storageRootSave();
   };
 };
