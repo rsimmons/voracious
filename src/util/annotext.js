@@ -1,7 +1,5 @@
 import { Record, List, OrderedMap } from 'immutable';
 
-import { cpSlice } from '../util/string';
-
 // in order of priority
 const validKinds = new OrderedMap({
   'ruby': {priority: 0},
@@ -177,29 +175,8 @@ export const toJS = (annoText) => {
   return annoText.toJS();
 };
 
-const migrate = (annoText) => {
-  return annoText.update('annotations', annotations => annotations.map(a => {
-    if (a.kind === 'lemma') {
-      const newA = {
-        cpBegin: a.cpBegin,
-        cpEnd: a.cpEnd,
-        kind: 'word',
-        data: {},
-      };
-
-      if (a.data !== cpSlice(annoText.text, a.cpBegin, a.cpEnd)) {
-        newA.data.lemma = a.data;
-      }
-
-      return newA;
-    } else {
-      return a;
-    }
-  }));
-};
-
 export const fromJS = (obj) => {
-  return migrate(new AnnotatedText({text: obj.text, annotations: new List(obj.annotations.map(a => new Annotation(a)))}));
+  return new AnnotatedText({text: obj.text, annotations: new List(obj.annotations.map(a => new Annotation(a)))});
 };
 
 // Determine whether the given annotations nest properly without splitting.

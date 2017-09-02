@@ -138,32 +138,3 @@ export const chunkFromIdJS = (chunkId, chunkJS) => {
     annoText: annoTextFromJS(chunkJS.annoText),
   });
 };
-
-export const chunkSetToJS = (chunkSet) => {
-  // NOTE: We skip the index, since we can recreate that.
-  //  We also just store a list of chunks, map is unnecessary.
-  const chunks = [];
-  for (const c of chunkSet.chunkMap.values()) {
-    chunks.push({
-      uid: c.uid,
-      position: c.position.toJS(),
-      annoText: annoTextToJS(c.annoText),
-    });
-  }
-
-  return {
-    chunks,
-  }
-};
-
-export const chunkSetFromJS = (obj) => {
-  const chunks = [];
-  for (const c of obj.chunks) {
-    chunks.push(new Chunk({
-      uid: c.uid,
-      position: new RangePosition(c.position),
-      annoText: annoTextFromJS(c.annoText),
-    }));
-  }
-  return createTimeRangeChunkSet(chunks);
-};
