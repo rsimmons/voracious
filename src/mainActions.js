@@ -60,7 +60,10 @@ export default class MainActions {
     this.storage = createStorageBackend().then((backend) => {
       this.storage = backend;
       if (SWITCH_NEW_LOAD) {
-        this._loadFromStorageNew();
+        console.time('load');
+        this._loadFromStorageNew().then(() => {
+          console.timeEnd('load');
+        });
       } else {
         this._loadFromStorageOld();
       }
@@ -80,7 +83,7 @@ export default class MainActions {
   };
 
   _loadFromStorageOld = () => {
-    this.storage.getItem('active').then(storedStateStr => {
+    this.storage.getItemMaybe('active').then(storedStateStr => {
       if (storedStateStr) {
         let newState = this.state.get();
 
@@ -146,7 +149,7 @@ export default class MainActions {
   };
 
   _loadFromStorageNew = async () => {
-    const rootStr = await this.storage.getItem('root');
+    const rootStr = await this.storage.getItemMaybe('root');
 
     if (rootStr) {
       let newState = new MainStateRecord();
@@ -167,10 +170,12 @@ export default class MainActions {
         for (const t of source.texts) {
           const chunkIds = jpar(await this.storage.getItem('chunk_set/' + t.chunkSetId));
           const chunks = [];
-          // TODO: Should bulk-load these with getItems
-          for (const cid of chunkIds) {
-            const chunkStr = await this.storage.getItem('chunk/' + cid);
-            chunks.push(chunkFromIdJS(cid, jpar(chunkStr)));
+          const chunkStrs = await this.storage.getItems(chunkIds.map(cid => 'chunk/' + cid));
+          if (chunkIds.length !== chunkStrs.length) {
+            throw new Error('not all chunks found');
+          }
+          for (let i = 0; i < chunkIds.length; i++) {
+            chunks.push(chunkFromIdJS(chunkIds[i], jpar(chunkStrs[i])));
           }
 
           texts.push(new SourceTextRecord({
@@ -181,7 +186,7 @@ export default class MainActions {
           }));
         }
 
-        const viewPositionStr = await this.storage.getItem('source_position/' + source.id);
+        const viewPositionStr = await this.storage.getItemMaybe('source_position/' + source.id);
         const viewPosition = viewPositionStr ? jpar(viewPositionStr) : 0;
 
         newState = newState.setIn(['sources', source.id], new SourceRecord({

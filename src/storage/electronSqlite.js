@@ -16,9 +16,26 @@ class ElectronSqliteBackend {
     await db.run('CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)');
   }
 
-  async getItem(key) {
+  async getItemMaybe(key) {
     const row = await db.get('SELECT * FROM kv WHERE k = ?', key);
     return row && row.v;
+  }
+
+  async getItem(key) {
+    const value = this.getItemMaybe(key);
+    if (value === undefined) {
+      throw new Error('item not found');
+    }
+    return value;
+  }
+
+  async getItems(keys) {
+    const inPlaceholder = '(' + keys.map(() => '?').join(',') + ')';
+    const rows = await db.all('SELECT * FROM kv WHERE k IN ' + inPlaceholder, keys);
+    if (rows.length !== keys.length) {
+      throw new Error('not all items found');
+    }
+    return rows.map(row => row.v);
   }
 
   async setItem(key, value) {
