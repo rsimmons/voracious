@@ -4,6 +4,7 @@ import Immutable, { Record } from 'immutable';
 import './AnnoText.css';
 
 import Tooltip from './Tooltip';
+import CopyInterceptor from './CopyInterceptor';
 
 import { cpSlice } from '../util/string';
 import { getKindAtIndex, getKindInRange, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from '../util/annotext';
@@ -326,6 +327,9 @@ export default class AnnoText extends PureComponent {
       <div className="AnnoText">
         <div {... ((language === 'und' ? {} : {lang: language}))}>{annoTextChildren}</div>
         {this.renderTooltip()}
+        {this.state.selectionRange ? (
+          <CopyInterceptor copyData={[{format: 'text/plain', data: cpSlice(annoText.text, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd)}]}/>
+        ) : null}
       </div>
     );
   }
