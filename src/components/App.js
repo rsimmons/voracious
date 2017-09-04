@@ -7,7 +7,6 @@ import Button from './Button.js';
 import Source from './Source.js';
 import HighlightSet from './HighlightSet.js';
 
-import { createExpandedHighlightSetsMapSelector } from '../selectors';
 import { downloadFile } from '../util/download';
 
 // NewHighlightSetForm
@@ -43,11 +42,6 @@ class NewHighlightSetForm extends Component {
 
 // App
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.expandedHighlightSetsMapSelector = createExpandedHighlightSetsMapSelector();
-  }
-
   handleExportBackup = () => {
     // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
     const backupData = JSON.stringify(this.props.actions._saveToJSONable());
@@ -57,7 +51,9 @@ class App extends Component {
   render() {
     const { mainState, actions } = this.props;
 
-    const expandedHighlightSetsMap = this.expandedHighlightSetsMapSelector(mainState); // NOTE: This is an OrderedMap
+    console.time('expand');
+    const expandedHighlightSetsMap = actions.getExpandedHighlightSets(); // NOTE: This is an OrderedMap
+    console.timeEnd('expand');
 
     if (mainState.loading) {
       return <h1>Loading...</h1>;
