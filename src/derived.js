@@ -7,7 +7,7 @@ import { getChunksInRange, chunkSetIterableChunks } from './util/chunk';
 const getSourceHighlightSetContexts = (source, highlightSetId) => {
   const contexts = [];
 
-  for (const text of source.texts) {
+  source.texts.forEach((text, textNum) => {
     for (const chunk of chunkSetIterableChunks(text.chunkSet)) {
       const hls = getKind(chunk.annoText, 'highlight');
       if (hls.some(a => (a.data.setId === highlightSetId))) {
@@ -33,15 +33,19 @@ const getSourceHighlightSetContexts = (source, highlightSetId) => {
         const latestHighlightTimestamp = Math.max(...getKind(chunk.annoText, 'highlight').map(a => a.data.timeCreated));
 
         contexts.push({
-          primaryAnnoText: chunk.annoText, // this one has highlights
-          primaryLanguage: text.language,
+          sourceId: source.id,
+          primary: {
+            annoText: chunk.annoText, // this one has highlights
+            language: text.language,
+            textNum,
+            chunkId: chunk.uid,
+          },
           secondaryAnnoTexts: secondaryAnnoTexts, // list of {language, annoTexts: [annoText...]}
-          chunkUID: chunk.uid, // added this for export to Anki
           latestHighlightTimestamp,
         });
       }
     }
-  }
+  });
 
   return contexts;
 };

@@ -22,19 +22,19 @@ export default class HighlightSet extends Component {
     for (const context of highlightSet.contexts) {
       const fields = [];
 
-      fields.push(context.chunkUID); // Useful as a stable UID for Anki
+      fields.push(context.primary.chunkID); // Useful as a stable UID for Anki
 
       fields.push(context.latestHighlightTimestamp);
 
       const clozedAnnotextHTML = annoTextCustomRender(
-        context.primaryAnnoText,
+        context.primary.annoText,
         (a, inner) => {
           if (a.kind === 'ruby') {
             return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
           } else if (a.kind === 'highlight') {
             // Compute cloze number as a hash of contained text.
             //  Hacky, but will give us stable cloze ids.
-            const textSlice = cpSlice(context.primaryAnnoText.text, a.cpBegin, a.cpEnd);
+            const textSlice = cpSlice(context.primary.annoText.text, a.cpBegin, a.cpEnd);
             const clozeNum = parseInt(shajs('sha1').update(textSlice).digest('hex'), 16) % 1000000000;
             return ['{{c' + clozeNum + '::', ...inner, '}}'];
           } else {
@@ -59,7 +59,7 @@ export default class HighlightSet extends Component {
   };
 
   render() {
-    const { highlightSet, onDelete } = this.props;
+    const { highlightSet, onDelete, onSetName, onSourceSetChunkAnnoText, highlightSets } = this.props;
     const ELEMENT_HEIGHT = 150;
 
     return (
@@ -70,12 +70,12 @@ export default class HighlightSet extends Component {
             &nbsp;
             <Button onClick={onDelete}>× Delete Set</Button>
           </span>
-          <span style={{ fontSize: 24 }}><Editable value={highlightSet.name} onUpdate={newName => { this.props.onSetName(newName); }}/></span>
+          <span style={{ fontSize: 24 }}><Editable value={highlightSet.name} onUpdate={newName => { onSetName(newName); }}/></span>
         </div>
         <Infinite elementHeight={ELEMENT_HEIGHT} useWindowAsScrollContainer>
           {highlightSet.contexts.map((context, i) => (
             <div key={i} style={{height: ELEMENT_HEIGHT}} className="HighlightSet-context-list-item">
-              <AnnoText annoText={context.primaryAnnoText} language={context.primaryLanguage} />
+              <AnnoText annoText={context.primary.annoText} language={context.primary.language} onUpdate={(newAnnoText) => { onSourceSetChunkAnnoText(context.sourceId, context.primary.textNum, context.primary.chunkId, newAnnoText); }} highlightSets={highlightSets} />
               <div>{context.secondaryAnnoTexts.map((sec, i) => (
                 <div key={i}>{sec.annoTexts.map((t, i) => (
                   <AnnoText key={i} annoText={t} language={sec.language} alignment="left" />

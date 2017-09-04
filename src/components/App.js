@@ -111,7 +111,7 @@ class App extends Component {
                                 const expandedSet = expandedHighlightSetsMap.get(setId);
                                 return (
                                   <div>
-                                    <HighlightSet actions={actions} highlightSet={expandedSet} onSetName={(name) => { actions.highlightSetRename(setId, name); }} onDelete={() => {
+                                    <HighlightSet actions={actions} highlightSet={expandedSet} onSourceSetChunkAnnoText={actions.sourceSetChunkAnnoText} highlightSets={mainState.highlightSets} onSetName={(name) => { actions.highlightSetRename(setId, name); }} onDelete={() => {
                                       if (expandedSet.contexts.length > 0) {
                                         window.alert('Only empty sets can be deleted');
                                       } else {
