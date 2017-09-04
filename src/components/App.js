@@ -52,10 +52,6 @@ class App extends Component {
   render() {
     const { mainState, actions } = this.props;
 
-    console.time('expand');
-    const expandedHighlightSetsMap = getExpandedHighlightSets(mainState); // NOTE: This is an OrderedMap
-    console.timeEnd('expand');
-
     if (mainState.loading) {
       return <h1>Loading...</h1>;
     } else {
@@ -64,7 +60,7 @@ class App extends Component {
           <Switch>
             <Route path="/source/:id" render={({ match, history }) => {
               const sourceId = match.params.id;
-              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={expandedHighlightSetsMap} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onSetVideoURL={(url) => { actions.sourceSetVideoURL(sourceId, url) }} onClearVideoURL={() => { actions.sourceClearVideoURL(sourceId) }} onImportSubsFile={(file) => { actions.sourceImportSubsFile(sourceId, file) }} onSetTextRole={(textNum, role) => { actions.sourceSetTextRole(sourceId, textNum, role) }} onMoveUpText={(textNum) => { actions.sourceMoveUpText(sourceId, textNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
+              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={mainState.highlightSets} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onSetVideoURL={(url) => { actions.sourceSetVideoURL(sourceId, url) }} onClearVideoURL={() => { actions.sourceClearVideoURL(sourceId) }} onImportSubsFile={(file) => { actions.sourceImportSubsFile(sourceId, file) }} onSetTextRole={(textNum, role) => { actions.sourceSetTextRole(sourceId, textNum, role) }} onMoveUpText={(textNum) => { actions.sourceMoveUpText(sourceId, textNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
@@ -94,6 +90,8 @@ class App extends Component {
                       </div>
                     )}/>
                     <Route path="/highlights" render={() => {
+                      const expandedHighlightSetsMap = getExpandedHighlightSets(mainState); // NOTE: This is an OrderedMap
+
                       return (
                         <div>
                           <div className="App-highlight-set-left-panel">
