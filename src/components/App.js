@@ -7,6 +7,7 @@ import Button from './Button.js';
 import Source from './Source.js';
 import HighlightSet from './HighlightSet.js';
 
+import { getExpandedHighlightSets } from '../derived';
 import { downloadFile } from '../util/download';
 
 // NewHighlightSetForm
@@ -52,7 +53,7 @@ class App extends Component {
     const { mainState, actions } = this.props;
 
     console.time('expand');
-    const expandedHighlightSetsMap = actions.getExpandedHighlightSets(); // NOTE: This is an OrderedMap
+    const expandedHighlightSetsMap = getExpandedHighlightSets(mainState); // NOTE: This is an OrderedMap
     console.timeEnd('expand');
 
     if (mainState.loading) {

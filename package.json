@@ -10,6 +10,8 @@
     "diff-match-patch": "^1.0.0",
     "franc": "^3.1.1",
     "immutable": "^3.8.1",
+    "memoize-immutable": "^3.0.0",
+    "mixedtuplemap": "^1.0.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-infinite": "^0.12.1",
