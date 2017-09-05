@@ -94,14 +94,8 @@ export default class MainActions {
         const texts = [];
         for (const t of source.texts) {
           const chunkIds = jpar(await this.storage.getItem('chunk_set/' + t.chunkSetId));
-          const chunks = [];
-          const chunkStrs = await this.storage.getItems(chunkIds.map(cid => 'chunk/' + cid));
-          if (chunkIds.length !== chunkStrs.length) {
-            throw new Error('not all chunks found');
-          }
-          for (let i = 0; i < chunkIds.length; i++) {
-            chunks.push(chunkFromIdJS(chunkIds[i], jpar(chunkStrs[i])));
-          }
+          const chunkStrsMap = await this.storage.getItems(chunkIds.map(cid => 'chunk/' + cid));
+          const chunks = chunkIds.map(cid => chunkFromIdJS(cid, jpar(chunkStrsMap.get('chunk/' + cid))));
 
           texts.push(new SourceTextRecord({
             language: t.language,

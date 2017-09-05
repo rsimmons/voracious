@@ -35,7 +35,24 @@ class ElectronSqliteBackend {
     if (rows.length !== keys.length) {
       throw new Error('not all items found');
     }
-    return rows.map(row => row.v);
+
+    const result = new Map();
+    for (const row of rows) {
+      const k = row.k;
+      if (result.has(k)) {
+        throw new Error('loaded same key more than once?');
+      }
+      result.set(k, row.v);
+    }
+
+    // Extra sanity check
+    for (const k of keys) {
+      if (!result.has(k)) {
+        throw new Error('missed a key');
+      }
+    }
+
+    return result;
   }
 
   async setItem(key, value) {
