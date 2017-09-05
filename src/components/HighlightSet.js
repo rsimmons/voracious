@@ -22,7 +22,7 @@ export default class HighlightSet extends Component {
     for (const context of highlightSet.contexts) {
       const fields = [];
 
-      fields.push(context.primary.chunkID); // Useful as a stable UID for Anki
+      fields.push(context.primary.chunkId); // Useful as a stable UID for Anki
 
       fields.push(context.latestHighlightTimestamp);
 
