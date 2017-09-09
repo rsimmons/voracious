@@ -6,6 +6,11 @@ import Select from './Select.js';
 import LanguageSelect from './LanguageSelect.js';
 import Editable from './Editable.js';
 import Button from './Button.js';
+import { startsWith, removePrefix } from '../util/string';
+
+const { ipcRenderer } = window.require('electron'); // use window to avoid webpack
+
+const LOCAL_PREFIX = 'local://';
 
 class HiddenFileChooser extends PureComponent {
   choose = () => {
@@ -36,8 +41,35 @@ const REST_ROLE_OPTIONS = [
 ];
 
 export default class SourceSettings extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    ipcRenderer.on('chose-video-file', this.handleIpcChoseVideoFile);
+  }
+
+  componentWillUnmount() {
+    ipcRenderer.removeListener('chose-video-file', this.handleIpcChoseVideoFile);
+  }
+
+  handleIpcChoseVideoFile = (e, fn) => {
+    this.props.onSetVideoURL(LOCAL_PREFIX + fn);
+  };
+
   handleClickSetVideoURL = () => {
     this.props.onSetVideoURL(this.videoURLInputElem.value);
+  };
+
+  handleClickChooseVideoFile = () => {
+    ipcRenderer.send('choose-video-file');
+  };
+
+  renderVideoURL = (url) => {
+    if (startsWith(url, LOCAL_PREFIX)) {
+      const fn = removePrefix(url, LOCAL_PREFIX);
+      return fn;
+    } else {
+      return <a target="_blank" href={url}>{url}</a>;
+    }
   };
 
   render() {
@@ -49,9 +81,9 @@ export default class SourceSettings extends PureComponent {
         <div style={{marginTop: '0.5em', maxWidth: '25em'}}>
           <span>Video:&nbsp;</span>
           {source.media.size ? (
-            <span><a target="_blank" href={source.media.first().videoURL}>{source.media.first().videoURL}</a>{' '}<button onClick={onClearVideoURL}>Clear URL</button></span>
+            <span style={{wordBreak: 'break-all'}}>{this.renderVideoURL(source.media.first().videoURL)}{' '}<button onClick={onClearVideoURL}>Unset</button></span>
           ) : (
-            <span><input type="text" placeholder="Video URL" ref={el => this.videoURLInputElem = el} />{' '}<button onClick={this.handleClickSetVideoURL}>Set URL</button></span>
+            <span><button onClick={this.handleClickChooseVideoFile}>Choose File</button> or <input type="text" placeholder="Video URL" ref={el => this.videoURLInputElem = el} />{' '}<button onClick={this.handleClickSetVideoURL}>Set URL</button></span>
           )}
         </div>
         <div style={{marginTop: '0.5em'}}>

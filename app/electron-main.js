@@ -1,8 +1,4 @@
-const electron = require('electron');
-// Module to control application life.
-const app = electron.app;
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow;
+const {app, protocol, ipcMain, dialog, BrowserWindow} = require('electron');
 
 const path = require('path');
 const url = require('url');
@@ -11,9 +7,38 @@ const url = require('url');
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+// We register our own local: protocol, which behaves like file:, to allow
+//  the renderer window to play videos directly from the filesystem.
+//  The given path must be absolute, and not escaped after the prefix.
+function registerLocalProtocol() {
+  protocol.registerFileProtocol('local', (request, callback) => {
+    const path = request.url.substr(8); // strip off local:// prefix
+    callback(path)
+  }, (error) => {
+    if (error) console.error('Failed to register protocol');
+  })
+}
+
+function addIpcHandlers() {
+  ipcMain.on('choose-video-file', () => {
+    dialog.showOpenDialog({
+      title: 'Choose a video file',
+      buttonLabel: 'Choose',
+      filters: [{name: 'Videos', extensions: ['mp4', 'webm']}],
+      properties: ['openFile'],
+    }, files => {
+      if (files && files.length) {
+        const fn = files[0];
+        console.log('chose', fn);
+        mainWindow.send('chose-video-file', fn)
+      }
+    });
+  });
+}
+
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600});
+  mainWindow = new BrowserWindow({width: 1200, height: 600});
 
   // and load the index.html of the app.
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -40,7 +65,11 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  registerLocalProtocol();
+  addIpcHandlers();
+  createWindow();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function() {
