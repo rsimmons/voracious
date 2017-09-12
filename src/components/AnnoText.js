@@ -121,7 +121,8 @@ export default class AnnoText extends PureComponent {
   handleSetRuby = () => {
     const { annoText, onUpdate } = this.props;
     const rubyText = this.setRubyTextInput.value.trim();
-    const {cpBegin, cpEnd} = this.state.selectionRange;
+    const tooltipRange = this.state.selectionRange || this.state.hoverRange;
+    const {cpBegin, cpEnd} = tooltipRange;
     let newAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'ruby');
     if (rubyText !== '') {
       newAnnoText = addAnnotation(newAnnoText, cpBegin, cpEnd, 'ruby', rubyText);
@@ -133,7 +134,8 @@ export default class AnnoText extends PureComponent {
     const { annoText, onUpdate } = this.props;
     const lemma = this.setWordLemmaTextInput.value.trim();
     const data = lemma === '' ? {} : {lemma};
-    const {cpBegin, cpEnd} = this.state.selectionRange;
+    const tooltipRange = this.state.selectionRange || this.state.hoverRange;
+    const {cpBegin, cpEnd} = tooltipRange;
     const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'word', data);
     onUpdate(newAnnoText);
   };
