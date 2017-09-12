@@ -68,14 +68,19 @@ export const addRubyAnnotation = (annoText, cpBegin, cpEnd, rubyText) => {
 };
 
 export const addHighlightAnnotation = (annoText, cpBegin, cpEnd, setId) => {
-  const clearedAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'highlight');
+  const clearedAnnoText = removeHighlightAnnotations(annoText, cpBegin, cpEnd, setId);
   // TODO: data should be an Immutable record
   return addAnnotation(clearedAnnoText, cpBegin, cpEnd, 'highlight', {timeCreated: Date.now(), setId});
 };
 
 export const removeHighlightAnnotations = (annoText, cpBegin, cpEnd, setId) => {
-  // TODO: this should only clear ones matching setId
-  return clearKindInRange(annoText, cpBegin, cpEnd, 'highlight');
+  let newAnnoText = annoText;
+  for (const anno of getKindInRange(annoText, 'highlight', cpBegin, cpEnd)) {
+    if (anno.data.setId === setId) {
+      newAnnoText = deleteAnnotation(newAnnoText, anno);
+    }
+  }
+  return newAnnoText;
 };
 
 export const addWordAnnotation = (annoText, cpBegin, cpEnd, lemma) => {
