@@ -7,7 +7,7 @@ import Tooltip from './Tooltip';
 import CopyInterceptor from './CopyInterceptor';
 
 import { cpSlice } from '../util/string';
-import { getKindAtIndex, getKindInRange, addAnnotation, customRender as annoTextCustomRender, clearKindInRange, getInRange, deleteAnnotation } from '../util/annotext';
+import { getKindAtIndex, getKindInRange, addRubyAnnotation, addHighlightAnnotation, removeHighlightAnnotations, addWordAnnotation, customRender as annoTextCustomRender, getInRange, deleteAnnotation } from '../util/annotext';
 
 const CPRange = new Record({
   cpBegin: null,
@@ -121,37 +121,34 @@ export default class AnnoText extends PureComponent {
   handleSetRuby = () => {
     const { annoText, onUpdate } = this.props;
     const rubyText = this.setRubyTextInput.value.trim();
+    this.setRubyTextInput.value = '';
     const tooltipRange = this.state.selectionRange || this.state.hoverRange;
     const {cpBegin, cpEnd} = tooltipRange;
-    let newAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'ruby');
-    if (rubyText !== '') {
-      newAnnoText = addAnnotation(newAnnoText, cpBegin, cpEnd, 'ruby', rubyText);
-    }
+    const newAnnoText = addRubyAnnotation(annoText, cpBegin, cpEnd, rubyText);
     onUpdate(newAnnoText);
   };
 
   handleSetWord = () => {
     const { annoText, onUpdate } = this.props;
     const lemma = this.setWordLemmaTextInput.value.trim();
-    const data = lemma === '' ? {} : {lemma};
+    this.setWordLemmaTextInput.value = '';
     const tooltipRange = this.state.selectionRange || this.state.hoverRange;
     const {cpBegin, cpEnd} = tooltipRange;
-    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'word', data);
+    const newAnnoText = addWordAnnotation(annoText, cpBegin, cpEnd, lemma);
     onUpdate(newAnnoText);
   };
 
   addHighlightOnRange = (setId, range) => {
     const { annoText, onUpdate } = this.props;
     const {cpBegin, cpEnd} = range;
-    // TODO: the data for the annotation should be immutable, a Record
-    const newAnnoText = addAnnotation(annoText, cpBegin, cpEnd, 'highlight', {timeCreated: Date.now(), setId: setId});
+    const newAnnoText = addHighlightAnnotation(annoText, cpBegin, cpEnd, setId);
     onUpdate(newAnnoText);
   };
 
   removeHighlightOnRange = (setId, range) => {
     const { annoText, onUpdate } = this.props;
     const {cpBegin, cpEnd} = range;
-    const newAnnoText = clearKindInRange(annoText, cpBegin, cpEnd, 'highlight');
+    const newAnnoText = removeHighlightAnnotations(annoText, cpBegin, cpEnd, setId);
     onUpdate(newAnnoText);
   };
 
