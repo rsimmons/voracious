@@ -356,6 +356,11 @@ export default class MainActions {
   };
 
   setSourceViewPosition = (sourceId, position) => {
+    const currentPosition = this.state.get().sources.get(sourceId).viewPosition;
+    if (position === currentPosition) {
+      return;
+    }
+
     this.state.set(this.state.get().setIn(['sources', sourceId, 'viewPosition'], position));
 
     this._storageSourcePositionSave(sourceId, position);

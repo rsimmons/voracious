@@ -133,6 +133,22 @@ export default class Source extends Component {
     this.videoIsPlaying = false;
   }
 
+  componentDidMount() {
+    this.saveViewPositionTimer = window.setInterval(this.saveViewPosition, 1000);
+  }
+
+  componentWillUnmount() {
+    if (this.saveViewPositionTimer) {
+      window.clearInterval(this.saveViewPositionTimer);
+    }
+  }
+
+  saveViewPosition = () => {
+    if ((this.videoTime !== null) && (this.videoTime !== undefined)) {
+      this.props.onUpdateViewPosition(this.videoTime);
+    }
+  };
+
   handleVideoTimeUpdate = (time) => {
     this.videoTime = time;
 
@@ -313,9 +329,7 @@ export default class Source extends Component {
   }
 
   handleExit = () => {
-    // TODO: this should probably be last-reported time,
-    //  slightly different than textViewPosition?
-    this.props.onUpdateViewPosition(this.state.textViewPosition);
+    this.saveViewPosition();
     this.props.onExit();
   }
 
