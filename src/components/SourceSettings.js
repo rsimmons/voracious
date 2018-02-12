@@ -107,7 +107,7 @@ export default class SourceSettings extends PureComponent {
         ))}</ul>
         <div style={{marginTop: '1em'}}>
           <form>
-            <Button onClick={() => {this.subsFileChooserElem.choose()}}>Import Subs (SRT)</Button>
+            <Button onClick={() => {this.subsFileChooserElem.choose()}}>Import Subs</Button>
             <HiddenFileChooser accept=".srt" onChoose={(file) => { onImportSubsFile(file); }} ref={el => {this.subsFileChooserElem = el}} />
             {' '}<Button onClick={() => { if (window.confirm('Delete "' + source.name + '" and all its subtitle tracks? This cannot be undone.')) { onDeleteSource(); } }}>Delete Video</Button>
           </form>
