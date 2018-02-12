@@ -46,10 +46,23 @@ class VideoMedia extends Component {
     }
   }
 
+  setVideoRef = (el) => {
+    this.videoElem = el;
+    if (this.videoElem) {
+      this.videoElem.playbackRate = this.props.playbackRate;
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.playbackRate !== this.props.playbackRate && this.videoElem) {
+      this.videoElem.playbackRate = this.props.playbackRate;
+    }
+  }
+
   render() {
     const { media, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
-      <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
+      <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={this.setVideoRef} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
     );
   }
 }
@@ -101,9 +114,16 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onReplay, onTogglePause, onContinue, onChangeQuizMode } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onChangeQuizMode, onChangePlaybackRate } = this.props;
     return (
       <form className="PlayControls">
+        <Select
+            value={this.props.playbackRate}
+            onChange={onChangePlaybackRate} options={[
+              { value: "0.5", label: "50%" },
+              { value: "0.75", label: "75%" },
+              { value: "1", label: "Normal Speed" }
+            ]} />
         <button type="button" onClick={onBack}>Jump Back [A]</button>
         <button type="button" onClick={onReplay}>Replay [R]</button>
         <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
@@ -127,6 +147,7 @@ export default class Source extends Component {
       quizMode: 'none',
       quizPause: false, // are we paused (or have requested pause) for quiz?
       quizState: null,
+      playbackRate: 1.0,
       showingSettings: !props.source.media.size || !props.source.texts.size,
     };
     this.videoTime = null;
@@ -211,6 +232,10 @@ export default class Source extends Component {
       //  very slightly out of sync if we were paused for question
       textViewPosition: this.videoTime,
     });
+  }
+
+  handleChangePlaybackRate = (value) => {
+    this.setState({playbackRate: parseFloat(value)});
   }
 
   handleVideoPlaying = () => {
@@ -394,7 +419,16 @@ export default class Source extends Component {
         {sourceReady ? (
           <div className="Source-main">
             <div className="Source-video-area">
-              <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+              <VideoMedia
+                  media={source.media}
+                  playbackRate={this.state.playbackRate}
+                  initialTime={this.props.source.viewPosition}
+                  onTimeUpdate={this.handleVideoTimeUpdate}
+                  onPlaying={this.handleVideoPlaying}
+                  onPause={this.handleVideoPause}
+                  onEnded={this.handleVideoEnded}
+                  onSeeking={this.handleVideoSeeking}
+                  ref={(c) => { this.videoMediaComponent = c; }} />
               <div className="Source-text-chunks">
                 {source.texts.map((text, textNum) => {
                   const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
@@ -435,7 +469,7 @@ export default class Source extends Component {
                 })}
               </div>
             </div>
-            <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
+            <PlayControls playbackRate={this.state.playbackRate} onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} onChangePlaybackRate={this.handleChangePlaybackRate} />
           </div>
         ) : (
           <div className="Source-blackfill"></div>
