@@ -7085,6 +7085,10 @@ websocket-extensions@>=0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.1.tgz#76899499c184b6ef754377c2dbb0cd6cb55d29e7"
 
+webvtt-parser@annevk/webvtt:
+  version "0.1.0"
+  resolved "https://codeload.github.com/annevk/webvtt/tar.gz/a3274ebabeacb669847d7285f66f9e915f1742b4"
+
 whatwg-encoding@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/whatwg-encoding/-/whatwg-encoding-1.0.1.tgz#3c6c451a198ee7aec55b1ec61d0920c67801a5f4"

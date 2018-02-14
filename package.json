@@ -17,7 +17,8 @@
     "react-infinite": "^0.12.1",
     "react-router-dom": "^4.1.2",
     "react-scripts": "1.0.10",
-    "sha.js": "^2.4.8"
+    "sha.js": "^2.4.8",
+    "webvtt-parser": "annevk/webvtt"
   },
   "devDependencies": {
     "cross-env": "^5.0.5",

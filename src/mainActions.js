@@ -2,7 +2,7 @@ import assert from 'assert';
 import { Record, OrderedMap, List } from 'immutable';
 
 import genUID from './util/uid';
-import { parseSRT } from './util/subtitles';
+import { parseSRT, parseWebVTT } from './util/subtitles';
 import { createAutoAnnotatedText } from './util/analysis';
 import { createTimeRangeChunk, createTimeRangeChunkSet, setChunkAnnoText, chunkToJSNoID, chunkFromIdJS, getChunkById, chunkSetChunkIdsArray, chunkSetIterableChunkIds, chunkSetIterableChunks } from './util/chunk';
 import createStorageBackend from './storage';
@@ -292,8 +292,22 @@ export default class MainActions {
     // Start async file load and parse
     const reader = new FileReader();
     reader.onload = (e) => {
+
+      let parseFn;
+
+      // Pick a parsing function
+      if (e.target.result.startsWith("WEBVTT\n")) {
+        parseFn = parseWebVTT;
+      } else if (file.name.toLocaleLowerCase().endsWith(".srt")) {
+        parseFn = parseSRT;
+      } else if (file.name.toLocaleLowerCase().endsWith(".vrt")) {
+        parseFn = parseWebVTT;
+      } else {
+        parseFn = parseSRT;
+      }
+
       // Parse loaded file data
-      const subs = parseSRT(e.target.result);
+      const subs = parseFn(e.target.result);
 
       // Autodetect language
       const combinedText = subs.map(s => s.lines).join();

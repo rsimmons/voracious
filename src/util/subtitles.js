@@ -1,3 +1,5 @@
+import { WebVTTParser } from 'webvtt-parser';
+
 const parseTime = (s) => {
   const re = /(\d{2}):(\d{2}):(\d{2}),(\d{3})/;
   const [, hours, mins, seconds, ms] = re.exec(s);
@@ -37,3 +39,14 @@ export const parseSRT = (text) => {
 
   return subs;
 };
+
+export const parseWebVTT = (text) => {
+  const parser = new WebVTTParser();
+  const tree = parser.parse(text, 'metadata');
+
+  return tree.cues.map((cue) => ({
+    begin: cue.startTime,
+    end: cue.endTime,
+    lines: cue.text
+  }));
+}
