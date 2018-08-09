@@ -28,7 +28,7 @@ class App extends Component {
             <Route path="/source/:cid/:vid" render={({ match, history }) => {
               const collectionId = decodeURIComponent(match.params.cid);
               const videoId = decodeURIComponent(match.params.vid);
-              return <Source actions={actions} source={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(collectionId, videoId, pos); }} />;
+              return <Source actions={actions} source={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionId, videoId, pos); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">

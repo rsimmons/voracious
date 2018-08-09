@@ -10,14 +10,15 @@ const fs = window.require('fs-extra'); // use window to avoid webpack
 export const listCollectionVideos = async (collectionId) => {
   const result = [];
 
-  const files = await fs.readdir(collectionId);
+  const dir = collectionId;
+  const files = await fs.readdir(dir);
   files.sort();
 
   for (const fn of files) {
     result.push({
       id: fn,
       name: fn,
-      url: 'local://' + fn, // this prefix works with our custom file protocol for Electron
+      url: 'local://' + path.join(dir, fn), // this prefix works with our custom file protocol for Electron
     });
   }
 

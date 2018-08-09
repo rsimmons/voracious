@@ -2,14 +2,13 @@ import React, { Component } from 'react';
 
 import './Source.css';
 
-import SourceSettings from './SourceSettings.js';
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 import Modal from './Modal.js';
 
 import { getLastChunkAtTime } from '../util/chunk';
 
-class VideoMedia extends Component {
+class VideoWrapper extends Component {
   constructor(props) {
     super(props);
     this.videoElem = null;
@@ -47,9 +46,9 @@ class VideoMedia extends Component {
   }
 
   render() {
-    const { media, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
+    const { videoURL, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
-      <video src={media.first().videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
+      <video src={videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
     );
   }
 }
@@ -123,29 +122,28 @@ export default class Source extends Component {
     super(props);
     this.videoMediaComponent = undefined;
     this.state = {
-      textViewPosition: props.source.viewPosition,
+      textViewPosition: props.source.playbackPosition,
       quizMode: 'none',
       quizPause: false, // are we paused (or have requested pause) for quiz?
       quizState: null,
-      showingSettings: !props.source.media.size || !props.source.texts.size,
     };
     this.videoTime = null;
     this.videoIsPlaying = false;
   }
 
   componentDidMount() {
-    this.saveViewPositionTimer = window.setInterval(this.saveViewPosition, 1000);
+    this.savePlaybackPositionTimer = window.setInterval(this.savePlaybackPosition, 1000);
   }
 
   componentWillUnmount() {
-    if (this.saveViewPositionTimer) {
-      window.clearInterval(this.saveViewPositionTimer);
+    if (this.savePlaybackPositionTimer) {
+      window.clearInterval(this.savePlaybackPositionTimer);
     }
   }
 
-  saveViewPosition = () => {
+  savePlaybackPosition = () => {
     if ((this.videoTime !== null) && (this.videoTime !== undefined)) {
-      this.props.onUpdateViewPosition(this.videoTime);
+      this.props.onUpdatePlaybackPosition(this.videoTime);
     }
   };
 
@@ -324,21 +322,13 @@ export default class Source extends Component {
     }
   };
 
-  handleToggleSettings = () => {
-    this.setState(state => ({ ...state, showingSettings: !state.showingSettings}));
-  }
-
   handleExit = () => {
-    this.saveViewPosition();
+    this.savePlaybackPosition();
     this.props.onExit();
   }
 
   render() {
     const { source, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText } = this.props;
-
-    // Is source ready to be used? Not very useful if there isn't
-    //  at least a video and subs.
-    const sourceReady = source.media.size && source.texts.size;
 
     // Based on quiz mode and state, determine if we override text displays
     let transcriptionMessage = null;
@@ -391,64 +381,54 @@ export default class Source extends Component {
 
     return (
       <div className="Source">
-        {sourceReady ? (
-          <div className="Source-main">
-            <div className="Source-video-area">
-              <VideoMedia media={source.media} initialTime={this.props.source.viewPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
-              <div className="Source-text-chunks">
-                {source.texts.map((text, textNum) => {
-                  const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
+        <div className="Source-main">
+          <div className="Source-video-area">
+            <VideoWrapper videoURL={source.videoURL} initialTime={this.props.source.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+            {/**
+            <div className="Source-text-chunks">
+              {source.texts.map((text, textNum) => {
+                const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
 
-                  if (chunk) {
-                    return (
-                      <div className="Source-text-chunk-outer" key={textNum}>
-                        <div className="Source-text-chunk-inner">
-                          {(() => {
-                            let message;
-                            if (text.role === 'transcription') {
-                              message = transcriptionMessage;
-                            } else if (text.role === 'translation') {
-                              message = translationsMessage;
-                            } else {
-                              throw new Error('unpossible?');
-                            }
+                if (chunk) {
+                  return (
+                    <div className="Source-text-chunk-outer" key={textNum}>
+                      <div className="Source-text-chunk-inner">
+                        {(() => {
+                          let message;
+                          if (text.role === 'transcription') {
+                            message = transcriptionMessage;
+                          } else if (text.role === 'translation') {
+                            message = translationsMessage;
+                          } else {
+                            throw new Error('unpossible?');
+                          }
 
-                            return (
-                              <div style={{position: 'relative'}}>
-                                {message ? (
-                                  <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                    <div style={{color: '#aaa'}}>{message}</div>
-                                  </div>
-                                ) : null}
-                                <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                  <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} />
+                          return (
+                            <div style={{position: 'relative'}}>
+                              {message ? (
+                                <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                  <div style={{color: '#aaa'}}>{message}</div>
                                 </div>
+                              ) : null}
+                              <div style={{visibility: message ? 'hidden' : 'visible'}}>
+                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} />
                               </div>
-                            );
-                          })()}
-                        </div>
+                            </div>
+                          );
+                        })()}
                       </div>
-                    );
-                  } else {
-                    return null;
-                  }
-                })}
-              </div>
+                    </div>
+                  );
+                } else {
+                  return null;
+                }
+              })}
             </div>
-            <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
+            **/}
           </div>
-        ) : (
-          <div className="Source-blackfill"></div>
-        )}
-        {this.state.showingSettings ? (
-          <Modal onClickOutside={() => { this.setState({showingSettings: false}) }}>
-            <div className="Source-settings-wrapper">
-              <SourceSettings source={source} onSetName={onSetName} onSetVideoURL={onSetVideoURL} onClearVideoURL={onClearVideoURL} onImportSubsFile={onImportSubsFile} onSetTextRole={onSetTextRole} onMoveUpText={onMoveUpText} onDeleteText={onDeleteText} onDeleteSource={onDeleteSource} />
-            </div>
-          </Modal>
-        ) : null}
+          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
+        </div>
         <button className="Source-big-button Source-exit-button" onClick={this.handleExit}>↩</button>
-        <button className="Source-big-button Source-toggle-settings-button" onClick={this.handleToggleSettings}>ⓘ</button>
       </div>
     );
   }

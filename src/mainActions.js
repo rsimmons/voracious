@@ -22,7 +22,7 @@ const VideoRecord = new Record({
   name: undefined,
   videoURL: undefined,
   subtitleTracks: new IMap(), // language -> SubtitleTrackRecord
-  viewPosition: 0,
+  playbackPosition: 0,
 });
 
 const SubtitleTrackRecord = new Record({
@@ -116,13 +116,13 @@ export default class MainActions {
   };
 */
 
-  setVideoPlaybackPosition = (collectionId, videoId, position) => {
-    const currentPosition = this.state.get().collections.get(collectionId).videos.get(videoId).viewPosition;
+  saveVideoPlaybackPosition = (collectionId, videoId, position) => {
+    const currentPosition = this.state.get().collections.get(collectionId).videos.get(videoId).playbackPosition;
     if (position === currentPosition) {
       return;
     }
 
-    this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'viewPosition'], position));
+    this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'playbackPosition'], position));
 
     this._storageSavePlaybackPosition(collectionId, videoId, position);
   };
