@@ -58,9 +58,10 @@ class App extends Component {
       return (
         <Router>
           <Switch>
-            <Route path="/source/:id" render={({ match, history }) => {
-              const sourceId = match.params.id;
-              return <Source actions={actions} source={mainState.sources.get(sourceId)} onExit={() => { history.goBack(); }} highlightSets={mainState.highlightSets} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(sourceId, pos); }} onSetChunkAnnoText={(textNum, chunkId, newAnnoText) => { actions.sourceSetChunkAnnoText(sourceId, textNum, chunkId, newAnnoText) }} onDeleteSource={() => { history.push('/library'); actions.deleteSource(sourceId); }} onSetVideoURL={(url) => { actions.sourceSetVideoURL(sourceId, url) }} onClearVideoURL={() => { actions.sourceClearVideoURL(sourceId) }} onImportSubsFile={(file) => { actions.sourceImportSubsFile(sourceId, file) }} onSetTextRole={(textNum, role) => { actions.sourceSetTextRole(sourceId, textNum, role) }} onMoveUpText={(textNum) => { actions.sourceMoveUpText(sourceId, textNum) }} onDeleteText={(textNum) => { actions.sourceDeleteText(sourceId, textNum) }} onSetName={(name) => { actions.sourceSetName(sourceId, name); }} />;
+            <Route path="/source/:cid/:vid" render={({ match, history }) => {
+              const collectionId = decodeURIComponent(match.params.cid);
+              const videoId = decodeURIComponent(match.params.vid);
+              return <Source actions={actions} source={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} highlightSets={mainState.highlightSets} onUpdateViewPosition={(pos) => { actions.setSourceViewPosition(collectionId, videoId, pos); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
@@ -78,11 +79,17 @@ class App extends Component {
                             <Button onClick={() => { const newSourceId = actions.createVideoSource(); history.push('/source/' + newSourceId); }}>+ Add Video</Button>
                           </div>
                           <ul>
-                            {mainState.sources.valueSeq().map((s) => (
-                              <li key={s.id} className="App-library-list-item">
-                                <Link to={'/source/' + s.id}>
-                                  {s.name}
-                                </Link>
+                            {mainState.collections.valueSeq().map((collection) => (
+                              <li key={collection.id}>
+                                <ul>
+                                  {collection.videos.valueSeq().map((video) => (
+                                    <li key={video.id} className="App-library-list-item">
+                                      <Link to={'/source/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
+                                        {video.name}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
                               </li>
                             ))}
                           </ul>
