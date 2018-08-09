@@ -5,24 +5,41 @@ import { createAutoAnnotatedText } from '../util/analysis';
 import { detectWithinSupported } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
 
+const SUPPORTED_VIDEO_EXTENSIONS = [
+  '.mp4',
+];
+
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
-export const listCollectionVideos = async (collectionId) => {
+const recursiveScanDirectory = async (dir) => {
   const result = [];
 
-  const dir = collectionId;
-  const files = await fs.readdir(dir);
-  files.sort();
+  const dirents = await fs.readdir(dir);
 
-  for (const fn of files) {
-    result.push({
-      id: fn,
-      name: fn,
-      url: 'local://' + path.join(dir, fn), // this prefix works with our custom file protocol for Electron
-    });
+  for (const fn of dirents) {
+    console.log('fn', fn);
+    const absfn = path.join(dir, fn);
+    const stat = await fs.stat(absfn);
+
+    if (stat.isDirectory()) {
+      result.push(... await recursiveScanDirectory(absfn));
+    } else {
+      const ext = path.extname(fn);
+      if (SUPPORTED_VIDEO_EXTENSIONS.includes(ext)) {
+        result.push({
+          id: fn,
+          name: fn,
+          url: 'local://' + absfn, // this prefix works with our custom file protocol for Electron
+        });
+      }
+    }
   }
 
   return result;
+};
+
+export const listCollectionVideos = async (collectionId) => {
+  return recursiveScanDirectory(collectionId);
 };
 
 const loadSubtitleTrackFromSRT = async (filename) => {
