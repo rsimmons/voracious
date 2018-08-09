@@ -11,14 +11,10 @@
     "franc": "^3.1.1",
     "fs-extra": "^7.0.0",
     "immutable": "^3.8.1",
-    "memoize-immutable": "^3.0.0",
-    "mixedtuplemap": "^1.0.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-infinite": "^0.12.1",
     "react-router-dom": "^4.1.2",
-    "react-scripts": "1.0.10",
-    "sha.js": "^2.4.8"
+    "react-scripts": "1.0.10"
   },
   "devDependencies": {
     "cross-env": "^5.0.5",

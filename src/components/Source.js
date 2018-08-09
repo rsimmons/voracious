@@ -334,7 +334,7 @@ export default class Source extends Component {
   }
 
   render() {
-    const { source, highlightSets, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText } = this.props;
+    const { source, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText } = this.props;
 
     // Is source ready to be used? Not very useful if there isn't
     //  at least a video and subs.
@@ -421,7 +421,7 @@ export default class Source extends Component {
                                   </div>
                                 ) : null}
                                 <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                  <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} highlightSets={highlightSets} />
+                                  <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} />
                                 </div>
                               </div>
                             );
