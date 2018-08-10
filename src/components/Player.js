@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import './Source.css';
+import './Player.css';
 
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
@@ -116,13 +116,13 @@ class PlayControls extends Component {
   }
 }
 
-// Source
-export default class Source extends Component {
+// Player
+export default class Player extends Component {
   constructor(props) {
     super(props);
     this.videoMediaComponent = undefined;
     this.state = {
-      textViewPosition: props.source.playbackPosition,
+      textViewPosition: props.video.playbackPosition,
       quizMode: 'none',
       quizPause: false, // are we paused (or have requested pause) for quiz?
       quizState: null,
@@ -156,7 +156,7 @@ export default class Source extends Component {
       return;
     }
 
-    const { source } = this.props;
+    const { video } = this.props;
 
     let pauseForQuiz = false;
 
@@ -166,8 +166,8 @@ export default class Source extends Component {
       // Is there at least one text track?
       if (this.state.quizMode === 'none') {
       } else if (this.state.quizMode === 'listen') {
-        if (source.texts.size >= 1) {
-          const firstText = source.texts.first();
+        if (video.texts.size >= 1) {
+          const firstText = video.texts.first();
 
           // Look up chunk (if any) before this time change
           const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
@@ -259,7 +259,7 @@ export default class Source extends Component {
 
   handleReplay = () => {
     if (this.videoMediaComponent) {
-      const firstText = this.props.source.texts.first();
+      const firstText = this.props.video.texts.first();
       const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
 
       if (currentChunk) {
@@ -277,11 +277,11 @@ export default class Source extends Component {
   };
 
   anyTranscriptionText = () => {
-    return this.props.source.texts.some(text => text.role === 'transcription');
+    return this.props.video.texts.some(text => text.role === 'transcription');
   };
 
   anyTranslationText = () => {
-    return this.props.source.texts.some(text => text.role === 'translation');
+    return this.props.video.texts.some(text => text.role === 'translation');
   };
 
   handleContinue = () => {
@@ -328,7 +328,7 @@ export default class Source extends Component {
   }
 
   render() {
-    const { source, onSetChunkAnnoText, onSetName, onDeleteSource, onSetVideoURL, onClearVideoURL, onImportSubsFile, onSetTextRole, onMoveUpText, onDeleteText } = this.props;
+    const { video } = this.props;
 
     // Based on quiz mode and state, determine if we override text displays
     let transcriptionMessage = null;
@@ -380,19 +380,19 @@ export default class Source extends Component {
     }
 
     return (
-      <div className="Source">
-        <div className="Source-main">
-          <div className="Source-video-area">
-            <VideoWrapper videoURL={source.videoURL} initialTime={this.props.source.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+      <div className="Player">
+        <div className="Player-main">
+          <div className="Player-video-area">
+            <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
             {/**
-            <div className="Source-text-chunks">
-              {source.texts.map((text, textNum) => {
+            <div className="Player-text-chunks">
+              {video.texts.map((text, textNum) => {
                 const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
 
                 if (chunk) {
                   return (
-                    <div className="Source-text-chunk-outer" key={textNum}>
-                      <div className="Source-text-chunk-inner">
+                    <div className="Player-text-chunk-outer" key={textNum}>
+                      <div className="Player-text-chunk-inner">
                         {(() => {
                           let message;
                           if (text.role === 'transcription') {
@@ -428,7 +428,7 @@ export default class Source extends Component {
           </div>
           <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
         </div>
-        <button className="Source-big-button Source-exit-button" onClick={this.handleExit}>↩</button>
+        <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
       </div>
     );
   }

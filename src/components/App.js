@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Link, NavLink, Switch, Route, Redirect } from 
 import './App.css';
 
 import Button from './Button.js';
-import Source from './Source.js';
+import Player from './Player.js';
 
 import { downloadFile } from '../util/download';
 
@@ -25,10 +25,10 @@ class App extends Component {
       return (
         <Router>
           <Switch>
-            <Route path="/source/:cid/:vid" render={({ match, history }) => {
+            <Route path="/player/:cid/:vid" render={({ match, history }) => {
               const collectionId = decodeURIComponent(match.params.cid);
               const videoId = decodeURIComponent(match.params.vid);
-              return <Source actions={actions} source={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionId, videoId, pos); }} />;
+              return <Player actions={actions} video={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionId, videoId, pos); }} />;
             }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
@@ -40,26 +40,21 @@ class App extends Component {
                   <Switch>
                     <Route path="/library" render={({ history }) => (
                       <div>
-                        <div>
-                          <div style={{marginBottom: 20}}>
-                            <Button onClick={() => { const newSourceId = actions.createVideoSource(); history.push('/source/' + newSourceId); }}>+ Add Video</Button>
-                          </div>
-                          <ul>
-                            {mainState.collections.valueSeq().map((collection) => (
-                              <li key={collection.id}>
-                                <ul>
-                                  {collection.videos.valueSeq().map((video) => (
-                                    <li key={video.id} className="App-library-list-item">
-                                      <Link to={'/source/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
-                                        {video.name}
-                                      </Link>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        <ul>
+                          {mainState.collections.valueSeq().map((collection) => (
+                            <li key={collection.id}>
+                              <ul>
+                                {collection.videos.valueSeq().map((video) => (
+                                  <li key={video.id} className="App-library-list-item">
+                                    <Link to={'/player/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
+                                      {video.name}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}/>
                     <Route path="/settings" render={() => (

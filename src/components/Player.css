@@ -1,4 +1,4 @@
-.Source-big-button {
+.Player-big-button {
   display: block;
   position: absolute;
   color: white;
@@ -11,39 +11,39 @@
   line-height: 1;
 }
 
-.Source-big-button:hover {
+.Player-big-button:hover {
   color: #aaa;
 }
 
-.Source-exit-button {
+.Player-exit-button {
   top: 0;
   left: 0;
 }
 
-.Source-toggle-settings-button {
+.Player-toggle-settings-button {
   top: 0;
   right: 0;
 }
 
-.Source-settings-wrapper {
+.Player-settings-wrapper {
   background-color: #ddd;
   padding: 20px;
   border-radius: 5px;
   font-size: 18px;
 }
 
-.Source-blackfill {
+.Player-blackfill {
   height: 100vh;
   background: black;
 }
 
-.Source-main {
+.Player-main {
   display: flex;
   flex-flow: column nowrap;
   height: 100vh;
 }
 
-.Source-video-area {
+.Player-video-area {
   display: flex;
   flex-flow: column nowrap;
   flex: auto;
@@ -51,14 +51,14 @@
   background: black;
 }
 
-.Source-text-chunks {
+.Player-text-chunks {
   position: absolute;
   bottom: 30px;
   left: 0;
   right: 0;
 }
 
-.Source-text-chunk-outer {
+.Player-text-chunk-outer {
   /*
     With the text-shadow, this background seems optional.
     Itt might be good to have it as an option. We put it in an outer
@@ -67,7 +67,7 @@
   background: rgba(0,0,0,0.5);
 }
 
-.Source-text-chunk-inner {
+.Player-text-chunk-inner {
   color: white;
   text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black, 0 0 5px black;
   font-size: 1.6em;
@@ -78,7 +78,7 @@
   max-width: 25em;
 }
 
-.Source video {
+.Player video {
   display: block;
   flex: auto;
   min-height: 0;
