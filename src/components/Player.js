@@ -4,7 +4,6 @@ import './Player.css';
 
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
-import Modal from './Modal.js';
 
 import { getLastChunkAtTime } from '../util/chunk';
 
@@ -393,20 +392,20 @@ export default class Player extends Component {
         <div className="Player-main">
           <div className="Player-video-area">
             <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
-            {/**
             <div className="Player-text-chunks">
-              {video.texts.map((text, textNum) => {
-                const chunk = getLastChunkAtTime(text.chunkSet, this.state.textViewPosition);
+              {video.subtitleTracks.valueSeq().map((subTrack) => {
+                const chunk = subTrack.chunkSet ? getLastChunkAtTime(subTrack.chunkSet, this.state.textViewPosition) : null;
 
                 if (chunk) {
                   return (
-                    <div className="Player-text-chunk-outer" key={textNum}>
+                    <div className="Player-text-chunk-outer" key={subTrack.id}>
                       <div className="Player-text-chunk-inner">
                         {(() => {
                           let message;
-                          if (text.role === 'transcription') {
+                          const textRole = 'transcription';
+                          if (textRole === 'transcription') {
                             message = transcriptionMessage;
-                          } else if (text.role === 'translation') {
+                          } else if (textRole === 'translation') {
                             message = translationsMessage;
                           } else {
                             throw new Error('unpossible?');
@@ -420,7 +419,7 @@ export default class Player extends Component {
                                 </div>
                               ) : null}
                               <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={text.language} onUpdate={newAnnoText => { onSetChunkAnnoText(textNum, chunk.uid, newAnnoText); }} />
+                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} />
                               </div>
                             </div>
                           );
@@ -433,7 +432,6 @@ export default class Player extends Component {
                 }
               })}
             </div>
-            **/}
           </div>
           <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
         </div>

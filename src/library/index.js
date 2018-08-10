@@ -82,7 +82,10 @@ const loadSubtitleTrackFromSRT = async (filename) => {
 
   const chunkSet = createTimeRangeChunkSet(chunks);
 
-  return chunkSet;
+  return {
+    language,
+    chunkSet,
+  };
 };
 
 export const loadCollectionSubtitleTrack = async (collectionId, subTrackId) => {

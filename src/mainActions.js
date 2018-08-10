@@ -1,6 +1,5 @@
 import { Record, Map as IMap } from 'immutable';
 
-import genUID from './util/uid';
 import createStorageBackend from './storage';
 import { listCollectionVideos, loadCollectionSubtitleTrack } from './library';
 
@@ -87,6 +86,7 @@ export default class MainActions {
 
     if (profileStr) {
       const profile = jpar(profileStr);
+      console.log('profile', profile);
 
       // TODO: update state from profile object
     } else {
@@ -142,11 +142,11 @@ export default class MainActions {
 
     for (const subTrack of subTracks.values()) {
       if (!subTrack.chunkSet) {
-        console.log('loading sub track...', collectionId, videoId, stid);
         const stid = subTrack.id;
-        const chunkSet = await loadCollectionSubtitleTrack(collectionId, stid);
+        console.log('loading sub track...', collectionId, videoId, stid);
+        const {language, chunkSet} = await loadCollectionSubtitleTrack(collectionId, stid);
         // NOTE: It's OK to update state, we are iterating from immutable object
-        this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks', stid, 'chunkSet'], chunkSet));
+        this.state.set(this.state.get().updateIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks', stid], subTrack => subTrack.merge({language, chunkSet})));
         console.log('loaded sub track', collectionId, videoId, stid);
       }
     }
