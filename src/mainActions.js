@@ -26,6 +26,7 @@ const VideoRecord = new Record({
 });
 
 const SubtitleTrackRecord = new Record({
+  id: undefined,
   language: undefined,
   subtitles: undefined,
 });
@@ -55,13 +56,20 @@ export default class MainActions {
 
     for (const collectionId of collectionIds) {
       const collectionVideos = await listCollectionVideos(collectionId);
+      console.log(collectionVideos);
 
       const collectionVideoRecords = []; // [k, v] pairs
       for (const vid of collectionVideos) {
+        const subTrackKVs = []; // [k, v] pairs
+        for (const stid of vid.subtitleTrackIds) {
+          subTrackKVs.push([stid, new SubtitleTrackRecord({id: stid})]);
+        }
+
         collectionVideoRecords.push([vid.id, new VideoRecord({
           id: vid.id,
           name: vid.name,
           videoURL: vid.url,
+          subtitleTracks: new IMap(subTrackKVs),
           // remaining fields are OK to leave as default
         })]);
       }

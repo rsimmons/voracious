@@ -9,36 +9,58 @@ const SUPPORTED_VIDEO_EXTENSIONS = [
   '.mp4',
 ];
 
+const SUPPORTED_SUBTITLE_EXTENSIONS = [
+  '.srt',
+];
+
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
-const recursiveScanDirectory = async (dir) => {
+const recursiveScanDirectory = async (collectionDir, relDir) => {
   const result = [];
+  const videoFiles = [];
+  const subtitleFilesMap = new Map(); // base -> fn
 
-  const dirents = await fs.readdir(dir);
+  const dirents = await fs.readdir(path.join(collectionDir, relDir));
 
   for (const fn of dirents) {
-    const absfn = path.join(dir, fn);
+    const absfn = path.join(collectionDir, relDir, fn);
     const stat = await fs.stat(absfn);
 
     if (stat.isDirectory()) {
-      result.push(... await recursiveScanDirectory(absfn));
+      result.push(...await recursiveScanDirectory(collectionDir, path.join(relDir, fn)));
     } else {
       const ext = path.extname(fn);
       if (SUPPORTED_VIDEO_EXTENSIONS.includes(ext)) {
-        result.push({
-          id: fn,
-          name: fn,
-          url: 'local://' + absfn, // this prefix works with our custom file protocol for Electron
-        });
+        videoFiles.push(fn);
+      } else if (SUPPORTED_SUBTITLE_EXTENSIONS.includes(ext)) {
+        const base = path.basename(fn, ext);
+        subtitleFilesMap.set(base, fn);
       }
     }
+  }
+
+  for (const vfn of videoFiles) {
+    const subtitleTrackIds = [];
+
+    const basevfn = path.basename(vfn, path.extname(vfn));
+
+    if (subtitleFilesMap.has(basevfn)) {
+      subtitleTrackIds.push(path.join(relDir, subtitleFilesMap.get(basevfn)));
+    }
+
+    result.push({
+      id: path.join(relDir, vfn),
+      name: path.basename(vfn, path.extname(vfn)),
+      url: 'local://' + path.join(collectionDir, relDir, vfn), // this prefix works with our custom file protocol for Electron
+      subtitleTrackIds,
+    });
   }
 
   return result;
 };
 
 export const listCollectionVideos = async (collectionId) => {
-  return recursiveScanDirectory(collectionId);
+  return recursiveScanDirectory(collectionId, '');
 };
 
 const loadSubtitleTrackFromSRT = async (filename) => {

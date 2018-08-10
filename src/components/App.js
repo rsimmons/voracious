@@ -47,7 +47,7 @@ class App extends Component {
                                 {collection.videos.valueSeq().map((video) => (
                                   <li key={video.id} className="App-library-list-item">
                                     <Link to={'/player/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
-                                      {video.name}
+                                      {video.name} [{video.subtitleTracks.size}]
                                     </Link>
                                   </li>
                                 ))}
