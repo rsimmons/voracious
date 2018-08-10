@@ -48,7 +48,10 @@ export default class MainActions {
 
     await this._storageLoadProfile();
 
-    const collectionIds = ['/Users/russ/Documents/Voracious'];
+    const collectionIds = [
+      '/Users/russ/Documents/Voracious',
+      '/Users/russ/Dropbox/Language Learning Material/Japanese/Video',
+    ];
 
     for (const collectionId of collectionIds) {
       const collectionVideos = await listCollectionVideos(collectionId);
