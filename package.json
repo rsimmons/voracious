@@ -8,20 +8,19 @@
   "private": true,
   "dependencies": {
     "diff-match-patch": "^1.0.0",
-    "franc": "^3.1.1",
+    "franc": "^4.0.0",
     "fs-extra": "^7.0.0",
     "immutable": "^3.8.1",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
     "react-router-dom": "^4.1.2",
-    "react-scripts": "1.0.10"
+    "react-scripts": "1.1.4"
   },
   "devDependencies": {
     "cross-env": "^5.0.5",
     "electron": "^1.7.5",
     "electron-builder": "^19.24.1",
-    "electron-rebuild": "^1.6.0",
-    "react-addons-perf": "^15.4.2"
+    "electron-rebuild": "^1.6.0"
   },
   "homepage": ".",
   "main": "src/electron-starter.js",

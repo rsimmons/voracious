@@ -17,7 +17,6 @@ const recursiveScanDirectory = async (dir) => {
   const dirents = await fs.readdir(dir);
 
   for (const fn of dirents) {
-    console.log('fn', fn);
     const absfn = path.join(dir, fn);
     const stat = await fs.stat(absfn);
 

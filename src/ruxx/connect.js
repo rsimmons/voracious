@@ -1,8 +1,5 @@
 import { Component } from 'react'
 
-const PROFILE = false;
-const Perf = PROFILE ? require('react-addons-perf') : null;
-
 export default class StateMapper extends Component {
   constructor(props) {
     super(props);
@@ -15,18 +12,8 @@ export default class StateMapper extends Component {
     // Subscribe to state changes
     this.unsubscribe = this.props.subscribableState.subscribe(() => {
       // NOTE: We don't assume that store state is immutable
-      if (PROFILE) {
-        Perf.start();
-      }
       this.setState({actualState: this.props.subscribableState.get()});
     });
-  }
-
-  componentDidUpdate() {
-    if (PROFILE) {
-      Perf.stop();
-      Perf.printExclusive();
-    }
   }
 
   componentWillUnmount() {
