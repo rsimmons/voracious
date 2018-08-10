@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { parseSRT } from '../util/subtitles';
+import { parseSRT } from '../util/subtitleParsing';
 import { createAutoAnnotatedText } from '../util/analysis';
 import { detectWithinSupported } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
