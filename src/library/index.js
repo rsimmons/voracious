@@ -65,7 +65,7 @@ export const listCollectionVideos = async (collectionId) => {
 
 const loadSubtitleTrackFromSRT = async (filename) => {
   // Load and parse SRT file
-  const data = await fs.readFile(filename);
+  const data = await fs.readFile(filename, 'utf8');
 
   const subs = parseSRT(data);
 
@@ -80,5 +80,12 @@ const loadSubtitleTrackFromSRT = async (filename) => {
     chunks.push(createTimeRangeChunk(sub.begin, sub.end, annoText));
   }
 
-  const subtitleTrack = createTimeRangeChunkSet(chunks);
+  const chunkSet = createTimeRangeChunkSet(chunks);
+
+  return chunkSet;
+};
+
+export const loadCollectionSubtitleTrack = async (collectionId, subTrackId) => {
+  const subfn = path.join(collectionId, subTrackId);
+  return await loadSubtitleTrackFromSRT(subfn);
 };

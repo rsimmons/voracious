@@ -2,7 +2,7 @@ import { Record, Map as IMap } from 'immutable';
 
 import genUID from './util/uid';
 import createStorageBackend from './storage';
-import { listCollectionVideos } from './library';
+import { listCollectionVideos, loadCollectionSubtitleTrack } from './library';
 
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
@@ -21,14 +21,14 @@ const VideoRecord = new Record({
   id: undefined,
   name: undefined,
   videoURL: undefined,
-  subtitleTracks: new IMap(), // language -> SubtitleTrackRecord
+  subtitleTracks: new IMap(), // id -> SubtitleTrackRecord
   playbackPosition: 0,
 });
 
 const SubtitleTrackRecord = new Record({
   id: undefined,
   language: undefined,
-  subtitles: undefined,
+  chunkSet: undefined,
 });
 
 export default class MainActions {
@@ -56,7 +56,6 @@ export default class MainActions {
 
     for (const collectionId of collectionIds) {
       const collectionVideos = await listCollectionVideos(collectionId);
-      console.log(collectionVideos);
 
       const collectionVideoRecords = []; // [k, v] pairs
       for (const vid of collectionVideos) {
@@ -136,5 +135,20 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'playbackPosition'], position));
 
     this._storageSavePlaybackPosition(collectionId, videoId, position);
+  };
+
+  loadSubtitlesIfNeeded = async (collectionId, videoId) => {
+    const subTracks = this.state.get().getIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks']);
+
+    for (const subTrack of subTracks.values()) {
+      if (!subTrack.chunkSet) {
+        console.log('loading sub track...', collectionId, videoId, stid);
+        const stid = subTrack.id;
+        const chunkSet = await loadCollectionSubtitleTrack(collectionId, stid);
+        // NOTE: It's OK to update state, we are iterating from immutable object
+        this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks', stid, 'chunkSet'], chunkSet));
+        console.log('loaded sub track', collectionId, videoId, stid);
+      }
+    }
   };
 };

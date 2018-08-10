@@ -132,12 +132,21 @@ export default class Player extends Component {
   }
 
   componentDidMount() {
+    this.props.onNeedSubtitles();
+
     this.savePlaybackPositionTimer = window.setInterval(this.savePlaybackPosition, 1000);
   }
 
   componentWillUnmount() {
     if (this.savePlaybackPositionTimer) {
       window.clearInterval(this.savePlaybackPositionTimer);
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    // Compare object identity since it's immutable
+    if (this.props.video.subtitleTracks !== prevProps.video.subtitleTracks) {
+      this.props.onNeedSubtitles();
     }
   }
 
