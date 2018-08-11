@@ -99,7 +99,7 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onReplay, onTogglePause, onContinue, onChangeQuizMode } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onChangeSubtitleMode } = this.props;
     return (
       <form className="PlayControls">
         <button type="button" onClick={onBack}>Jump Back [A]</button>
@@ -109,7 +109,7 @@ class PlayControls extends Component {
         <Select options={[
           {value: 'none', label: 'None'},
           {value: 'listen', label: 'Listen'},
-        ]} onChange={onChangeQuizMode} />
+        ]} onChange={onChangeSubtitleMode} />
       </form>
     );
   }
@@ -122,9 +122,9 @@ export default class Player extends Component {
     this.videoMediaComponent = undefined;
     this.state = {
       textViewPosition: props.video.playbackPosition,
-      quizMode: 'none',
-      quizPause: false, // are we paused (or have requested pause) for quiz?
-      quizState: null,
+      subtitleMode: 'none',
+      autoPaused: false, // are we paused (or have requested pause) for listen/read test?
+      subtitleState: null,
     };
     this.videoTime = null;
     this.videoIsPlaying = false;
@@ -158,7 +158,7 @@ export default class Player extends Component {
   handleVideoTimeUpdate = (time) => {
     this.videoTime = time;
 
-    if (this.state.quizPause) {
+    if (this.state.autoPaused) {
       // We're either paused or in the process of pausing for question,
       //  so should ignore this time update.
       return;
@@ -166,29 +166,29 @@ export default class Player extends Component {
 
     const { video } = this.props;
 
-    let pauseForQuiz = false;
+    let doAutoPause = false;
 
-    // Determine if we need to pause for a quiz
+    // Determine if we need to auto-pause
     // Is the video playing? Don't want to mis-trigger pause upon seeking
     if (this.videoIsPlaying) {
       // Is there at least one text track?
-      if (this.state.quizMode === 'none') {
-      } else if (this.state.quizMode === 'listen') {
-        if (video.texts.size >= 1) {
-          const firstText = video.texts.first();
+      if (this.state.subtitleMode === 'none') {
+      } else if (this.state.subtitleMode === 'listen') {
+        if (video.subtitleTracks.size >= 1) {
+          const firstSubtitleTrack = video.subtitleTracks.first();
 
           // Look up chunk (if any) before this time change
-          const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
+          const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
 
           if (currentChunk) {
-            // Are we passing the time that would trigger a pause for quiz?
+            // Are we passing the time that would trigger a pause?
             const PAUSE_DELAY = 0.3;
             const triggerTime = currentChunk.position.end - PAUSE_DELAY;
 
             if ((this.state.textViewPosition < triggerTime) && (time >= triggerTime)) {
-              pauseForQuiz = true;
+              doAutoPause = true;
               this.setState({
-                quizState: {
+                subtitleState: {
                   textRevelation: 0,
                 }
               });
@@ -200,9 +200,9 @@ export default class Player extends Component {
       }
     }
 
-    if (pauseForQuiz) {
+    if (doAutoPause) {
       this.setState({
-        quizPause: true,
+        autoPaused: true,
       });
       this.videoMediaComponent.pause();
     } else {
@@ -210,9 +210,9 @@ export default class Player extends Component {
     }
   };
 
-  releaseQuizPause = () => {
+  releaseAutoPause = () => {
     this.setState({
-      quizPause: false,
+      autoPaused: false,
       // Resync displayed text with video time, since they may have gotten
       //  very slightly out of sync if we were paused for question
       textViewPosition: this.videoTime,
@@ -233,24 +233,24 @@ export default class Player extends Component {
 
   handleVideoSeeking = () => {
     this.videoIsPlaying = false;
-    this.releaseQuizPause();
+    this.releaseAutoPause();
   };
 
-  handleSetQuizMode = (mode) => {
+  handleSetSubtitleMode = (mode) => {
     switch (mode) {
       case 'none':
         this.setState({
-          quizMode: mode,
-          quizPause: false,
-          quizState: null,
+          subtitleMode: mode,
+          autoPaused: false,
+          subtitleState: null,
         });
         break;
 
       case 'listen':
         this.setState({
-          quizMode: mode,
-          quizPause: false,
-          quizState: null,
+          subtitleMode: mode,
+          autoPaused: false,
+          subtitleState: null,
         });
         break;
 
@@ -267,8 +267,8 @@ export default class Player extends Component {
 
   handleReplay = () => {
     if (this.videoMediaComponent) {
-      const firstText = this.props.video.texts.first();
-      const currentChunk = getLastChunkAtTime(firstText.chunkSet, this.state.textViewPosition);
+      const firstSubtitleTrack = this.props.video.subtitleTracks.first();
+      const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
 
       if (currentChunk) {
         this.videoMediaComponent.seek(currentChunk.position.begin);
@@ -278,49 +278,35 @@ export default class Player extends Component {
   };
 
   handleTogglePause = () => {
-    this.releaseQuizPause();
+    this.releaseAutoPause();
     if (this.videoMediaComponent) {
       this.videoMediaComponent.togglePause();
     }
   };
 
-  anyTranscriptionText = () => {
-    return this.props.video.texts.some(text => text.role === 'transcription');
-  };
-
-  anyTranslationText = () => {
-    return this.props.video.texts.some(text => text.role === 'translation');
-  };
-
   handleContinue = () => {
-    switch (this.state.quizMode) {
+    switch (this.state.subtitleMode) {
       case 'none':
         // ignore
         break;
 
       case 'listen':
-        if (this.state.quizPause) {
-          const anyTranscription = this.anyTranscriptionText();
-          const anyTranslation = this.anyTranslationText();
-          if (!(anyTranscription || anyTranslation)) {
-            throw new Error('unpossible?');
-          }
-
-          const maxRevelation = (+anyTranscription) + (+anyTranslation);
-          const currentRevelation = this.state.quizState.textRevelation;
+        if (this.state.autoPaused) {
+          const maxRevelation = this.props.video.subtitleTracks.size;
+          const currentRevelation = this.state.subtitleState.textRevelation;
 
           if (currentRevelation > maxRevelation) {
             throw new Error('internal error');
           } else if (currentRevelation === maxRevelation) {
             // Continue playing video
             this.videoMediaComponent.play();
-            this.releaseQuizPause();
+            this.releaseAutoPause();
             this.setState({
-              quizState: null,
+              subtitleState: null,
             });
           } else {
-            // Increment state quizState.textRevelation
-            this.setState(s => ({ quizState: { textRevelation: s.quizState.textRevelation + 1 }}));
+            // Increment state subtitleState.textRevelation
+            this.setState(s => ({ subtitleState: { textRevelation: s.subtitleState.textRevelation + 1 }}));
           }
         }
         break;
@@ -338,54 +324,9 @@ export default class Player extends Component {
   render() {
     const { video } = this.props;
 
-    // Based on quiz mode and state, determine if we override text displays
-    let transcriptionMessage = null;
-    let translationsMessage = null;
     const REVEAL_MESSAGE = '(press enter to reveal)';
     const HIDDEN_MESSAGE = '(hidden)';
     const LISTEN_MESSAGE = '(listen)';
-
-    switch (this.state.quizMode) {
-      case 'none':
-        // don't change
-        break;
-
-      case 'listen':
-        if (this.state.quizPause) {
-          switch (this.state.quizState.textRevelation) {
-            case 0:
-              if (this.anyTranscriptionText()) {
-                transcriptionMessage = REVEAL_MESSAGE;
-                translationsMessage = HIDDEN_MESSAGE;
-              } else {
-                translationsMessage = REVEAL_MESSAGE;
-              }
-              break;
-
-            case 1:
-              if (this.anyTranscriptionText()) {
-                translationsMessage = REVEAL_MESSAGE;
-              } else {
-                // don't change
-              }
-              break;
-
-            case 2:
-              // don't change
-              break;
-
-            default:
-              throw new Error('internal error');
-          }
-        } else {
-          transcriptionMessage = LISTEN_MESSAGE;
-          translationsMessage = LISTEN_MESSAGE;
-        }
-        break;
-
-      default:
-        throw new Error('internal error');
-    }
 
     return (
       <div className="Player">
@@ -393,7 +334,7 @@ export default class Player extends Component {
           <div className="Player-video-area">
             <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
             <div className="Player-text-chunks">
-              {video.subtitleTracks.valueSeq().map((subTrack) => {
+              {video.subtitleTracks.valueSeq().map((subTrack, subTrackIdx) => {
                 const chunk = subTrack.chunkSet ? getLastChunkAtTime(subTrack.chunkSet, this.state.textViewPosition) : null;
 
                 if (chunk) {
@@ -401,14 +342,27 @@ export default class Player extends Component {
                     <div className="Player-text-chunk-outer" key={subTrack.id}>
                       <div className="Player-text-chunk-inner">
                         {(() => {
-                          let message;
-                          const textRole = 'transcription';
-                          if (textRole === 'transcription') {
-                            message = transcriptionMessage;
-                          } else if (textRole === 'translation') {
-                            message = translationsMessage;
-                          } else {
-                            throw new Error('unpossible?');
+                          let message; // if set, a message to display instead of subtitle
+
+                          switch (this.state.subtitleMode) {
+                            case 'none':
+                              // don't change
+                              break;
+
+                            case 'listen':
+                              if (this.state.autoPaused) {
+                                if (subTrackIdx === this.state.subtitleState.textRevelation) {
+                                  message = REVEAL_MESSAGE;
+                                } else if (subTrackIdx > this.state.subtitleState.textRevelation) {
+                                  message = HIDDEN_MESSAGE;
+                                }
+                              } else {
+                                message = LISTEN_MESSAGE;
+                              }
+                              break;
+
+                            default:
+                              throw new Error('internal error');
                           }
 
                           return (
@@ -433,7 +387,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeQuizMode={this.handleSetQuizMode} />
+          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeSubtitleMode={this.handleSetSubtitleMode} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
       </div>
