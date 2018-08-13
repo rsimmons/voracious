@@ -93,7 +93,7 @@ class App extends Component {
                         </div>
                       );
                     }}/>
-                    <Route path="/library" render={({ history }) => (
+                    <Route path="/library" render={() => (mainState.collections.size > 0) ? (
                       <ul>
                         {mainState.collections.valueSeq().sort((a, b) => a.name.localeCompare(b.name)).map((collection) => (
                           <li className="App-collection" key={collection.locator}>
@@ -116,6 +116,10 @@ class App extends Component {
                           </li>
                         ))}
                       </ul>
+                    ) : (
+                      <div className="App-no-collections-message">
+                        To get started, <Link to="/add_collection">Add A Collection</Link> to your library.
+                      </div>
                     )}/>
                     <Route path="/settings" render={({history}) => (
                       <div>

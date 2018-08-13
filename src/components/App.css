@@ -34,6 +34,10 @@
   background: #eee;
 }
 
+.App-no-collections-message {
+  font-size: 20px;
+}
+
 .App-collection {
   margin-bottom: 30px;
 }
