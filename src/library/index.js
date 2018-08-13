@@ -121,7 +121,7 @@ export const getCollectionIndex = async (collectionLocator) => {
         result.titles.push({
           name: dir,
           series: false,
-          video: vids[0],
+          videoId: vids[0].id,
           parts: null,
         });
       } else {
@@ -134,12 +134,12 @@ export const getCollectionIndex = async (collectionLocator) => {
             const epNum = +(epMatch[1]);
             episodes.push({
               number: epNum,
-              video: vid,
+              videoId: vid.id,
             });
           } else {
             others.push({
               name: vid.name,
-              video: vid,
+              videoId: vid.id,
             });
           }
         }
@@ -147,7 +147,7 @@ export const getCollectionIndex = async (collectionLocator) => {
         result.titles.push({
           name: dir,
           series: true,
-          video: null,
+          videoId: null,
           parts: {
             episodes,
             others,

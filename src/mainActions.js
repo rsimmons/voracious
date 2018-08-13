@@ -21,7 +21,7 @@ const CollectionRecord = new Record({
 const TitleRecord = new Record({
   name: undefined,
   series: undefined,
-  video: undefined, // only defined if not a series
+  videoId: undefined, // only defined if not a series
   parts: undefined, // only defined if a series
 });
 
@@ -92,7 +92,7 @@ export default class MainActions {
       collectionTitleRecords.push(new TitleRecord({
         name: title.name,
         series: title.series,
-        video: title.video, // only defined if not a series
+        videoId: title.videoId, // only defined if not a series
         parts: title.parts, // only defined if a series
       }));
     }

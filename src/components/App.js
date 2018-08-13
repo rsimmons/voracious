@@ -19,13 +19,18 @@ class ScrollToTopOnMount extends Component {
   }
 }
 
-const VideoListItem = (props) => (
-  <li key={props.key} className="App-library-list-item">
-    <Link to={'/player/' + encodeURIComponent(props.collection.locator) + '/' + encodeURIComponent(props.video.id)}>
-      {props.name}
-    </Link>
-  </li>
-);
+const VideoListItem = (props) => {
+  const { videoId, collection, name } = props;
+  const hasSubs = collection.videos.get(videoId).subtitleTracks.size > 0;
+
+  return (
+    <li className={'App-library-list-item ' + (hasSubs ? 'App-library-list-item-has-subs' : 'App-library-list-item-no-subs')}>
+      <Link to={'/player/' + encodeURIComponent(collection.locator) + '/' + encodeURIComponent(videoId)}>
+        {name}
+      </Link>
+    </li>
+  );
+};
 
 // App
 class App extends Component {
@@ -74,14 +79,14 @@ class App extends Component {
                           {title.parts.episodes.length ? (
                             <ul>
                               {title.parts.episodes.map(ep => (
-                                <VideoListItem collection={collection} video={ep.video} name={'Episode ' + ep.number} key={ep.number} />
+                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.number} key={ep.number} />
                               ))}
                             </ul>
                           ) : null}
                           {title.parts.others.length ? (
                             <ul>
                               {title.parts.others.map(other => (
-                                <VideoListItem collection={collection} video={other.video} name={other.name} key={other.name} />
+                                <VideoListItem collection={collection} videoId={other.videoId} name={other.name} key={other.name} />
                               ))}
                             </ul>
                           ) : null}
@@ -104,7 +109,7 @@ class App extends Component {
                                     </Link>
                                   </li>
                                 ) : (
-                                  <VideoListItem collection={collection} video={title.video} name={title.name} key={title.name} />
+                                  <VideoListItem collection={collection} videoId={title.videoId} name={title.name} key={title.name} />
                                 )
                               )}
                             </ul>
