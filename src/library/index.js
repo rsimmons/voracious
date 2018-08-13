@@ -94,7 +94,8 @@ export const getCollectionIndex = async (collectionLocator) => {
       result.titles.push({
         name: vid.name,
         series: false,
-        video: vid,
+        videoId: vid.id,
+        parts: null,
       });
     }
 
