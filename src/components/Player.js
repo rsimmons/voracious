@@ -73,11 +73,11 @@ class PlayControls extends Component {
 
     if (!e.repeat) {
       switch (e.keyCode) {
-        case 65: // a
+        case 37: // left arrow
           onBack();
           break;
 
-        case 82: // r
+        case 38: // up arrow
           onReplay();
           break;
 
@@ -86,7 +86,7 @@ class PlayControls extends Component {
           e.preventDefault();
           break;
 
-        case 13: // ener
+        case 40: // down arrow
           onContinue();
           e.preventDefault();
           break;
@@ -99,19 +99,18 @@ class PlayControls extends Component {
   }
 
   render() {
-    const { onBack, onReplay, onTogglePause, onContinue, onChangeSubtitleMode } = this.props;
+    return null;
+    /*
+    const { onBack, onReplay, onTogglePause, onContinue } = this.props;
     return (
       <form className="PlayControls">
         <button type="button" onClick={onBack}>Jump Back [A]</button>
         <button type="button" onClick={onReplay}>Replay [R]</button>
         <button type="button" onClick={onTogglePause}>Play/Pause [Space]</button>
         <button type="button" onClick={onContinue}>Continue [Enter]</button>
-        <Select options={[
-          {value: 'none', label: 'None'},
-          {value: 'listen', label: 'Listen'},
-        ]} onChange={onChangeSubtitleMode} />
       </form>
     );
+    */
   }
 }
 
@@ -122,7 +121,7 @@ export default class Player extends Component {
     this.videoMediaComponent = undefined;
     this.state = {
       textViewPosition: props.video.playbackPosition,
-      subtitleMode: 'none',
+      subtitleMode: 'manual',
       autoPaused: false, // are we paused (or have requested pause) for listen/read test?
       subtitleState: null,
     };
@@ -172,7 +171,7 @@ export default class Player extends Component {
     // Is the video playing? Don't want to mis-trigger pause upon seeking
     if (this.videoIsPlaying) {
       // Is there at least one text track?
-      if (this.state.subtitleMode === 'none') {
+      if (this.state.subtitleMode === 'manual') {
       } else if (this.state.subtitleMode === 'listen') {
         if (video.subtitleTracks.size >= 1) {
           const firstSubtitleTrack = video.subtitleTracks.first();
@@ -238,7 +237,7 @@ export default class Player extends Component {
 
   handleSetSubtitleMode = (mode) => {
     switch (mode) {
-      case 'none':
+      case 'manual':
         this.setState({
           subtitleMode: mode,
           autoPaused: false,
@@ -286,7 +285,7 @@ export default class Player extends Component {
 
   handleContinue = () => {
     switch (this.state.subtitleMode) {
-      case 'none':
+      case 'manual':
         // ignore
         break;
 
@@ -345,7 +344,7 @@ export default class Player extends Component {
                           let message; // if set, a message to display instead of subtitle
 
                           switch (this.state.subtitleMode) {
-                            case 'none':
+                            case 'manual':
                               // don't change
                               break;
 
@@ -387,9 +386,16 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onChangeSubtitleMode={this.handleSetSubtitleMode} />
+          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
+        <div className="Player-subtitle-controls-panel">
+          Subtitle Mode:&nbsp;
+          <Select options={[
+            {value: 'manual', label: 'Manual'},
+            {value: 'listen', label: 'Listening Test'},
+          ]} onChange={this.handleSetSubtitleMode} />
+        </div>
       </div>
     );
   }

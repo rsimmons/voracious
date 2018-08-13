@@ -1,0 +1,19 @@
+.AddCollection-big-button {
+  display: block;
+  position: absolute;
+  border: none;
+  font-size: 48px;
+  background: transparent;
+  padding: 0.2em;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.AddCollection-big-button:hover {
+  color: #666;
+}
+
+.AddCollection-exit-button {
+  top: 0;
+  left: 0;
+}
