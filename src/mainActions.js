@@ -8,11 +8,11 @@ const jpar = JSON.parse; // alias
 
 const MainStateRecord = new Record({
   loading: false,
-  collections: new IMap(), // id -> CollectionRecord
+  collections: new IMap(), // locator -> CollectionRecord
 });
 
 const CollectionRecord = new Record({
-  id: undefined,
+  locator: undefined,
   name: undefined,
   videos: new IMap() // id -> VideoRecord,
 });
@@ -50,18 +50,18 @@ export default class MainActions {
     await this._storageLoadProfile();
 
     const collections = [
-      {name: 'Japanese Videos', id: '/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
+      {name: 'Japanese Videos', locator: '/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
     ];
 
-    for (const {name, id} of collections) {
-      this._addCollection(name, id);
+    for (const {name, locator} of collections) {
+      this._addCollection(name, locator);
     }
 
     this.state.set(this.state.get().set('loading', false));
   };
 
-  _addCollection = async (name, collectionId) => {
-    const collectionVideos = await listCollectionVideos(collectionId);
+  _addCollection = async (name, locator) => {
+    const collectionVideos = await listCollectionVideos(locator);
 
     const collectionVideoRecords = []; // [k, v] pairs
     for (const vid of collectionVideos) {
@@ -79,8 +79,8 @@ export default class MainActions {
       })]);
     }
 
-    this.state.set(this.state.get().setIn(['collections', collectionId], new CollectionRecord({
-      id: collectionId,
+    this.state.set(this.state.get().setIn(['collections', locator], new CollectionRecord({
+      locator,
       name,
       videos: new IMap(collectionVideoRecords),
     })));
@@ -104,7 +104,7 @@ export default class MainActions {
     }
   };
 
-  _storageSaveProfile = () => {
+  _storageSaveProfile = async () => {
     const profileObj = {
       collections: [],
     };
@@ -113,60 +113,47 @@ export default class MainActions {
 
     for (const collection of state.collections.values()) {
       profileObj.collections.push({
-        id: collection.id,
+        locator: collection.locator,
         name: collection.name,
       });
     }
 
-    this.storage.setItem('profile', jstr(profileObj));
+    await this.storage.setItem('profile', jstr(profileObj));
   };
 
-  _storageSavePlaybackPosition = (collectionId, videoId, position) => {
+  _storageSavePlaybackPosition = async (collectionLocator, videoId, position) => {
     // TODO: escape slashes in ids? encodeURIComponent?
-    this.storage.setItem('playback_position/' + collectionId + '/' + videoId, jstr(position));
+    await this.storage.setItem('playback_position/' + collectionLocator + '/' + videoId, jstr(position));
   };
 
-/*
-  setVideoSubtitleTrack = (sourceId, file) => {
-    this.state.set(this.state.get().updateIn(['sources', sourceId, 'texts'], texts => texts.push(new SourceTextRecord({
-      language,
-      role,
-      chunkSetId,
-      chunkSet,
-    }))));
-
-    this._storageSaveProfile();
-  };
-*/
-
-  saveVideoPlaybackPosition = (collectionId, videoId, position) => {
-    const currentPosition = this.state.get().collections.get(collectionId).videos.get(videoId).playbackPosition;
+  saveVideoPlaybackPosition = async (collectionLocator, videoId, position) => {
+    const currentPosition = this.state.get().collections.get(collectionLocator).videos.get(videoId).playbackPosition;
     if (position === currentPosition) {
       return;
     }
 
-    this.state.set(this.state.get().setIn(['collections', collectionId, 'videos', videoId, 'playbackPosition'], position));
+    this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'playbackPosition'], position));
 
-    this._storageSavePlaybackPosition(collectionId, videoId, position);
+    await this._storageSavePlaybackPosition(collectionLocator, videoId, position);
   };
 
-  loadSubtitlesIfNeeded = async (collectionId, videoId) => {
-    const subTracks = this.state.get().getIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks']);
+  loadSubtitlesIfNeeded = async (collectionLocator, videoId) => {
+    const subTracks = this.state.get().getIn(['collections', collectionLocator, 'videos', videoId, 'subtitleTracks']);
 
     for (const subTrack of subTracks.values()) {
       if (!subTrack.chunkSet) {
         const stid = subTrack.id;
-        console.log('loading sub track...', collectionId, videoId, stid);
-        const {language, chunkSet} = await loadCollectionSubtitleTrack(collectionId, stid);
+        console.log('loading sub track...', collectionLocator, videoId, stid);
+        const {language, chunkSet} = await loadCollectionSubtitleTrack(collectionLocator, stid);
         // NOTE: It's OK to update state, we are iterating from immutable object
-        this.state.set(this.state.get().updateIn(['collections', collectionId, 'videos', videoId, 'subtitleTracks', stid], subTrack => subTrack.merge({language, chunkSet})));
-        console.log('loaded sub track', collectionId, videoId, stid);
+        this.state.set(this.state.get().updateIn(['collections', collectionLocator, 'videos', videoId, 'subtitleTracks', stid], subTrack => subTrack.merge({language, chunkSet})));
+        console.log('loaded sub track', collectionLocator, videoId, stid);
       }
     }
   };
 
-  addLocalCollection = (name, directory) => {
-    this._addCollection(name, directory);
-    this._storageSaveProfile();
+  addLocalCollection = async (name, directory) => {
+    await this._addCollection(name, directory);
+    await this._storageSaveProfile();
   };
 };

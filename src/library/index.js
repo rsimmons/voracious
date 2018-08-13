@@ -59,8 +59,8 @@ const recursiveScanDirectory = async (collectionDir, relDir) => {
   return result;
 };
 
-export const listCollectionVideos = async (collectionId) => {
-  return recursiveScanDirectory(collectionId, '');
+export const listCollectionVideos = async (collectionLocator) => {
+  return recursiveScanDirectory(collectionLocator, '');
 };
 
 const loadSubtitleTrackFromSRT = async (filename) => {
@@ -88,7 +88,7 @@ const loadSubtitleTrackFromSRT = async (filename) => {
   };
 };
 
-export const loadCollectionSubtitleTrack = async (collectionId, subTrackId) => {
-  const subfn = path.join(collectionId, subTrackId);
+export const loadCollectionSubtitleTrack = async (collectionLocator, subTrackId) => {
+  const subfn = path.join(collectionLocator, subTrackId);
   return await loadSubtitleTrackFromSRT(subfn);
 };

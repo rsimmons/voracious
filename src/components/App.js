@@ -26,10 +26,10 @@ class App extends Component {
       return (
         <Router>
           <Switch>
-            <Route path="/player/:cid/:vid" render={({ match, history }) => {
-              const collectionId = decodeURIComponent(match.params.cid);
+            <Route path="/player/:cloc/:vid" render={({ match, history }) => {
+              const collectionLocator = decodeURIComponent(match.params.cloc);
               const videoId = decodeURIComponent(match.params.vid);
-              return <Player video={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionId, videoId, pos); }} onNeedSubtitles={() => { actions.loadSubtitlesIfNeeded(collectionId, videoId); }} />;
+              return <Player video={mainState.collections.get(collectionLocator).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionLocator, videoId, pos); }} onNeedSubtitles={() => { actions.loadSubtitlesIfNeeded(collectionLocator, videoId); }} />;
             }}/>
             <Route path="/add_collection" render={({ history }) => {
               return <AddCollection onAdd={(name, dir) => { actions.addLocalCollection(name, dir); history.replace('/library'); }} onExit={() => { history.goBack(); }} />;
@@ -45,15 +45,15 @@ class App extends Component {
                     <Route path="/library" render={({ history }) => (
                       <ul>
                         {mainState.collections.valueSeq().map((collection) => (
-                          <li className="App-collection" key={collection.id}>
+                          <li className="App-collection" key={collection.locator}>
                             <div className="App-collection-header">
                               <h2 className="App-collection-title header-font">{collection.name}</h2>
-                              <div className="App-collection-id">{collection.id}</div>
+                              <div className="App-collection-id">{collection.locator}</div>
                             </div>
                             <ul>
                               {collection.videos.valueSeq().map((video) => (
                                 <li key={video.id} className="App-library-list-item">
-                                  <Link to={'/player/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
+                                  <Link to={'/player/' + encodeURIComponent(collection.locator) + '/' + encodeURIComponent(video.id)}>
                                     {video.name} [{video.subtitleTracks.size}]
                                   </Link>
                                 </li>
