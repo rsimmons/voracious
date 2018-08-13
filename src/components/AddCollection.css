@@ -1,19 +1,18 @@
-.AddCollection-big-button {
-  display: block;
-  position: absolute;
-  border: none;
-  font-size: 48px;
-  background: transparent;
-  padding: 0.2em;
-  cursor: pointer;
-  line-height: 1;
+.AddCollection-header {
+  position: fixed;
+  width: 100%;
+  height: 60px;
+  font-size: 32px;
+  padding: 0.2em 0.1em;
 }
 
-.AddCollection-big-button:hover {
-  color: #666;
+.AddCollection-below-header {
+  padding-top: 75px;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
-.AddCollection-exit-button {
-  top: 0;
-  left: 0;
+.AddCollection-instructions {
+  margin-top: 20px;
+  font-size: 16px;
 }

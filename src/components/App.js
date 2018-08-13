@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Link, NavLink, Switch, Route, Redirect } from 
 
 import './App.css';
 
+import WidthWrapper from './WidthWrapper.js';
 import Button from './Button.js';
 import Player from './Player.js';
 import AddCollection from './AddCollection.js';
@@ -44,7 +45,7 @@ class App extends Component {
     const { mainState, actions } = this.props;
 
     if (mainState.loading) {
-      return <h1>Loading...</h1>;
+      return <WidthWrapper><h1 className="header-font">Loading...</h1></WidthWrapper>;
     } else {
       return (
         <Router>
@@ -58,7 +59,7 @@ class App extends Component {
               return <AddCollection onAdd={(name, dir) => { actions.addLocalCollection(name, dir); history.replace('/library'); }} onExit={() => { history.goBack(); }} />;
             }}/>
             <Route render={() => (
-              <div className="App-main-wrapper">
+              <WidthWrapper>
                 <nav className="App-main-nav header-font">
                   <NavLink to={'/library'} activeClassName="selected">Library</NavLink>
                   <NavLink to={'/settings'} activeClassName="selected">Settings</NavLink>
@@ -123,14 +124,14 @@ class App extends Component {
                     )}/>
                     <Route path="/settings" render={({history}) => (
                       <div>
-                        <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>
+                        <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>&nbsp;
                         <Button onClick={this.handleExportBackup}>Export Backup</Button>
                       </div>
                     )}/>
                     <Redirect to="/library"/>
                   </Switch>
                 </div>
-              </div>
+              </WidthWrapper>
             )}/>
           </Switch>
         </Router>
