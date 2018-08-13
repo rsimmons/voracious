@@ -9,6 +9,24 @@ import AddCollection from './AddCollection.js';
 
 import { downloadFile } from '../util/download';
 
+class ScrollToTopOnMount extends Component {
+  componentDidMount() {
+    window.scrollTo(0, 0)
+  }
+
+  render() {
+    return null
+  }
+}
+
+const VideoListItem = (props) => (
+  <li key={props.key} className="App-library-list-item">
+    <Link to={'/player/' + encodeURIComponent(props.collection.locator) + '/' + encodeURIComponent(props.video.id)}>
+      {props.name}
+    </Link>
+  </li>
+);
+
 // App
 class App extends Component {
   handleExportBackup = () => {
@@ -42,22 +60,53 @@ class App extends Component {
                 </nav>
                 <div className="App-below-main-nav">
                   <Switch>
+                    <Route path="/library/:cloc/:tname" render={({ match }) => {
+                      const collectionLocator = decodeURIComponent(match.params.cloc);
+                      const titleName = decodeURIComponent(match.params.tname);
+                      const collection = mainState.collections.get(collectionLocator);
+                      const title = collection.titles.find(t => t.name === titleName); // unindexed, but should be quick
+                      return (
+                        <div>
+                          <ScrollToTopOnMount/>
+                          <div className="App-collection-header">
+                            <h2 className="App-collection-header-title"><Link to="/library" className="App-back-to-library-link">{collection.name}</Link> / {title.name}</h2>
+                          </div>
+                          {title.parts.episodes.length ? (
+                            <ul>
+                              {title.parts.episodes.map(ep => (
+                                <VideoListItem collection={collection} video={ep.video} name={'Episode ' + ep.number} key={ep.number} />
+                              ))}
+                            </ul>
+                          ) : null}
+                          {title.parts.others.length ? (
+                            <ul>
+                              {title.parts.others.map(other => (
+                                <VideoListItem collection={collection} video={other.video} name={other.name} key={other.name} />
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      );
+                    }}/>
                     <Route path="/library" render={({ history }) => (
                       <ul>
                         {mainState.collections.valueSeq().map((collection) => (
                           <li className="App-collection" key={collection.locator}>
                             <div className="App-collection-header">
-                              <h2 className="App-collection-title header-font">{collection.name}</h2>
+                              <h2 className="App-collection-header-title">{collection.name}</h2>
                               <div className="App-collection-id">{collection.locator}</div>
                             </div>
                             <ul>
-                              {collection.videos.valueSeq().map((video) => (
-                                <li key={video.id} className={"App-library-list-item " + (video.subtitleTracks.size ? 'App-library-list-item-has-subs' : 'App-library-list-item-no-subs')}>
-                                  <Link to={'/player/' + encodeURIComponent(collection.locator) + '/' + encodeURIComponent(video.id)}>
-                                    {video.name}
-                                  </Link>
-                                </li>
-                              ))}
+                              {collection.titles.map(title => title.series ? (
+                                  <li key={title.name} className="App-library-list-item">
+                                    <Link to={'/library/' + encodeURIComponent(collection.locator) + '/' + encodeURIComponent(title.name)}>
+                                      {title.name} <span style={{color: 'grey'}}>[{title.parts.count}]</span>
+                                    </Link>
+                                  </li>
+                                ) : (
+                                  <VideoListItem collection={collection} video={title.video} name={title.name} key={title.name} />
+                                )
+                              )}
                             </ul>
                           </li>
                         ))}

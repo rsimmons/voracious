@@ -1,7 +1,7 @@
-import { Record, Map as IMap } from 'immutable';
+import { List, Record, Map as IMap } from 'immutable';
 
 import createStorageBackend from './storage';
-import { listCollectionVideos, loadCollectionSubtitleTrack } from './library';
+import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
 
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
@@ -14,7 +14,15 @@ const MainStateRecord = new Record({
 const CollectionRecord = new Record({
   locator: undefined,
   name: undefined,
+  titles: new List(), // of TitleRecords
   videos: new IMap() // id -> VideoRecord,
+});
+
+const TitleRecord = new Record({
+  name: undefined,
+  series: undefined,
+  video: undefined, // only defined if not a series
+  parts: undefined, // only defined if a series
 });
 
 const VideoRecord = new Record({
@@ -61,10 +69,10 @@ export default class MainActions {
   };
 
   _addCollection = async (name, locator) => {
-    const collectionVideos = await listCollectionVideos(locator);
+    const collectionIndex = await getCollectionIndex(locator);
 
     const collectionVideoRecords = []; // [k, v] pairs
-    for (const vid of collectionVideos) {
+    for (const vid of collectionIndex.videos) {
       const subTrackKVs = []; // [k, v] pairs
       for (const stid of vid.subtitleTrackIds) {
         subTrackKVs.push([stid, new SubtitleTrackRecord({id: stid})]);
@@ -79,10 +87,21 @@ export default class MainActions {
       })]);
     }
 
+    const collectionTitleRecords = [];
+    for (const title of collectionIndex.titles) {
+      collectionTitleRecords.push(new TitleRecord({
+        name: title.name,
+        series: title.series,
+        video: title.video, // only defined if not a series
+        parts: title.parts, // only defined if a series
+      }));
+    }
+
     this.state.set(this.state.get().setIn(['collections', locator], new CollectionRecord({
       locator,
       name,
       videos: new IMap(collectionVideoRecords),
+      titles: new List(collectionTitleRecords),
     })));
   }
 

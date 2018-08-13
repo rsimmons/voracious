@@ -42,9 +42,11 @@
   margin-bottom: 20px;
 }
 
-.App-collection-title {
+.App-collection-header-title {
   margin-top: 0;
   margin-bottom: 0;
+  font-weight: normal;
+  line-height: 1.5;
 }
 
 .App-collection-id {
@@ -52,9 +54,18 @@
   color: #666;
 }
 
+.App-back-to-library-link {
+  color: inherit;
+}
+
+.App-back-to-library-link:hover {
+  background: #eee;
+}
+
 .App-library-list-item {
   font-size: 18px;
   border-top: 1px solid #ddd;
+  padding: 0.5em 0;
 }
 
 .App-library-list-item-has-subs {
@@ -75,7 +86,6 @@
 
 .App-library-list-item > a {
   display: block;
-  padding: 0.5em 0;
   text-decoration: none;
   color: inherit;
 }
