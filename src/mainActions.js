@@ -50,7 +50,7 @@ export default class MainActions {
     await this._storageLoadProfile();
 
     const collections = [
-      {name: 'Japanese Videos', locator: '/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
+      {name: 'Japanese Videos', locator: 'local:/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
     ];
 
     for (const {name, locator} of collections) {
@@ -153,7 +153,7 @@ export default class MainActions {
   };
 
   addLocalCollection = async (name, directory) => {
-    await this._addCollection(name, directory);
+    await this._addCollection(name, 'local:'+directory);
     await this._storageSaveProfile();
   };
 };

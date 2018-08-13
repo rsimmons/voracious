@@ -15,19 +15,19 @@ const SUPPORTED_SUBTITLE_EXTENSIONS = [
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
-const recursiveScanDirectory = async (collectionDir, relDir) => {
+const recursiveScanDirectory = async (baseDir, relDir) => {
   const result = [];
   const videoFiles = [];
   const subtitleFilesMap = new Map(); // base -> fn
 
-  const dirents = await fs.readdir(path.join(collectionDir, relDir));
+  const dirents = await fs.readdir(path.join(baseDir, relDir));
 
   for (const fn of dirents) {
-    const absfn = path.join(collectionDir, relDir, fn);
+    const absfn = path.join(baseDir, relDir, fn);
     const stat = await fs.stat(absfn);
 
     if (stat.isDirectory()) {
-      result.push(...await recursiveScanDirectory(collectionDir, path.join(relDir, fn)));
+      result.push(...await recursiveScanDirectory(baseDir, path.join(relDir, fn)));
     } else {
       const ext = path.extname(fn);
       if (SUPPORTED_VIDEO_EXTENSIONS.includes(ext)) {
@@ -51,7 +51,7 @@ const recursiveScanDirectory = async (collectionDir, relDir) => {
     result.push({
       id: path.join(relDir, vfn),
       name: path.basename(vfn, path.extname(vfn)),
-      url: 'local://' + path.join(collectionDir, relDir, vfn), // this prefix works with our custom file protocol for Electron
+      url: 'local://' + path.join(baseDir, relDir, vfn), // this prefix works with our custom file protocol for Electron
       subtitleTrackIds,
     });
   }
@@ -60,7 +60,14 @@ const recursiveScanDirectory = async (collectionDir, relDir) => {
 };
 
 export const listCollectionVideos = async (collectionLocator) => {
-  return recursiveScanDirectory(collectionLocator, '');
+  const LOCAL_PREFIX = 'local:';
+
+  if (collectionLocator.startsWith(LOCAL_PREFIX)) {
+    const baseDirectory = collectionLocator.slice(LOCAL_PREFIX.length);
+    return recursiveScanDirectory(baseDirectory, '');
+  } else {
+    throw new Error('internal error');
+  }
 };
 
 const loadSubtitleTrackFromSRT = async (filename) => {
