@@ -95,7 +95,7 @@ class App extends Component {
                     }}/>
                     <Route path="/library" render={({ history }) => (
                       <ul>
-                        {mainState.collections.valueSeq().map((collection) => (
+                        {mainState.collections.valueSeq().sort((a, b) => a.name.localeCompare(b.name)).map((collection) => (
                           <li className="App-collection" key={collection.locator}>
                             <div className="App-collection-header">
                               <h2 className="App-collection-header-title">{collection.name}</h2>
