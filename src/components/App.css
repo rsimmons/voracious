@@ -13,7 +13,7 @@
 }
 
 .App-below-main-nav {
-  padding-top: 70px;
+  padding-top: 75px;
 }
 
 .App-main-nav > a {
@@ -32,6 +32,24 @@
 
 .App-main-nav > a:hover {
   background: #eee;
+}
+
+.App-collection {
+  margin-bottom: 30px;
+}
+
+.App-collection-header {
+  margin-bottom: 20px;
+}
+
+.App-collection-title {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.App-collection-id {
+  font-size: 14px;
+  color: #666;
 }
 
 .App-library-list-item {

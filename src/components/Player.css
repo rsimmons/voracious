@@ -25,6 +25,15 @@
   right: 0;
 }
 
+.Player-subtitle-controls-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: white;
+  background-color: rgba(0,0,0,0.5);
+  padding: 10px;
+}
+
 .Player-settings-wrapper {
   background-color: #ddd;
   padding: 20px;

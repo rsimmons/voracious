@@ -30,8 +30,20 @@ function addIpcHandlers() {
     }, files => {
       if (files && files.length) {
         const fn = files[0];
-        console.log('chose', fn);
         mainWindow.send('chose-video-file', fn)
+      }
+    });
+  });
+
+  ipcMain.on('choose-collection-directory', () => {
+    dialog.showOpenDialog({
+      title: 'Select collection folder',
+      buttonLabel: 'Choose',
+      properties: ['openDirectory'],
+    }, files => {
+      if (files && files.length) {
+        const fn = files[0];
+        mainWindow.send('chose-collection-directory', fn)
       }
     });
   });

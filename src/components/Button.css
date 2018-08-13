@@ -5,9 +5,16 @@
   color: black;
   border: 1px solid #aaa;
   border-radius: 0.2em;
+}
+
+.Button:enabled {
   cursor: pointer;
 }
 
-.Button:hover {
+.Button:disabled {
+  color: #aaa;
+}
+
+.Button:hover:enabled {
   background: #ddd;
 }

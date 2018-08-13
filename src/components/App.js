@@ -5,6 +5,7 @@ import './App.css';
 
 import Button from './Button.js';
 import Player from './Player.js';
+import AddCollection from './AddCollection.js';
 
 import { downloadFile } from '../util/download';
 
@@ -30,6 +31,9 @@ class App extends Component {
               const videoId = decodeURIComponent(match.params.vid);
               return <Player video={mainState.collections.get(collectionId).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionId, videoId, pos); }} onNeedSubtitles={() => { actions.loadSubtitlesIfNeeded(collectionId, videoId); }} />;
             }}/>
+            <Route path="/add_collection" render={({ history }) => {
+              return <AddCollection onAdd={(name, dir) => { actions.addLocalCollection(name, dir); history.replace('/library'); }} onExit={() => { history.goBack(); }} />;
+            }}/>
             <Route render={() => (
               <div className="App-main-wrapper">
                 <nav className="App-main-nav header-font">
@@ -39,26 +43,29 @@ class App extends Component {
                 <div className="App-below-main-nav">
                   <Switch>
                     <Route path="/library" render={({ history }) => (
-                      <div>
-                        <ul>
-                          {mainState.collections.valueSeq().map((collection) => (
-                            <li key={collection.id}>
-                              <ul>
-                                {collection.videos.valueSeq().map((video) => (
-                                  <li key={video.id} className="App-library-list-item">
-                                    <Link to={'/player/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
-                                      {video.name} [{video.subtitleTracks.size}]
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <ul>
+                        {mainState.collections.valueSeq().map((collection) => (
+                          <li className="App-collection" key={collection.id}>
+                            <div className="App-collection-header">
+                              <h2 className="App-collection-title header-font">{collection.name}</h2>
+                              <div className="App-collection-id">{collection.id}</div>
+                            </div>
+                            <ul>
+                              {collection.videos.valueSeq().map((video) => (
+                                <li key={video.id} className="App-library-list-item">
+                                  <Link to={'/player/' + encodeURIComponent(collection.id) + '/' + encodeURIComponent(video.id)}>
+                                    {video.name} [{video.subtitleTracks.size}]
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
                     )}/>
-                    <Route path="/settings" render={() => (
+                    <Route path="/settings" render={({history}) => (
                       <div>
+                        <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>
                         <Button onClick={this.handleExportBackup}>Export Backup</Button>
                       </div>
                     )}/>

@@ -8,6 +8,7 @@ export default class Button extends Component {
   }
 
   render() {
-    return <button onClick={this.handleClick} className="Button">{this.props.children}</button>
+    const disabled = !!this.props.disabled;
+    return <button onClick={this.handleClick} disabled={disabled} className="Button">{this.props.children}</button>
   }
 }

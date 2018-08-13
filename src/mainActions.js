@@ -13,6 +13,7 @@ const MainStateRecord = new Record({
 
 const CollectionRecord = new Record({
   id: undefined,
+  name: undefined,
   videos: new IMap() // id -> VideoRecord,
 });
 
@@ -48,38 +49,42 @@ export default class MainActions {
 
     await this._storageLoadProfile();
 
-    const collectionIds = [
-      '/Users/russ/Documents/Voracious',
-      '/Users/russ/Dropbox/Language Learning Material/Japanese/Video',
+    const collections = [
+      {name: 'Japanese Videos', id: '/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
     ];
 
-    for (const collectionId of collectionIds) {
-      const collectionVideos = await listCollectionVideos(collectionId);
-
-      const collectionVideoRecords = []; // [k, v] pairs
-      for (const vid of collectionVideos) {
-        const subTrackKVs = []; // [k, v] pairs
-        for (const stid of vid.subtitleTrackIds) {
-          subTrackKVs.push([stid, new SubtitleTrackRecord({id: stid})]);
-        }
-
-        collectionVideoRecords.push([vid.id, new VideoRecord({
-          id: vid.id,
-          name: vid.name,
-          videoURL: vid.url,
-          subtitleTracks: new IMap(subTrackKVs),
-          // remaining fields are OK to leave as default
-        })]);
-      }
-
-      this.state.set(this.state.get().setIn(['collections', collectionId], new CollectionRecord({
-        id: collectionId,
-        videos: new IMap(collectionVideoRecords),
-      })));
+    for (const {name, id} of collections) {
+      this._addCollection(name, id);
     }
 
     this.state.set(this.state.get().set('loading', false));
   };
+
+  _addCollection = async (name, collectionId) => {
+    const collectionVideos = await listCollectionVideos(collectionId);
+
+    const collectionVideoRecords = []; // [k, v] pairs
+    for (const vid of collectionVideos) {
+      const subTrackKVs = []; // [k, v] pairs
+      for (const stid of vid.subtitleTrackIds) {
+        subTrackKVs.push([stid, new SubtitleTrackRecord({id: stid})]);
+      }
+
+      collectionVideoRecords.push([vid.id, new VideoRecord({
+        id: vid.id,
+        name: vid.name,
+        videoURL: vid.url,
+        subtitleTracks: new IMap(subTrackKVs),
+        // remaining fields are OK to leave as default
+      })]);
+    }
+
+    this.state.set(this.state.get().setIn(['collections', collectionId], new CollectionRecord({
+      id: collectionId,
+      name,
+      videos: new IMap(collectionVideoRecords),
+    })));
+  }
 
   _storageLoadProfile = async () => {
     const profileStr = await this.storage.getItemMaybe('profile');
@@ -101,9 +106,17 @@ export default class MainActions {
 
   _storageSaveProfile = () => {
     const profileObj = {
+      collections: [],
     };
 
-    // TODO: fill profileObject from this.state
+    const state = this.state.get();
+
+    for (const collection of state.collections.values()) {
+      profileObj.collections.push({
+        id: collection.id,
+        name: collection.name,
+      });
+    }
 
     this.storage.setItem('profile', jstr(profileObj));
   };
@@ -150,5 +163,10 @@ export default class MainActions {
         console.log('loaded sub track', collectionId, videoId, stid);
       }
     }
+  };
+
+  addLocalCollection = (name, directory) => {
+    this._addCollection(name, directory);
+    this._storageSaveProfile();
   };
 };
