@@ -57,6 +57,14 @@
   border-top: 1px solid #ddd;
 }
 
+.App-library-list-item-has-subs {
+  color: black;
+}
+
+.App-library-list-item-no-subs {
+  color: #888;
+}
+
 .App-library-list-item:last-child {
   border-bottom: 1px solid #ddd;
 }
