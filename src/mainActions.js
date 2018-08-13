@@ -57,14 +57,6 @@ export default class MainActions {
 
     await this._storageLoadProfile();
 
-    const collections = [
-      {name: 'Japanese Videos', locator: 'local:/Users/russ/Dropbox/Language Learning Material/Japanese/Video'},
-    ];
-
-    for (const {name, locator} of collections) {
-      this._addCollection(name, locator);
-    }
-
     this.state.set(this.state.get().set('loading', false));
   };
 
@@ -110,9 +102,10 @@ export default class MainActions {
 
     if (profileStr) {
       const profile = jpar(profileStr);
-      console.log('profile', profile);
 
-      // TODO: update state from profile object
+      for (const col of profile.collections) {
+        this._addCollection(col.name, col.locator);
+      }
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -141,8 +134,7 @@ export default class MainActions {
   };
 
   _storageSavePlaybackPosition = async (collectionLocator, videoId, position) => {
-    // TODO: escape slashes in ids? encodeURIComponent?
-    await this.storage.setItem('playback_position/' + collectionLocator + '/' + videoId, jstr(position));
+    await this.storage.setItem('playback_position/' + encodeURIComponent(collectionLocator) + '/' + encodeURIComponent(videoId), jstr(position));
   };
 
   saveVideoPlaybackPosition = async (collectionLocator, videoId, position) => {
