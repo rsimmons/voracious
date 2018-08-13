@@ -104,7 +104,7 @@ export default class MainActions {
       const profile = jpar(profileStr);
 
       for (const col of profile.collections) {
-        this._addCollection(col.name, col.locator);
+        await this._addCollection(col.name, col.locator);
       }
     } else {
       // Key wasn't present, so initialize to default state
