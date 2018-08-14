@@ -99,7 +99,14 @@ class App extends Component {
                         {mainState.collections.valueSeq().sort((a, b) => a.name.localeCompare(b.name)).map((collection) => (
                           <li className="App-collection" key={collection.locator}>
                             <div className="App-collection-header">
-                              <h2 className="App-collection-header-title">{collection.name}</h2>
+                              <h2 className="App-collection-header-title">{collection.name} <span className="App-collection-header-buttons">
+                                <button onClick={e => {
+                                  e.preventDefault();
+                                  if (window.confirm('Are you sure you want to delete the collection "' + collection.name + '"?')) {
+                                    actions.removeCollection(collection.locator);
+                                  }
+                                }}>Delete</button>{' '}
+                              </span></h2>
                               <div className="App-collection-id">{collection.locator}</div>
                             </div>
                             <ul>

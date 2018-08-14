@@ -167,4 +167,10 @@ export default class MainActions {
     await this._addCollection(name, 'local:'+directory);
     await this._storageSaveProfile();
   };
+
+  removeCollection = async (locator) => {
+    console.log('foo');
+    this.state.set(this.state.get().deleteIn(['collections', locator]));
+    await this._storageSaveProfile();
+  };
 };

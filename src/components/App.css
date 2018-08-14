@@ -47,6 +47,27 @@
   line-height: 1.5;
 }
 
+.App-collection-header-buttons {
+  visibility: hidden;
+  margin-left: 10px;
+}
+
+.App-collection-header:hover .App-collection-header-buttons {
+  visibility: visible;
+}
+
+.App-collection-header-buttons button {
+  vertical-align: middle;
+  border: 1px solid #aaa;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.App-collection-header-buttons button:hover {
+  background-color: #eee;
+}
+
 .App-collection-id {
   font-size: 14px;
   color: #666;
