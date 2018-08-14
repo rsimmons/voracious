@@ -58,7 +58,8 @@
 
 .App-collection-header-buttons button {
   vertical-align: middle;
-  border: 1px solid #aaa;
+  border: 1px solid #ccc;
+  color: #999;
   background: white;
   border-radius: 4px;
   cursor: pointer;
