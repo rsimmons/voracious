@@ -7,7 +7,7 @@ import Tooltip from './Tooltip';
 import CopyInterceptor from './CopyInterceptor';
 
 import { cpSlice } from '../util/string';
-import { getKindAtIndex, getKindInRange, addRubyAnnotation, addHighlightAnnotation, removeHighlightAnnotations, addWordAnnotation, customRender as annoTextCustomRender, getInRange, deleteAnnotation } from '../util/annotext';
+import { getKindAtIndex, getKindInRange, customRender as annoTextCustomRender } from '../util/annotext';
 
 const CPRange = new Record({
   cpBegin: null,
@@ -20,7 +20,6 @@ export default class AnnoText extends PureComponent {
     this.state = {
       selectionRange: null,
       hoverRange: null,
-      tooltipExpandedEditing: false, // is the tooltip (if any) showing full edit controls?
     };
     this.charElem = {}; // map from cpIndex to element wrapping character
     this.hoverTimeout = null;
@@ -118,40 +117,6 @@ export default class AnnoText extends PureComponent {
     this.setHoverTimeout();
   };
 
-  handleSetRuby = () => {
-    const { annoText, onUpdate } = this.props;
-    const rubyText = this.setRubyTextInput.value.trim();
-    this.setRubyTextInput.value = '';
-    const tooltipRange = this.state.selectionRange || this.state.hoverRange;
-    const {cpBegin, cpEnd} = tooltipRange;
-    const newAnnoText = addRubyAnnotation(annoText, cpBegin, cpEnd, rubyText);
-    onUpdate(newAnnoText);
-  };
-
-  handleSetWord = () => {
-    const { annoText, onUpdate } = this.props;
-    const lemma = this.setWordLemmaTextInput.value.trim();
-    this.setWordLemmaTextInput.value = '';
-    const tooltipRange = this.state.selectionRange || this.state.hoverRange;
-    const {cpBegin, cpEnd} = tooltipRange;
-    const newAnnoText = addWordAnnotation(annoText, cpBegin, cpEnd, lemma);
-    onUpdate(newAnnoText);
-  };
-
-  addHighlightOnRange = (setId, range) => {
-    const { annoText, onUpdate } = this.props;
-    const {cpBegin, cpEnd} = range;
-    const newAnnoText = addHighlightAnnotation(annoText, cpBegin, cpEnd, setId);
-    onUpdate(newAnnoText);
-  };
-
-  removeHighlightOnRange = (setId, range) => {
-    const { annoText, onUpdate } = this.props;
-    const {cpBegin, cpEnd} = range;
-    const newAnnoText = removeHighlightAnnotations(annoText, cpBegin, cpEnd, setId);
-    onUpdate(newAnnoText);
-  };
-
   handleTooltipMouseEnter = () => {
     this.clearHoverTimeout();
   };
@@ -159,76 +124,6 @@ export default class AnnoText extends PureComponent {
   handleTooltipMouseLeave = () => {
     this.setHoverTimeout();
   };
-
-  handleTooltipExpandedEditClick = (e) => {
-    e.preventDefault();
-    this.setState(state => ({ ...state, tooltipExpandedEditing: !state.tooltipExpandedEditing}));
-  };
-
-  renderTooltipEditControls = (tooltipRange) => {
-    const { annoText, onUpdate, highlightSets } = this.props;
-
-    if (!onUpdate) {
-      return null;
-    }
-
-    const annosInRange = getInRange(annoText, tooltipRange.cpBegin, tooltipRange.cpEnd);
-
-    // For each highlight set, determine if there are any highlight
-    //  annos that intersect tooltipRange.
-    const existingHighlight = {};
-    const rangeHighlights = getKindInRange(annoText, 'highlight', tooltipRange.cpBegin, tooltipRange.cpEnd);
-    for (const s of highlightSets.values()) {
-      existingHighlight[s.id] = rangeHighlights.some(h => h.data.setId === s.id);
-    }
-
-    return (
-      <div className="AnnoText-edit-controls">
-        <div style={{textAlign: 'center'}}>
-          <span>
-            {highlightSets.valueSeq().map(s => existingHighlight[s.id] ? (
-              <button key={s.id} onClick={(e) => {
-                this.removeHighlightOnRange(s.id, tooltipRange);
-                // Blur so that subsequent space/enter to play video doesn't cause button press
-                e.currentTarget.blur();
-              }}>- {s.name}</button>
-            ) : (
-              <button key={s.id} onClick={(e) => {
-                this.addHighlightOnRange(s.id, tooltipRange);
-                // Blur so that subsequent space/enter to play video doesn't cause button press
-                e.currentTarget.blur();
-              }}>+ {s.name}</button>
-            ))}
-          </span>
-          &nbsp;&nbsp;<button onClick={this.handleTooltipExpandedEditClick}>Edit</button>
-        </div>
-        {this.state.tooltipExpandedEditing ? (
-          <form style={{marginTop: 10}}>
-            <input ref={(el) => { this.setRubyTextInput = el; }} placeholder="ruby text" /><button type="button" onClick={this.handleSetRuby} >Set Ruby</button><br />
-            <input ref={(el) => { this.setWordLemmaTextInput = el; }} placeholder="lemma" /><button type="button" onClick={this.handleSetWord} >Set Word</button><br />
-            <br />
-            {annosInRange.map((a, i) => (
-              <div key={i}>[{cpSlice(annoText.text, a.cpBegin, a.cpEnd)}]:{a.kind}={(() => {
-                switch (a.kind) {
-                  case 'highlight':
-                    return 'set:' + highlightSets.get(a.data.setId).name;
-                  case 'ruby':
-                    return '[' + a.data + ']';
-                  case 'word':
-                    return JSON.stringify(a.data);
-                  default:
-                    return '';
-                }
-              })()} <button onClick={(e) => {
-                e.preventDefault();
-                onUpdate(deleteAnnotation(annoText, a));
-              }}>X</button></div>
-            ))}
-          </form>
-        ) : null}
-      </div>
-    );
-  }
 
   renderTooltip = () => {
     const { annoText } = this.props;
@@ -270,7 +165,6 @@ export default class AnnoText extends PureComponent {
             {(hitWordAnnos.length > limitedHitWordAnnos.length) ? (
               <div style={{fontSize: '0.5em', marginTop: 10, textAlign: 'center', fontStyle: 'italic'}}> and {hitWordAnnos.length - limitedHitWordAnnos.length} more...</div>
             ) : null}
-            {this.renderTooltipEditControls(tooltipRange)}
           </div>
         </Tooltip>
       );
@@ -309,19 +203,6 @@ export default class AnnoText extends PureComponent {
       }
     );
 
-/*
-    const annoTextHTML = annoTextCustomRender(
-      annoText,
-      (a, inner) => {
-        if (a.kind === 'ruby') {
-          return ['<ruby>', ...inner, '<rp>(</rp><rt>', escape(a.data), '</rt><rp>)</rp></ruby>'];
-        } else {
-          return inner;
-        }
-      },
-      (c, i) => (c === '\n' ? '<br/>' : escape(c))
-    ).join('');
-*/
     return (
       <div className="AnnoText">
         <div {... ((language === 'und' ? {} : {lang: language}))}>{annoTextChildren}</div>
