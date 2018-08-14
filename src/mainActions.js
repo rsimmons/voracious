@@ -111,6 +111,8 @@ export default class MainActions {
       for (const col of profile.collections) {
         await this._addCollection(col.name, col.locator);
       }
+
+      this.state.set(this.state.get().setIn(['preferences', 'showRuby'], profile.preferences.showRuby));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -122,11 +124,14 @@ export default class MainActions {
   };
 
   _storageSaveProfile = async () => {
+    const state = this.state.get();
+
     const profileObj = {
       collections: [],
+      preferences: {
+        showRuby: state.preferences.showRuby,
+      },
     };
-
-    const state = this.state.get();
 
     for (const collection of state.collections.values()) {
       profileObj.collections.push({
@@ -179,7 +184,8 @@ export default class MainActions {
     await this._storageSaveProfile();
   };
 
-  toggleShowRuby = () => {
+  toggleShowRuby = async () => {
     this.state.set(this.state.get().updateIn(['preferences', 'showRuby'], v => !v));
+    await this._storageSaveProfile();
   };
 };
