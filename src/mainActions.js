@@ -6,9 +6,14 @@ import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
 
+const PreferencesRecord = new Record({
+  showRuby: true,
+});
+
 const MainStateRecord = new Record({
   loading: false,
   collections: new IMap(), // locator -> CollectionRecord
+  preferences: new PreferencesRecord(),
 });
 
 const CollectionRecord = new Record({
@@ -172,5 +177,9 @@ export default class MainActions {
     console.log('foo');
     this.state.set(this.state.get().deleteIn(['collections', locator]));
     await this._storageSaveProfile();
+  };
+
+  toggleShowRuby = () => {
+    this.state.set(this.state.get().updateIn(['preferences', 'showRuby'], v => !v));
   };
 };

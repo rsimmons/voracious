@@ -174,13 +174,13 @@ export default class AnnoText extends PureComponent {
   };
 
   render() {
-    const { annoText, language } = this.props;
+    const { annoText, language, showRuby } = this.props;
 
     const annoTextChildren = annoTextCustomRender(
       annoText,
       (a, inner) => {
         if (a.kind === 'ruby') {
-          return [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>];
+          return showRuby ? [<ruby key={`ruby-${a.cpBegin}:${a.cpEnd}`}>{inner}<rp>(</rp><rt>{a.data}</rt><rp>)</rp></ruby>] : inner;
         } else if (a.kind === 'highlight') {
           return [<span key={`highlight-${a.cpBegin}:${a.cpEnd}`} className='AnnoText-highlight'>{inner}</span>];
         } else {

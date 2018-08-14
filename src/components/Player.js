@@ -69,7 +69,7 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onReplay, onTogglePause, onContinue } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onToggleRuby } = this.props;
 
     if (!e.repeat) {
       switch (e.keyCode) {
@@ -88,6 +88,11 @@ class PlayControls extends Component {
 
         case 40: // down arrow
           onContinue();
+          e.preventDefault();
+          break;
+
+        case 70: // F key
+          onToggleRuby();
           e.preventDefault();
           break;
 
@@ -315,6 +320,10 @@ export default class Player extends Component {
     }
   };
 
+  handleToggleRuby = () => {
+    this.props.onToggleRuby();
+  };
+
   handleExit = () => {
     this.savePlaybackPosition();
     this.props.onExit();
@@ -372,7 +381,7 @@ export default class Player extends Component {
                                 </div>
                               ) : null}
                               <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} />
+                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.showRuby} />
                               </div>
                             </div>
                           );
@@ -386,7 +395,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} />
+          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
