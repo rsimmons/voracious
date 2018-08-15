@@ -439,7 +439,7 @@ export default class Player extends Component {
               switch (this.state.subtitleMode) {
                 case 'manual':
                   return (
-                    <div>Manually toggle the display of each subtitle track using the number keys (e.g. 1 for the first track).</div>
+                    <div>Manually toggle the display of each subtitle track using the number keys (e.g. 1 for the first track). To be honest, this mode is pretty boring and you should try the others.</div>
                   );
 
                 case 'listen':
