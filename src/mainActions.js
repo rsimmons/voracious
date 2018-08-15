@@ -8,6 +8,7 @@ const jpar = JSON.parse; // alias
 
 const PreferencesRecord = new Record({
   showRuby: true,
+  showHelp: true,
 });
 
 const MainStateRecord = new Record({
@@ -112,7 +113,8 @@ export default class MainActions {
         await this._addCollection(col.name, col.locator);
       }
 
-      this.state.set(this.state.get().setIn(['preferences', 'showRuby'], profile.preferences.showRuby));
+      this.state.set(this.state.get().setIn(['preferences', 'showRuby'], !!profile.preferences.showRuby));
+      this.state.set(this.state.get().setIn(['preferences', 'showHelp'], !!profile.preferences.showHelp));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -130,6 +132,7 @@ export default class MainActions {
       collections: [],
       preferences: {
         showRuby: state.preferences.showRuby,
+        showHelp: state.preferences.showHelp,
       },
     };
 
@@ -184,8 +187,9 @@ export default class MainActions {
     await this._storageSaveProfile();
   };
 
-  toggleShowRuby = async () => {
-    this.state.set(this.state.get().updateIn(['preferences', 'showRuby'], v => !v));
+  setPreference = async (pref, value) => {
+    // TODO: validate pref, value?
+    this.state.set(this.state.get().setIn(['preferences', pref], value));
     await this._storageSaveProfile();
   };
 };

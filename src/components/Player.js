@@ -69,7 +69,7 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onReplay, onTogglePause, onContinue, onToggleRuby } = this.props;
+    const { onBack, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp } = this.props;
 
     if (!e.repeat) {
       switch (e.keyCode) {
@@ -96,6 +96,11 @@ class PlayControls extends Component {
           e.preventDefault();
           break;
 
+        case 72: // H key
+          onToggleHelp();
+          e.preventDefault();
+          break;
+
         default:
           // ignore
           break;
@@ -118,6 +123,11 @@ class PlayControls extends Component {
     */
   }
 }
+
+const MODE_TITLES = {
+  manual: 'Manual',
+  listen: 'Listening Test',
+};
 
 // Player
 export default class Player extends Component {
@@ -321,7 +331,13 @@ export default class Player extends Component {
   };
 
   handleToggleRuby = () => {
-    this.props.onToggleRuby();
+    const { preferences, onSetPreference } = this.props;
+    onSetPreference('showRuby', !preferences.showRuby);
+  };
+
+  handleToggleHelp = () => {
+    const { preferences, onSetPreference } = this.props;
+    onSetPreference('showHelp', !preferences.showHelp);
   };
 
   handleExit = () => {
@@ -381,7 +397,7 @@ export default class Player extends Component {
                                 </div>
                               ) : null}
                               <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.showRuby} />
+                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} />
                               </div>
                             </div>
                           );
@@ -395,15 +411,47 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} />
+          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
           Subtitle Mode:&nbsp;
-          <Select options={[
-            {value: 'manual', label: 'Manual'},
-            {value: 'listen', label: 'Listening Test'},
-          ]} onChange={this.handleSetSubtitleMode} />
+          <Select options={Object.entries(MODE_TITLES).map(([k, v]) => ({value: k, label: v}))} onChange={this.handleSetSubtitleMode} />&nbsp;&nbsp;
+          <button onClick={e => { e.preventDefault(); this.handleToggleHelp(); }}>Toggle Help</button>
+        </div>
+        <div className="Player-help-panel" style={{display: this.props.preferences.showHelp ? 'block' : 'none'}}>
+          <div className="Player-help-panel-section">
+            <div className="Player-help-panel-header">Keyboard Controls</div>
+            <table><tbody>
+              <tr><td>Replay Sub:</td><td>&uarr;</td></tr>
+              <tr><td>Reveal Sub /<br/>Continue:</td><td>&darr;</td></tr>
+              <tr><td>Previous Sub:</td><td>&larr;</td></tr>
+              <tr><td>Next Sub:</td><td>&rarr;</td></tr>
+              <tr><td>Pause/Unpause:</td><td>space</td></tr>
+              <tr><td>Toggle Furigana:</td><td>F</td></tr>
+              <tr><td>Toggle Help:</td><td>H</td></tr>
+            </tbody></table>
+          </div>
+          <div className="Player-help-panel-section">
+            <div className="Player-help-panel-header">Mode: {MODE_TITLES[this.state.subtitleMode]}</div>
+            {(() => {
+              switch (this.state.subtitleMode) {
+                case 'manual':
+                  return (
+                    <div>Manually toggle the display of each subtitle track using the number keys (e.g. 1 for the first track).</div>
+                  );
+                  break;
+
+                case 'listen':
+                  return (
+                    <div>Subtitles are initially hidden. At the end of each subtitle, the video will pause automatically. Could you hear what was said? Press &uarr; to replay, if necessary. Then press the &darr; key to reveal the subs, and check if you heard correctly. Then press &darr; to unpause the video.</div>
+                  );
+
+                default:
+                  throw new Error('internal error');
+              }
+            })()}
+          </div>
         </div>
       </div>
     );
