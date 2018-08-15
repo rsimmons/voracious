@@ -136,7 +136,7 @@ export default class Player extends Component {
     this.videoMediaComponent = undefined;
     this.state = {
       textViewPosition: props.video.playbackPosition,
-      subtitleMode: 'manual',
+      subtitleMode: props.preferences.subtitleMode, // we just initialize from preference
       autoPaused: false, // are we paused (or have requested pause) for listen/read test?
       subtitleState: null,
     };
@@ -271,6 +271,7 @@ export default class Player extends Component {
       default:
         throw new Error('internal error');
     }
+    this.props.onSetPreference('subtitleMode', mode);
   }
 
   handleBack = () => {
@@ -416,7 +417,7 @@ export default class Player extends Component {
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
           Subtitle Mode:&nbsp;
-          <Select options={Object.entries(MODE_TITLES).map(([k, v]) => ({value: k, label: v}))} onChange={this.handleSetSubtitleMode} />&nbsp;&nbsp;
+          <Select options={Object.entries(MODE_TITLES).map(([k, v]) => ({value: k, label: v}))} onChange={this.handleSetSubtitleMode} value={this.state.subtitleMode} />&nbsp;&nbsp;
           <button onClick={e => { e.preventDefault(); this.handleToggleHelp(); }}>Toggle Help</button>
         </div>
         <div className="Player-help-panel" style={{display: this.props.preferences.showHelp ? 'block' : 'none'}}>
@@ -440,7 +441,6 @@ export default class Player extends Component {
                   return (
                     <div>Manually toggle the display of each subtitle track using the number keys (e.g. 1 for the first track).</div>
                   );
-                  break;
 
                 case 'listen':
                   return (

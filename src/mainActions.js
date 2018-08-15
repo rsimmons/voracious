@@ -9,6 +9,7 @@ const jpar = JSON.parse; // alias
 const PreferencesRecord = new Record({
   showRuby: true,
   showHelp: true,
+  subtitleMode: 'manual',
 });
 
 const MainStateRecord = new Record({
@@ -115,6 +116,7 @@ export default class MainActions {
 
       this.state.set(this.state.get().setIn(['preferences', 'showRuby'], !!profile.preferences.showRuby));
       this.state.set(this.state.get().setIn(['preferences', 'showHelp'], !!profile.preferences.showHelp));
+      this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode || 'manual'));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -133,6 +135,7 @@ export default class MainActions {
       preferences: {
         showRuby: state.preferences.showRuby,
         showHelp: state.preferences.showHelp,
+        subtitleMode: state.preferences.subtitleMode,
       },
     };
 
