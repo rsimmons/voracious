@@ -127,6 +127,7 @@ class PlayControls extends Component {
 const MODE_TITLES = {
   manual: 'Manual',
   listen: 'Listening Test',
+  read: 'Reading Test',
 };
 
 // Player
@@ -180,7 +181,7 @@ export default class Player extends Component {
 
     const { video } = this.props;
 
-    let doAutoPause = false;
+    let updateTextPosition = true;
 
     // Determine if we need to auto-pause
     // Is the video playing? Don't want to mis-trigger pause upon seeking
@@ -200,8 +201,10 @@ export default class Player extends Component {
             const triggerTime = currentChunk.position.end - PAUSE_DELAY;
 
             if ((this.state.textViewPosition < triggerTime) && (time >= triggerTime)) {
-              doAutoPause = true;
+              updateTextPosition = false;
+              this.videoMediaComponent.pause();
               this.setState({
+                autoPaused: true,
                 subtitleState: {
                   textRevelation: 0,
                 }
@@ -209,17 +212,33 @@ export default class Player extends Component {
             }
           }
         }
+      } else if (this.state.subtitleMode === 'read') {
+        if (video.subtitleTracks.size >= 1) {
+          const firstSubtitleTrack = video.subtitleTracks.first();
+
+          // TODO: A better way to do this would be to find the next sub-start even after the current time,
+          // and then subtract the pause delay from that. If we are crossing that trigger time, then
+          // do the pause (so we don't overshoot).
+
+          // Look up chunk (if any) before this time change
+          const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
+          const newChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, time);
+
+          if ((currentChunk !== newChunk) && newChunk) {
+            updateTextPosition = false;
+            this.videoMediaComponent.pause();
+            this.setState({
+              autoPaused: true,
+              textViewPosition: time,
+            });
+          }
+        }
       } else {
         throw new Error('internal error');
       }
     }
 
-    if (doAutoPause) {
-      this.setState({
-        autoPaused: true,
-      });
-      this.videoMediaComponent.pause();
-    } else {
+    if (updateTextPosition) {
       this.setState({textViewPosition: time});
     }
   };
@@ -261,6 +280,14 @@ export default class Player extends Component {
         break;
 
       case 'listen':
+        this.setState({
+          subtitleMode: mode,
+          autoPaused: false,
+          subtitleState: null,
+        });
+        break;
+
+      case 'read':
         this.setState({
           subtitleMode: mode,
           autoPaused: false,
@@ -326,6 +353,13 @@ export default class Player extends Component {
         }
         break;
 
+      case 'read':
+        if (this.state.autoPaused) {
+          this.videoMediaComponent.play();
+          this.releaseAutoPause();
+        }
+        break;
+
       default:
         throw new Error('internal error');
     }
@@ -384,6 +418,10 @@ export default class Player extends Component {
                               } else {
                                 message = LISTEN_MESSAGE;
                               }
+                              break;
+
+                            case 'read':
+                              // nothing
                               break;
 
                             default:
@@ -445,6 +483,11 @@ export default class Player extends Component {
                 case 'listen':
                   return (
                     <div>Subtitles are initially hidden. At the end of each subtitle, the video will pause automatically. Could you hear what was said? Press &uarr; to replay, if necessary. Then press the &darr; key to reveal the subs, and check if you heard correctly. Then press &darr; to unpause the video.</div>
+                  );
+
+                case 'read':
+                  return (
+                    <div>Read etc</div>
                   );
 
                 default:
