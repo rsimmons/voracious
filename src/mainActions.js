@@ -149,6 +149,20 @@ export default class MainActions {
     await this.storage.setItem('profile', jstr(profileObj));
   };
 
+  loadVideoPlaybackPosition = async (collectionLocator, videoId) => {
+    const positionStr = await this.storage.getItemMaybe('playback_position/' + encodeURIComponent(collectionLocator) + '/' + encodeURIComponent(videoId));
+    if (!positionStr) {
+      return 0;
+    }
+
+    const position = jpar(positionStr);
+
+    // In addition to (asynchronously) returning the position, we update the in-memory state to have it
+    this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'playbackPosition'], position));
+
+    return position;
+  };
+
   _storageSavePlaybackPosition = async (collectionLocator, videoId, position) => {
     await this.storage.setItem('playback_position/' + encodeURIComponent(collectionLocator) + '/' + encodeURIComponent(videoId), jstr(position));
   };
@@ -185,7 +199,6 @@ export default class MainActions {
   };
 
   removeCollection = async (locator) => {
-    console.log('foo');
     this.state.set(this.state.get().deleteIn(['collections', locator]));
     await this._storageSaveProfile();
   };

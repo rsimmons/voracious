@@ -157,6 +157,7 @@ export default class Player extends Component {
 
   componentDidMount() {
     this.props.onNeedSubtitles();
+    this.restorePlaybackPosition();
 
     this.savePlaybackPositionTimer = window.setInterval(this.savePlaybackPosition, 1000);
   }
@@ -172,7 +173,19 @@ export default class Player extends Component {
     if (this.props.video.subtitleTracks !== prevProps.video.subtitleTracks) {
       this.props.onNeedSubtitles();
     }
+
+    // this check is probably not perfect.. technically could have same id in different collection?
+    if (this.props.video.id !== prevProps.video.id) {
+      this.restorePlaybackPosition();
+    }
   }
+
+  restorePlaybackPosition = async () => {
+    const position = await this.props.getSavedPlaybackPosition();
+    if (this.videoElem) {
+      this.videoElem.seek(position);
+    }
+  };
 
   initialSubtitleState = (mode) => {
     if (mode === 'listen') {
