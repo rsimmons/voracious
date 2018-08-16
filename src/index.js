@@ -7,8 +7,8 @@ import MainActions from './mainActions';
 import { SubscribableState, StateMapper } from './ruxx';
 
 // Load Kuromoji right away
-import { loadKuromoji } from './util/analysis';
-loadKuromoji();
+import { startLoadingKuromoji } from './util/analysis';
+startLoadingKuromoji();
 
 // Create state, actions
 const subscribableMainState = new SubscribableState();

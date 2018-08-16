@@ -9,7 +9,7 @@ const dmp = new DiffMatchPatch();
 let kuromojiTokenizer = null;
 let kuromojiLoadPromise = null;
 
-export const loadKuromoji = () => {
+export const startLoadingKuromoji = () => {
   console.log('Loading Kuromoji ...');
   kuromojiLoadPromise = new Promise(resolve =>
     kuromoji.builder({ dicPath: "/kuromoji/dict/" }).build(function (err, tokenizer) {
@@ -21,13 +21,14 @@ export const loadKuromoji = () => {
 };
 
 export const ensureKuromojiLoaded = async () => {
+  if (!kuromojiLoadPromise) {
+    startLoadingKuromoji();
+  }
   await kuromojiLoadPromise;
 };
 
-const analyzeJAKuromoji = (text) => {
-  if (!kuromojiTokenizer) {
-    throw new Error('Kuromoji has not been loaded');
-  }
+const analyzeJAKuromoji = async (text) => {
+  await ensureKuromojiLoaded();
 
   const tokens = kuromojiTokenizer.tokenize(text);
   const annotations = [];
@@ -128,17 +129,17 @@ const languageAnalyzerFunc = {
 
 const canAnalyzeLanguage = (language) => languageAnalyzerFunc.hasOwnProperty(language);
 
-const analyzeText = (text, language) => {
+const analyzeText = async (text, language) => {
   if (!canAnalyzeLanguage(language)) {
     throw new Error('Cannot analyze ' + language);
   }
 
-  return languageAnalyzerFunc[language](text);
+  return await languageAnalyzerFunc[language](text);
 };
 
-export const createAutoAnnotatedText = (text, language) => {
+export const createAutoAnnotatedText = async (text, language) => {
   if (canAnalyzeLanguage(language)) {
-    return createAnnoText(text, analyzeText(text, language));
+    return createAnnoText(text, await analyzeText(text, language));
   } else {
     return createAnnoText(text);
   }

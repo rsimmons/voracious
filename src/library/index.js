@@ -180,7 +180,7 @@ const loadSubtitleTrackFromSRT = async (filename) => {
   await ensureKuromojiLoaded(); // wait until kuromoji has loaded
   const chunks = [];
   for (const sub of subs) {
-    const annoText = createAutoAnnotatedText(sub.lines, language);
+    const annoText = await createAutoAnnotatedText(sub.lines, language);
     chunks.push(createTimeRangeChunk(sub.begin, sub.end, annoText));
   }
 
