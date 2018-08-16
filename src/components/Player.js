@@ -438,7 +438,7 @@ export default class Player extends Component {
             <div className="Player-help-panel-header">Keyboard Controls</div>
             <table><tbody>
               <tr><td>Replay Sub:</td><td>&uarr;</td></tr>
-              <tr><td>Reveal Sub /<br/>Continue:</td><td>&darr;</td></tr>
+              <tr><td>Reveal Sub /<br/>Unpause:</td><td>&darr;</td></tr>
               <tr><td>Previous Sub:</td><td>&larr;</td></tr>
               <tr><td>Next Sub:</td><td>&rarr;</td></tr>
               <tr><td>Pause/Unpause:</td><td>space</td></tr>
@@ -462,7 +462,7 @@ export default class Player extends Component {
 
                 case 'read':
                   return (
-                    <div>Read etc</div>
+                    <div>At the start of each new subtitle, the video will pause automatically. Try reading the sub. Then press &darr; to unpause the video, and hear it spoken. Did you read it correctly?</div>
                   );
 
                 default:
