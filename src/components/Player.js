@@ -5,7 +5,7 @@ import './Player.css';
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 
-import { getLastChunkAtTime } from '../util/chunk';
+import { getChunkAtTime, getPrevChunkAtTime, getNextChunkAtTime } from '../util/chunk';
 
 class VideoWrapper extends Component {
   constructor(props) {
@@ -69,12 +69,16 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp } = this.props;
+    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp } = this.props;
 
     if (!e.repeat) {
       switch (e.keyCode) {
         case 37: // left arrow
           onBack();
+          break;
+
+        case 39: // right arrow
+          onAhead();
           break;
 
         case 38: // up arrow
@@ -182,7 +186,7 @@ export default class Player extends Component {
     const { video } = this.props;
 
     const result = video.subtitleTracks.valueSeq().toArray().map((subTrack, subTrackIdx) => {
-      const chunk = subTrack.chunkSet ? getLastChunkAtTime(subTrack.chunkSet, time) : null;
+      const chunk = subTrack.chunkSet ? getChunkAtTime(subTrack.chunkSet, time) : null;
 
       return {
         subTrack,
@@ -309,11 +313,45 @@ export default class Player extends Component {
       };
     });
     this.props.onSetPreference('subtitleMode', newMode);
-  }
+  };
 
   handleBack = () => {
+    const { video } = this.props;
+
     if (this.videoMediaComponent) {
-      this.videoMediaComponent.seekRelative(-3.0);
+      if (video.subtitleTracks.size > 0) {
+        const firstTrack = video.subtitleTracks.first();
+        if (firstTrack.chunkSet) {
+          const prevChunk = getPrevChunkAtTime(firstTrack.chunkSet, this.state.displayedSubTime);
+
+          if (prevChunk) {
+            this.videoMediaComponent.seek(prevChunk.position.begin);
+            // this.videoMediaComponent.play();
+          }
+        }
+      } else {
+        this.videoMediaComponent.seekRelative(-3.0);
+      }
+    }
+  };
+
+  handleAhead = () => {
+    const { video } = this.props;
+
+    if (this.videoMediaComponent) {
+      if (video.subtitleTracks.size > 0) {
+        const firstTrack = video.subtitleTracks.first();
+        if (firstTrack.chunkSet) {
+          const nextChunk = getNextChunkAtTime(firstTrack.chunkSet, this.state.displayedSubTime);
+
+          if (nextChunk) {
+            this.videoMediaComponent.seek(nextChunk.position.begin);
+            // this.videoMediaComponent.play();
+          }
+        }
+      } else {
+        this.videoMediaComponent.seekRelative(3.0);
+      }
     }
   };
 
@@ -338,7 +376,7 @@ export default class Player extends Component {
   handleContinue = () => {
     switch (this.state.subtitleMode) {
       case 'manual':
-        // ignore
+        this.videoMediaComponent.play();
         break;
 
       case 'listen':
@@ -425,7 +463,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} />
+          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
