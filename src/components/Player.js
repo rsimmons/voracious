@@ -135,14 +135,20 @@ export default class Player extends Component {
   constructor(props) {
     super(props);
     this.videoMediaComponent = undefined;
+
+    const subtitleMode = props.preferences.subtitleMode;
+    const subtitleState = this.initialSubtitleState(subtitleMode);
+    const displayedSubTime = props.video.playbackPosition;
     this.state = {
-      textViewPosition: props.video.playbackPosition,
-      subtitleMode: props.preferences.subtitleMode, // we just initialize from preference
-      autoPaused: false, // are we paused (or have requested pause) for listen/read test?
-      subtitleState: null,
+      subtitleMode, // we just initialize from preference
+      subtitleState,
+      displayedSubTime,
+      displayedSubs: this.getSubsToDisplay(displayedSubTime, subtitleMode, subtitleState),
     };
+
     this.videoTime = null;
     this.videoIsPlaying = false;
+    this.subsFrozen = false;
   }
 
   componentDidMount() {
@@ -164,6 +170,29 @@ export default class Player extends Component {
     }
   }
 
+  initialSubtitleState = (mode) => {
+    if (mode === 'listen') {
+      return { tracksRevealed: 0};
+    } else {
+      return null;
+    }
+  };
+
+  getSubsToDisplay = (time, subtitleMode, subtitleState) => {
+    const { video } = this.props;
+
+    const result = video.subtitleTracks.valueSeq().toArray().map((subTrack, subTrackIdx) => {
+      const chunk = subTrack.chunkSet ? getLastChunkAtTime(subTrack.chunkSet, time) : null;
+
+      return {
+        subTrack,
+        chunk,
+      };
+    });
+
+    return result;
+  };
+
   savePlaybackPosition = () => {
     if ((this.videoTime !== null) && (this.videoTime !== undefined)) {
       this.props.onUpdatePlaybackPosition(this.videoTime);
@@ -171,17 +200,18 @@ export default class Player extends Component {
   };
 
   handleVideoTimeUpdate = (time) => {
-    this.videoTime = time;
+    // console.log('time update', time, 'subsFrozen', this.subsFrozen);
 
-    if (this.state.autoPaused) {
-      // We're either paused or in the process of pausing for question,
-      //  so should ignore this time update.
+    if (this.subsFrozen) {
+      // If subs are frozen, we skip all the auto-pause logic and subtitle time updating
       return;
     }
 
     const { video } = this.props;
 
-    let updateTextPosition = true;
+    const newDisplayedSubTime = time;
+    let newDisplayedSubs = this.getSubsToDisplay(newDisplayedSubTime, this.state.subtitleMode, this.state.subtitleState);
+    let updateSubs = true;
 
     // Determine if we need to auto-pause
     // Is the video playing? Don't want to mis-trigger pause upon seeking
@@ -190,47 +220,33 @@ export default class Player extends Component {
       if (this.state.subtitleMode === 'manual') {
       } else if (this.state.subtitleMode === 'listen') {
         if (video.subtitleTracks.size >= 1) {
-          const firstSubtitleTrack = video.subtitleTracks.first();
-
-          // Look up chunk (if any) before this time change
-          const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
-
+          const currentChunk = this.state.displayedSubs[0].chunk;
           if (currentChunk) {
             // Are we passing the time that would trigger a pause?
             const PAUSE_DELAY = 0.3;
             const triggerTime = currentChunk.position.end - PAUSE_DELAY;
 
-            if ((this.state.textViewPosition < triggerTime) && (time >= triggerTime)) {
-              updateTextPosition = false;
+            if ((this.videoTime < triggerTime) && (time >= triggerTime)) {
+              this.subsFrozen = true;
+              updateSubs = false;
               this.videoMediaComponent.pause();
-              this.setState({
-                autoPaused: true,
-                subtitleState: {
-                  textRevelation: 0,
-                }
-              });
             }
           }
         }
       } else if (this.state.subtitleMode === 'read') {
         if (video.subtitleTracks.size >= 1) {
-          const firstSubtitleTrack = video.subtitleTracks.first();
-
           // TODO: A better way to do this would be to find the next sub-start even after the current time,
           // and then subtract the pause delay from that. If we are crossing that trigger time, then
-          // do the pause (so we don't overshoot).
+          // do the pause (so we don't overshoot). We would also need to fast-forward the displayedSubTime
+          // to the start of the next chunk.
 
           // Look up chunk (if any) before this time change
-          const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
-          const newChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, time);
+          const currentChunk = this.state.displayedSubs[0].chunk;
+          const newChunk = newDisplayedSubs[0].chunk;
 
           if ((currentChunk !== newChunk) && newChunk) {
-            updateTextPosition = false;
+            this.subsFrozen = true;
             this.videoMediaComponent.pause();
-            this.setState({
-              autoPaused: true,
-              textViewPosition: time,
-            });
           }
         }
       } else {
@@ -238,19 +254,32 @@ export default class Player extends Component {
       }
     }
 
-    if (updateTextPosition) {
-      this.setState({textViewPosition: time});
+    this.videoTime = time;
+
+    if (updateSubs) {
+      let newSubtitleState = this.state.subtitleState;
+
+      // Determine if we need to reset revelation in listen mode (whether or not video is playing)
+      if (this.state.subtitleMode === 'listen') {
+        if (video.subtitleTracks.size >= 1) {
+          if (newDisplayedSubs[0].chunk !== this.state.displayedSubs[0].chunk) {
+            // Reset subtitle track revelation
+            newSubtitleState = {tracksRevealed: 0};
+          }
+        }
+      }
+
+      this.setState({
+        displayedSubTime: newDisplayedSubTime,
+        displayedSubs: newDisplayedSubs,
+        subtitleState: newSubtitleState,
+      });
     }
   };
 
-  releaseAutoPause = () => {
-    this.setState({
-      autoPaused: false,
-      // Resync displayed text with video time, since they may have gotten
-      //  very slightly out of sync if we were paused for question
-      textViewPosition: this.videoTime,
-    });
-  }
+  unfreezeSubs = () => {
+    this.subsFrozen = false;
+  };
 
   handleVideoPlaying = () => {
     this.videoIsPlaying = true;
@@ -266,39 +295,20 @@ export default class Player extends Component {
 
   handleVideoSeeking = () => {
     this.videoIsPlaying = false;
-    this.releaseAutoPause();
+    this.unfreezeSubs();
   };
 
-  handleSetSubtitleMode = (mode) => {
-    switch (mode) {
-      case 'manual':
-        this.setState({
-          subtitleMode: mode,
-          autoPaused: false,
-          subtitleState: null,
-        });
-        break;
-
-      case 'listen':
-        this.setState({
-          subtitleMode: mode,
-          autoPaused: false,
-          subtitleState: null,
-        });
-        break;
-
-      case 'read':
-        this.setState({
-          subtitleMode: mode,
-          autoPaused: false,
-          subtitleState: null,
-        });
-        break;
-
-      default:
-        throw new Error('internal error');
-    }
-    this.props.onSetPreference('subtitleMode', mode);
+  handleSetSubtitleMode = (newMode) => {
+    this.setState(s => {
+      const newSubtitleState = this.initialSubtitleState(newMode);
+      return {
+        subtitleMode: newMode,
+        subtitleState: newSubtitleState,
+        displayedSubTime: s.displayedSubTime,
+        displayedSubs: this.getSubsToDisplay(s.displayedSubTime, newMode, newSubtitleState),
+      };
+    });
+    this.props.onSetPreference('subtitleMode', newMode);
   }
 
   handleBack = () => {
@@ -309,8 +319,7 @@ export default class Player extends Component {
 
   handleReplay = () => {
     if (this.videoMediaComponent) {
-      const firstSubtitleTrack = this.props.video.subtitleTracks.first();
-      const currentChunk = getLastChunkAtTime(firstSubtitleTrack.chunkSet, this.state.textViewPosition);
+      const currentChunk = (this.state.displayedSubs.length > 0) ? this.state.displayedSubs[0].chunk : null;
 
       if (currentChunk) {
         this.videoMediaComponent.seek(currentChunk.position.begin);
@@ -320,7 +329,7 @@ export default class Player extends Component {
   };
 
   handleTogglePause = () => {
-    this.releaseAutoPause();
+    this.unfreezeSubs();
     if (this.videoMediaComponent) {
       this.videoMediaComponent.togglePause();
     }
@@ -333,31 +342,32 @@ export default class Player extends Component {
         break;
 
       case 'listen':
-        if (this.state.autoPaused) {
-          const maxRevelation = this.props.video.subtitleTracks.size;
-          const currentRevelation = this.state.subtitleState.textRevelation;
+        const maxRevelation = this.props.video.subtitleTracks.size;
+        const currentRevelation = this.state.subtitleState.tracksRevealed;
 
-          if (currentRevelation > maxRevelation) {
-            throw new Error('internal error');
-          } else if (currentRevelation === maxRevelation) {
-            // Continue playing video
-            this.videoMediaComponent.play();
-            this.releaseAutoPause();
-            this.setState({
-              subtitleState: null,
-            });
-          } else {
-            // Increment state subtitleState.textRevelation
-            this.setState(s => ({ subtitleState: { textRevelation: s.subtitleState.textRevelation + 1 }}));
-          }
+        if (currentRevelation > maxRevelation) {
+          throw new Error('internal error');
+        } else if (currentRevelation === maxRevelation) {
+          // Continue playing video
+          this.videoMediaComponent.play();
+          this.unfreezeSubs();
+        } else {
+          // Reveal one more subtitle track
+          this.setState(s => {
+            const newSubtitleState = {tracksRevealed: s.subtitleState.tracksRevealed + 1};
+            return {
+              ...s,
+              subtitleState: newSubtitleState,
+              displayedSubs: this.getSubsToDisplay(s.displayedSubTime, s.subtitleMode, newSubtitleState),
+            };
+          });
         }
         break;
 
       case 'read':
-        if (this.state.autoPaused) {
-          this.videoMediaComponent.play();
-          this.releaseAutoPause();
-        }
+        // This appears safe to do even if the video is already playing
+        this.videoMediaComponent.play();
+        this.unfreezeSubs();
         break;
 
       default:
@@ -383,70 +393,35 @@ export default class Player extends Component {
   render() {
     const { video } = this.props;
 
-    const REVEAL_MESSAGE = '(press enter to reveal)';
-    const HIDDEN_MESSAGE = '(hidden)';
-    const LISTEN_MESSAGE = '(listen)';
-
     return (
       <div className="Player">
         <div className="Player-main">
           <div className="Player-video-area">
             <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
             <div className="Player-text-chunks">
-              {video.subtitleTracks.valueSeq().map((subTrack, subTrackIdx) => {
-                const chunk = subTrack.chunkSet ? getLastChunkAtTime(subTrack.chunkSet, this.state.textViewPosition) : null;
+              {this.state.displayedSubs.map(({ subTrack, chunk }, subTrackIdx) => {
+                let hidden = false;
 
-                if (chunk) {
-                  return (
-                    <div className="Player-text-chunk-outer" key={subTrack.id}>
-                      <div className="Player-text-chunk-inner">
-                        {(() => {
-                          let message; // if set, a message to display instead of subtitle
+                if ((this.state.subtitleMode === 'listen') && (subTrackIdx >= this.state.subtitleState.tracksRevealed)) {
+                  hidden = true;
+                }
 
-                          switch (this.state.subtitleMode) {
-                            case 'manual':
-                              // don't change
-                              break;
-
-                            case 'listen':
-                              if (this.state.autoPaused) {
-                                if (subTrackIdx === this.state.subtitleState.textRevelation) {
-                                  message = REVEAL_MESSAGE;
-                                } else if (subTrackIdx > this.state.subtitleState.textRevelation) {
-                                  message = HIDDEN_MESSAGE;
-                                }
-                              } else {
-                                message = LISTEN_MESSAGE;
-                              }
-                              break;
-
-                            case 'read':
-                              // nothing
-                              break;
-
-                            default:
-                              throw new Error('internal error');
-                          }
-
-                          return (
-                            <div style={{position: 'relative'}}>
-                              {message ? (
-                                <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                  <div style={{color: '#aaa'}}>{message}</div>
-                                </div>
-                              ) : null}
-                              <div style={{visibility: message ? 'hidden' : 'visible'}}>
-                                <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} />
-                              </div>
-                            </div>
-                          );
-                        })()}
+                return chunk ? (
+                  <div className="Player-text-chunk-outer" key={subTrack.id}>
+                    <div className="Player-text-chunk-inner">
+                      <div style={{position: 'relative'}}>
+                        {hidden ? (
+                          <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                            <div style={{color: '#aaa'}}>(press &darr; to reveal)</div>
+                          </div>
+                        ) : null}
+                        <div style={{visibility: hidden ? 'hidden' : 'visible'}}>
+                          <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} />
+                        </div>
                       </div>
                     </div>
-                  );
-                } else {
-                  return null;
-                }
+                  </div>
+                ) : null;
               })}
             </div>
           </div>
