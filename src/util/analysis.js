@@ -7,13 +7,21 @@ const kuromoji = window.kuromoji; // loaded by script tag in index.html, we do t
 const dmp = new DiffMatchPatch();
 
 let kuromojiTokenizer = null;
+let kuromojiLoadPromise = null;
 
 export const loadKuromoji = () => {
   console.log('Loading Kuromoji ...');
-  kuromoji.builder({ dicPath: "./kuromoji/dict/" }).build(function (err, tokenizer) {
-    console.log('Kuromoji loaded');
-    kuromojiTokenizer = tokenizer;
-  });
+  kuromojiLoadPromise = new Promise(resolve =>
+    kuromoji.builder({ dicPath: "/kuromoji/dict/" }).build(function (err, tokenizer) {
+      console.log('Kuromoji loaded');
+      kuromojiTokenizer = tokenizer;
+      resolve();
+    })
+  );
+};
+
+export const ensureKuromojiLoaded = async () => {
+  await kuromojiLoadPromise;
 };
 
 const analyzeJAKuromoji = (text) => {

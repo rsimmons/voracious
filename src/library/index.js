@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { parseSRT } from '../util/subtitleParsing';
-import { createAutoAnnotatedText } from '../util/analysis';
+import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
 import { detectWithinSupported } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
 
@@ -177,6 +177,7 @@ const loadSubtitleTrackFromSRT = async (filename) => {
   const language = detectWithinSupported(combinedText);
 
   // Create time-indexed subtitle track
+  await ensureKuromojiLoaded(); // wait until kuromoji has loaded
   const chunks = [];
   for (const sub of subs) {
     const annoText = createAutoAnnotatedText(sub.lines, language);
