@@ -1,24 +1,25 @@
 # Voracious
 
-Voracious is a (prototype) tool for foreign language learners to get the most out of watching TV and movies. It lets you easily:
-- simultaneously display foreign and native subtitles
-- train your listen/comprehension with a "quiz mode" that automatically pauses after each subtitle
-- replay the current subtitle to re-listen to tricky speech
-- highlight words/phrases for later study
-- export highlights for SRS in Anki
-- automatically generate furigana for Japanese text
-- _(coming soon)_ hover over words to see definitions
-- _(coming soon)_ study comics/images as well, with OCR
+**Warning: Voracious is still just a prototype**
+
+Voracious is a video player app for Mac/Windows/Linux with special features for studying foreign languages (esp. Japanese). 
+
+Features:
+- **scan and browse** your media collection ala Kodi or Plex
+- simultaneously display **multiple subtitle tracks** (SRT, VTT. _ASS coming soon_)
+- quickly **replay** the current subtitle and navigate forward and back *by subtitle* using the keyboard
+- train your listen/reading/comprehension with **special viewing modes** that automatically pause and hide/reveal subtitles
+- automatically generate **furigana** annotations _(Japanese only)_
+- _(coming soon)_ hover over words to see **dictionary definitions** _(Japanese only)_
+- _(coming soon)_ import and use **EPWING** dictionaries
+- _(coming soon)_ **export subtitles as sentence cards** to Anki (with audio, ala subs2srs), instantly via AnkiConnect
+- _(coming soon)_ **search for words/phrases** over your entire library of subtitles
 
 # Using Voracious (Quick Start)
 
-- Click `+ Add Video`
-- Paste a link to a video in the Video URL field and click `Set URL`
-- Click `Import Subs` to add subtitle tracks. Ideally you should add at least two subtitle tracks:
- - One in the same langauge as the video (transcription)
- - And then one in your native language (translation)
-- Use the video controls and buttons/key-shorcuts to play video, change quiz modes, etc.
-- (Japanese only) hover/click on words
+Before using Voracious, you need to have a media collection that's organized and named the same way you would for Kodi or Plex _(each show/movie in its own directory, subtitle filename matching video filenames, etc.)_. Also, keep in mind that Voracious won't be useful unless you have subtitles in the language you're trying to learn.
+
+If your media collection is ready to go, open Voracious and hit the *Add Collection* link. Select the folder where your collection lives, and give it name, and add it. On the Library page, you can browse your collection and play videos (videos without any available subtitles will appear grey). In the player, check the help overlay for keyboard controls, and try different subtitle modes.
 
 # Development
 
