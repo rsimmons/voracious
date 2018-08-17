@@ -124,7 +124,7 @@ const analyzeJAKuromoji = async (text) => {
 };
 
 const languageAnalyzerFunc = {
-  'ja': analyzeJAKuromoji,
+  'jpn': analyzeJAKuromoji,
 }
 
 const canAnalyzeLanguage = (language) => languageAnalyzerFunc.hasOwnProperty(language);
@@ -137,6 +137,7 @@ const analyzeText = async (text, language) => {
   return await languageAnalyzerFunc[language](text);
 };
 
+// expects ISO 639-3
 export const createAutoAnnotatedText = async (text, language) => {
   if (canAnalyzeLanguage(language)) {
     return createAnnoText(text, await analyzeText(text, language));

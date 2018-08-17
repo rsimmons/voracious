@@ -10,6 +10,7 @@ const PreferencesRecord = new Record({
   showRuby: true,
   showHelp: true,
   subtitleMode: 'manual',
+  subtitleOrder: new List(['jpn', 'eng']), // list of iso639-3 codes
 });
 
 const MainStateRecord = new Record({
@@ -114,9 +115,10 @@ export default class MainActions {
         await this._addCollection(col.name, col.locator);
       }
 
-      this.state.set(this.state.get().setIn(['preferences', 'showRuby'], !!profile.preferences.showRuby));
-      this.state.set(this.state.get().setIn(['preferences', 'showHelp'], !!profile.preferences.showHelp));
-      this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode || 'manual'));
+      this.state.set(this.state.get().setIn(['preferences', 'showRuby'], profile.preferences.showRuby));
+      this.state.set(this.state.get().setIn(['preferences', 'showHelp'], profile.preferences.showHelp));
+      this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode));
+      this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(profile.preferences.subtitleOrder)));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -136,6 +138,7 @@ export default class MainActions {
         showRuby: state.preferences.showRuby,
         showHelp: state.preferences.showHelp,
         subtitleMode: state.preferences.subtitleMode,
+        subtitleOrder: state.preferences.subtitleOrder.toArray(),
       },
     };
 
@@ -207,5 +210,31 @@ export default class MainActions {
     // TODO: validate pref, value?
     this.state.set(this.state.get().setIn(['preferences', pref], value));
     await this._storageSaveProfile();
+  };
+
+  sortSubtitleTracksMap = (subTracksMap) => {
+    const prefOrder = this.state.get().preferences.subtitleOrder.toArray();
+
+    const arr = subTracksMap.valueSeq().toArray();
+    arr.sort((a, b) => {
+      const aIdx = prefOrder.includes(a.language) ? prefOrder.indexOf(a.language) : Infinity;
+      const bIdx = prefOrder.includes(b.language) ? prefOrder.indexOf(b.language) : Infinity;
+
+      if (aIdx < bIdx) {
+        return -1;
+      } else if (aIdx > bIdx) {
+        return 1;
+      } else {
+        const al = a.language || '';
+        const bl = b.language || '';
+        const ac = al.localeCompare(bl);
+        if (ac !== 0) {
+          return ac;
+        } else {
+          return a.id.localeCompare(b.id);
+        }
+      }
+    });
+    return arr;
   };
 };

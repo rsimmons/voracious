@@ -2,7 +2,7 @@ import path from 'path';
 
 import { parseSRT } from '../util/subtitleParsing';
 import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
-import { detectWithinSupported } from '../util/languages';
+import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
 
 const LOCAL_PREFIX = 'local:';
@@ -12,18 +12,16 @@ const SUPPORTED_VIDEO_EXTENSIONS = [
   // '.mkv',
 ];
 
-const SUPPORTED_SUBTITLE_EXTENSIONS = [
-  '.srt',
-];
-
 const EPISODE_PATTERN = /ep([0-9]+)/;
+const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt)/;
+const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt)/;
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
 const listVideosRel = async (baseDir, relDir) => {
   const result = [];
   const videoFiles = [];
-  const subtitleFilesMap = new Map(); // base -> fn
+  const subtitleFilesMap = new Map(); // base -> [fn]
 
   const dirents = await fs.readdir(path.join(baseDir, relDir));
 
@@ -35,9 +33,33 @@ const listVideosRel = async (baseDir, relDir) => {
       const ext = path.extname(fn);
       if (SUPPORTED_VIDEO_EXTENSIONS.includes(ext)) {
         videoFiles.push(fn);
-      } else if (SUPPORTED_SUBTITLE_EXTENSIONS.includes(ext)) {
-        const base = path.basename(fn, ext);
-        subtitleFilesMap.set(base, fn);
+      } else {
+        const subMatchLang = SUBTITLE_LANG_EXTENSION_PATTERN.exec(fn);
+        let hit = false;
+        let base, langCode;
+
+        if (subMatchLang) {
+          hit = true;
+          base = subMatchLang[1];
+          langCode = subMatchLang[2];
+        } else {
+          const subMatchNolang = SUBTITLE_NOLANG_EXTENSION_PATTERN.exec(fn);
+
+          if (subMatchNolang) {
+            hit = true;
+            base = subMatchNolang[1];
+          }
+        }
+
+        if (hit) {
+          if (!subtitleFilesMap.has(base)) {
+            subtitleFilesMap.set(base, []);
+          }
+          subtitleFilesMap.get(base).push({
+            fn,
+            langCode,
+          });
+        }
       }
     }
   }
@@ -48,7 +70,9 @@ const listVideosRel = async (baseDir, relDir) => {
     const basevfn = path.basename(vfn, path.extname(vfn));
 
     if (subtitleFilesMap.has(basevfn)) {
-      subtitleTrackIds.push(path.join(relDir, subtitleFilesMap.get(basevfn)));
+      for (const subinfo of subtitleFilesMap.get(basevfn)) {
+        subtitleTrackIds.push(path.join(relDir, subinfo.fn));
+      }
     }
 
     result.push({
@@ -174,7 +198,7 @@ const loadSubtitleTrackFromSRT = async (filename) => {
 
   // Autodetect language
   const combinedText = subs.map(s => s.lines).join();
-  const language = detectWithinSupported(combinedText);
+  const language = detectIso6393(combinedText);
 
   // Create time-indexed subtitle track
   await ensureKuromojiLoaded(); // wait until kuromoji has loaded

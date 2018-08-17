@@ -180,6 +180,10 @@ export default class Player extends Component {
     }
   }
 
+  getOrderedSubtitleTracks = () => {
+    return this.props.sortSubtitleTracksMap(this.props.video.subtitleTracks);
+  }
+
   restorePlaybackPosition = async () => {
     const position = await this.props.getSavedPlaybackPosition();
     if (this.videoElem) {
@@ -196,9 +200,7 @@ export default class Player extends Component {
   };
 
   getSubsToDisplay = (time, subtitleMode, subtitleState) => {
-    const { video } = this.props;
-
-    const result = video.subtitleTracks.valueSeq().toArray().map((subTrack, subTrackIdx) => {
+    const result = this.getOrderedSubtitleTracks().map((subTrack, subTrackIdx) => {
       const chunk = subTrack.chunkSet ? getChunkAtTime(subTrack.chunkSet, time) : null;
 
       return {
@@ -224,8 +226,6 @@ export default class Player extends Component {
       return;
     }
 
-    const { video } = this.props;
-
     const newDisplayedSubTime = time;
     let newDisplayedSubs = this.getSubsToDisplay(newDisplayedSubTime, this.state.subtitleMode, this.state.subtitleState);
     let updateSubs = true;
@@ -236,7 +236,7 @@ export default class Player extends Component {
       // Is there at least one text track?
       if (this.state.subtitleMode === 'manual') {
       } else if (this.state.subtitleMode === 'listen') {
-        if (video.subtitleTracks.size >= 1) {
+        if (this.state.displayedSubs.length >= 1) {
           const currentChunk = this.state.displayedSubs[0].chunk;
           if (currentChunk) {
             // Are we passing the time that would trigger a pause?
@@ -251,7 +251,7 @@ export default class Player extends Component {
           }
         }
       } else if (this.state.subtitleMode === 'read') {
-        if (video.subtitleTracks.size >= 1) {
+        if (this.state.displayedSubs.length >= 1) {
           // TODO: A better way to do this would be to find the next sub-start even after the current time,
           // and then subtract the pause delay from that. If we are crossing that trigger time, then
           // do the pause (so we don't overshoot). We would also need to fast-forward the displayedSubTime
@@ -278,7 +278,7 @@ export default class Player extends Component {
 
       // Determine if we need to reset revelation in listen mode (whether or not video is playing)
       if (this.state.subtitleMode === 'listen') {
-        if (video.subtitleTracks.size >= 1) {
+        if (this.state.displayedSubs.length > 0) {
           if (newDisplayedSubs[0].chunk !== this.state.displayedSubs[0].chunk) {
             // Reset subtitle track revelation
             newSubtitleState = {tracksRevealed: 0};
@@ -329,11 +329,10 @@ export default class Player extends Component {
   };
 
   handleBack = () => {
-    const { video } = this.props;
-
     if (this.videoMediaComponent) {
-      if (video.subtitleTracks.size > 0) {
-        const firstTrack = video.subtitleTracks.first();
+      const ost = this.getOrderedSubtitleTracks();
+      if (ost.length > 0) {
+        const firstTrack = ost[0];
         if (firstTrack.chunkSet) {
           const prevChunk = getPrevChunkAtTime(firstTrack.chunkSet, this.state.displayedSubTime);
 
@@ -349,11 +348,10 @@ export default class Player extends Component {
   };
 
   handleAhead = () => {
-    const { video } = this.props;
-
     if (this.videoMediaComponent) {
-      if (video.subtitleTracks.size > 0) {
-        const firstTrack = video.subtitleTracks.first();
+      const ost = this.getOrderedSubtitleTracks();
+      if (ost.length > 0) {
+        const firstTrack = ost[0];
         if (firstTrack.chunkSet) {
           const nextChunk = getNextChunkAtTime(firstTrack.chunkSet, this.state.displayedSubTime);
 
@@ -393,7 +391,7 @@ export default class Player extends Component {
         break;
 
       case 'listen':
-        const maxRevelation = this.props.video.subtitleTracks.size;
+        const maxRevelation = this.state.displayedSubs.length;
         const currentRevelation = this.state.subtitleState.tracksRevealed;
 
         if (currentRevelation > maxRevelation) {
