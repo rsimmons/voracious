@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { parseSRT } from '../util/subtitleParsing';
+import { parseSRT, parseVTT } from '../util/subtitleParsing';
 import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
 import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
@@ -13,8 +13,8 @@ const SUPPORTED_VIDEO_EXTENSIONS = [
 ];
 
 const EPISODE_PATTERN = /ep([0-9]+)/;
-const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt)/;
-const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt)/;
+const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt|vtt)/;
+const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt|vtt)/;
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
@@ -190,11 +190,18 @@ export const getCollectionIndex = async (collectionLocator) => {
   }
 };
 
-const loadSubtitleTrackFromSRT = async (filename) => {
+const loadSubtitleTrackFromFile = async (filename) => {
   // Load and parse SRT file
   const data = await fs.readFile(filename, 'utf8');
 
-  const subs = parseSRT(data);
+  let subs;
+  if (filename.endsWith('.srt')) {
+    subs = parseSRT(data);
+  } else if (filename.endsWith('.vtt')) {
+    subs = parseVTT(data);
+  } else {
+    throw new Error('internal error');
+  }
 
   // Autodetect language
   const combinedText = subs.map(s => s.lines).join();
@@ -220,7 +227,7 @@ export const loadCollectionSubtitleTrack = async (collectionLocator, subTrackId)
   if (collectionLocator.startsWith(LOCAL_PREFIX)) {
     const baseDirectory = collectionLocator.slice(LOCAL_PREFIX.length);
     const subfn = path.join(baseDirectory, subTrackId);
-    return await loadSubtitleTrackFromSRT(subfn);
+    return await loadSubtitleTrackFromFile(subfn);
   } else {
     throw new Error('internal error');
   }

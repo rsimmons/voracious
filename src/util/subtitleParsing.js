@@ -1,3 +1,5 @@
+import { WebVTTParser } from 'webvtt-parser';
+
 const parseTime = (s) => {
   const re = /(\d{2}):(\d{2}):(\d{2}),(\d{3})/;
   const [, hours, mins, seconds, ms] = re.exec(s);
@@ -5,7 +7,7 @@ const parseTime = (s) => {
 };
 
 const cleanText = (s) => {
-  const BREAK_RE = /(<br>)/ig; // SRT files shouldn't have these, but some do
+  const BREAK_RE = /(<br>)/ig; // sub files shouldn't have these, but some do
   const TAG_RE = /(<([^>]+)>)/ig;
   return s.trim().replace(BREAK_RE, '\n').replace(TAG_RE, '');
 };
@@ -36,4 +38,16 @@ export const parseSRT = (text) => {
   }
 
   return subs;
+};
+
+export const parseVTT = (text) => {
+  const parser = new WebVTTParser();
+
+  const tree = parser.parse(text, 'metadata');
+
+  return tree.cues.map(cue => ({
+    begin: cue.startTime,
+    end: cue.endTime,
+    lines: cleanText(cue.text),
+  }));
 };
