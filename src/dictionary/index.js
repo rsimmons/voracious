@@ -1,9 +1,11 @@
 import path from 'path';
 
+import { getResourcesPath } from '../util/appPaths';
 import { loadYomichanZip } from './yomichan';
 
+const fs = window.require('fs-extra'); // use window to avoid webpack
+
 const HARDCODE_YOMICHAN_ZIPS = [
-  '/Users/russ/Documents/yomichan/jmdict_english.zip',
   '/Users/russ/Documents/yomichan/Daijirin.zip',
 ];
 
@@ -33,13 +35,27 @@ const indexYomichanEntries = (entries) => {
   }
 };
 
+const loadAndIndexYomichanZip = async (zipfn) => {
+  const entries = await loadYomichanZip(zipfn);
+
+  const name = path.basename(zipfn, path.extname(zipfn));
+
+  dictIndexes.set(name, indexYomichanEntries(entries));
+};
+
 export const openDictionaries = async () => {
+  // Scan for built-in dictionaries
+  const resourcesPath = getResourcesPath();
+  const dirents = await fs.readdir(resourcesPath);
+  for (const dirent of dirents) {
+    if (path.extname(dirent) === '.zip') {
+      // Assume any zips are Yomichan dicts
+      await loadAndIndexYomichanZip(path.join(resourcesPath, dirent));
+    }
+  }
+
   for (const zipfn of HARDCODE_YOMICHAN_ZIPS) {
-    const entries = await loadYomichanZip(zipfn);
-
-    const name = path.basename(zipfn, path.extname(zipfn));
-
-    dictIndexes.set(name, indexYomichanEntries(entries));
+    await loadAndIndexYomichanZip(zipfn);
   }
 };
 

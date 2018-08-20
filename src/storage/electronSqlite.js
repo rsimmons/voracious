@@ -1,9 +1,10 @@
 import path from 'path';
 
+import { getUserDataPath } from '../util/appPaths';
+
 // NOTE: We use window.require instead of require or import so that
 //  Webpack doesn't transform it. These requires happen at runtime
 //  via Electron loading mechanisms.
-const {app} = window.require('electron').remote;
 const db = window.require('sqlite');
 
 class ElectronSqliteBackend {
@@ -75,7 +76,7 @@ class ElectronSqliteBackend {
 }
 
 export default async function createBackend() {
-  const userDataPath = app.getPath('userData');
+  const userDataPath = getUserDataPath();
   const dbFilename = path.join(userDataPath, 'voracious.db');
 
   const backend = new ElectronSqliteBackend(dbFilename);
