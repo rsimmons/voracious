@@ -33,9 +33,13 @@ export const loadYomichanZip = async (fn) => {
   if (indexObj.format !== 3) {
     throw new Error('wrong format');
   }
+  console.log('loading', indexObj.title);
 
   const termEntries = await loadBank(zip, 'term');
   console.log('termEntries', termEntries.slice(30000, 30020));
   console.timeEnd('load yomichan zip ' + fn);
-  return termEntries;
+  return {
+    name: indexObj.title,
+    termEntries,
+  };
 };

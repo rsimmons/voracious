@@ -32,11 +32,9 @@ const indexYomichanEntries = (entries) => {
 };
 
 const loadAndIndexYomichanZip = async (zipfn) => {
-  const entries = await loadYomichanZip(zipfn);
+  const {name, termEntries} = await loadYomichanZip(zipfn);
 
-  const name = path.basename(zipfn, path.extname(zipfn));
-
-  dictIndexes.set(name, indexYomichanEntries(entries));
+  dictIndexes.set(name, indexYomichanEntries(termEntries));
 };
 
 const scanDirForYomichanZips = async (dir) => {
