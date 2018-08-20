@@ -191,6 +191,7 @@ export const getCollectionIndex = async (collectionLocator) => {
 };
 
 const loadSubtitleTrackFromFile = async (filename) => {
+  console.time('loadSubtitleTrackFromFile ' + filename);
   // Load and parse SRT file
   const data = await fs.readFile(filename, 'utf8');
 
@@ -216,6 +217,8 @@ const loadSubtitleTrackFromFile = async (filename) => {
   }
 
   const chunkSet = createTimeRangeChunkSet(chunks);
+
+  console.timeEnd('loadSubtitleTrackFromFile ' + filename);
 
   return {
     language,

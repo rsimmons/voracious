@@ -7,27 +7,50 @@ const fs = window.require('fs-extra'); // use window to avoid webpack
 
 const dictIndexes = new Map(); // name -> index
 
-const indexYomichanEntries = (entries) => {
-  const mainToEntries = new Map();
-  const readingToEntries = new Map();
+const indexYomichanEntries = (subentries) => {
+  const sequenceToEntry = new Map(); // sequence (id) -> macro-entry object
+  const wordOrReadingToSequences = new Map(); // string -> Set(sequence ids)
 
-  for (const entry of entries) {
-    const main = entry[0];
-    if (!mainToEntries.has(main)) {
-      mainToEntries.set(main, []);
+  for (const subentry of subentries) {
+    const word = subentry[0];
+    const reading = subentry[1];
+    const glosses = subentry[5].join('; ');
+    const sequence = subentry[6];
+
+    let record;
+    if (sequenceToEntry.has(sequence)) {
+      record = sequenceToEntry.get(sequence);
+    } else {
+      record = {
+        words: new Set(),
+        readings: new Set(),
+        glosses: new Set(),
+      };
+      sequenceToEntry.set(sequence, record);
     }
-    mainToEntries.get(main).push(entry);
 
-    const reading = entry[1];
+    record.words.add(word);
     if (reading) {
-      if (!readingToEntries.has(reading)) {
-        readingToEntries.set(reading, []);
+      record.readings.add(reading);
+    }
+    record.glosses.add(glosses);
+
+    if (!wordOrReadingToSequences.has(word)) {
+      wordOrReadingToSequences.set(word, new Set());
+    }
+    wordOrReadingToSequences.get(word).add(sequence);
+
+    if (reading) {
+      if (!wordOrReadingToSequences.has(reading)) {
+        wordOrReadingToSequences.set(reading, new Set());
       }
-      readingToEntries.get(reading).push(entry);
+      wordOrReadingToSequences.get(reading).add(sequence);
     }
   }
+
   return {
-    mainToEntries,
+    sequenceToEntry,
+    wordOrReadingToSequences,
   }
 };
 
@@ -58,10 +81,11 @@ export const openDictionaries = async () => {
 export const search = (word) => {
   const result = [];
   for (const [n, index] of dictIndexes.entries()) {
-    const entries = index.mainToEntries.get(word);
-    if (entries) {
-      for (const entry of entries) {
-        result.push(entry[5].join('; '));
+    const sequences = index.wordOrReadingToSequences.get(word);
+    if (sequences) {
+      for (const seq of sequences) {
+        const entry = index.sequenceToEntry.get(seq);
+        result.push(Array.from(entry.glosses).join('\n'));
       }
     }
   }

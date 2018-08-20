@@ -33,6 +33,9 @@ export const loadYomichanZip = async (fn) => {
   if (indexObj.format !== 3) {
     throw new Error('wrong format');
   }
+  if (!indexObj.sequenced) {
+    throw new Error('not sequenced?');
+  }
   console.log('loading', indexObj.title);
 
   const termEntries = await loadBank(zip, 'term');
