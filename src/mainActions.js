@@ -4,8 +4,6 @@ import createStorageBackend from './storage';
 import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
 import { openDictionaries } from './dictionary';
 
-const { app } = window.require('electron').remote;
-
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
 
