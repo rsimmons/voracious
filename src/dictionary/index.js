@@ -1,13 +1,9 @@
 import path from 'path';
 
-import { getResourcesPath } from '../util/appPaths';
+import { getResourcesPath, getUserDataPath } from '../util/appPaths';
 import { loadYomichanZip } from './yomichan';
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
-
-const HARDCODE_YOMICHAN_ZIPS = [
-  '/Users/russ/Documents/yomichan/Daijirin.zip',
-];
 
 const dictIndexes = new Map(); // name -> index
 
@@ -43,20 +39,22 @@ const loadAndIndexYomichanZip = async (zipfn) => {
   dictIndexes.set(name, indexYomichanEntries(entries));
 };
 
-export const openDictionaries = async () => {
-  // Scan for built-in dictionaries
-  const resourcesPath = getResourcesPath();
-  const dirents = await fs.readdir(resourcesPath);
+const scanDirForYomichanZips = async (dir) => {
+  const dirents = await fs.readdir(dir);
   for (const dirent of dirents) {
     if (path.extname(dirent) === '.zip') {
       // Assume any zips are Yomichan dicts
-      await loadAndIndexYomichanZip(path.join(resourcesPath, dirent));
+      await loadAndIndexYomichanZip(path.join(dir, dirent));
     }
   }
+};
 
-  for (const zipfn of HARDCODE_YOMICHAN_ZIPS) {
-    await loadAndIndexYomichanZip(zipfn);
-  }
+export const openDictionaries = async () => {
+  // Scan for built-in dictionaries
+  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'));
+
+  // Scan for imported dictionaries
+  await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'));
 };
 
 export const search = (word) => {
