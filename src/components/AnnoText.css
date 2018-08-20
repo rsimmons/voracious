@@ -25,7 +25,7 @@
 }
 
 .AnnoText-tooltip-dictionary-hits {
-  text-align: center;
+  text-align: left;
 }
 
 .AnnoText-tooltip-dictionary-hit:not(:last-child) {
@@ -36,16 +36,17 @@
   margin-bottom: 0.1em;
 }
 
-.AnnoText-tooltip-links {
+.AnnoText-tooltip-external-links {
+  float: right;
   font-size: 0.5em;
 }
 
-a.AnnoText-dict-linkout, a.AnnoText-dict-linkout:link, a.AnnoText-dict-linkout:visited {
-  color: white;
+.AnnoText-tooltip-external-links a, .AnnoText-tooltip-external-links:link, .AnnoText-tooltip-external-links:visited {
+  color: #222;
 }
 
-a.AnnoText-dict-linkout:hover, a.AnnoText-dict-linkout:focus, a.AnnoText-dict-linkout:active {
-  color: #ddd;
+.AnnoText-tooltip-external-links a:hover, .AnnoText-tooltip-external-links:focus, .AnnoText-tooltip-external-links:active {
+  color: #666;
 }
 
 .AnnoText-edit-controls {

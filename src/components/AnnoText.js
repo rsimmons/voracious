@@ -3,8 +3,10 @@ import Immutable, { Record } from 'immutable';
 
 import './AnnoText.css';
 
+import { search as searchDictionaries } from '../dictionary';
 import Tooltip from './Tooltip';
 import CopyInterceptor from './CopyInterceptor';
+import SystemBrowserLink from './SystemBrowserLink';
 
 import { cpSlice } from '../util/string';
 import { getKindAtIndex, getKindInRange, customRender as annoTextCustomRender } from '../util/annotext';
@@ -48,7 +50,7 @@ export default class AnnoText extends PureComponent {
     }
     this.hoverTimeout = window.setTimeout(
       () => { this.setState({ hoverRange: null }); this.hoverTimeout = null; },
-      500
+      300
     );
   }
 
@@ -149,15 +151,19 @@ export default class AnnoText extends PureComponent {
               {limitedHitWordAnnos.map(wordAnno => {
                 const lemma = wordAnno.data.lemma || cpSlice(annoText.text, wordAnno.cpBegin, wordAnno.cpEnd);
                 const encLemma = encodeURIComponent(lemma);
+                const searchHits = searchDictionaries(lemma);
                 return (
                   <li key={`wordinfo-${wordAnno.cpBegin}:${wordAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
-                    <div className="AnnoText-tooltip-word">{lemma}</div>
-                    <div className="AnnoText-tooltip-links">
-                      <a className="AnnoText-dict-linkout" href={'http://ejje.weblio.jp/content/' + encLemma} target="_blank">Weblio</a>{' '}
-                      <a className="AnnoText-dict-linkout" href={'http://eow.alc.co.jp/search?q=' + encLemma} target="_blank">ALC</a>{' '}
-                      <a className="AnnoText-dict-linkout" href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'} target="_blank">goo</a>{' '}
-                      <a className="AnnoText-dict-linkout" href={'http://tangorin.com/general/' + encLemma} target="_blank">Tangorin</a>
+                    <div className="AnnoText-tooltip-external-links">
+                      <SystemBrowserLink href={'https://dic.yahoo.co.jp/search/?p=' + encLemma}>Yahoo!</SystemBrowserLink>{' '}
+                      <SystemBrowserLink href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'}>goo</SystemBrowserLink>{' '}
+                      <SystemBrowserLink href={'http://eow.alc.co.jp/search?q=' + encLemma}>英辞郎</SystemBrowserLink>{' '}
+                      <SystemBrowserLink href={'https://jisho.org/search/' + encLemma}>Jisho</SystemBrowserLink>
                     </div>
+                    <div className="AnnoText-tooltip-word">{lemma}</div>
+                    <div style={{fontSize: '14px'}}>{searchHits.map((hit, idx) => (
+                      <div key={idx}>{hit}</div>
+                    ))}</div>
                   </li>
                 );
               })}

@@ -2,8 +2,8 @@
   position: absolute;
   z-index: 100;
 
-  width: 250px;
-  margin-left: -125px; /* half of width */
+  width: 400px;
+  margin-left: -200px; /* half of width */
 
   /* Moves the tooltip up by its own height, so that its bottom
      is at the same height of the top of its anchor element(s) */
@@ -17,8 +17,10 @@
 .Tooltip-content {
   padding: 20px;
   border-radius: 5px;
-  background-color: rgba(0,0,0,0.95);
-  color: #fff;
+  background-color: #eee;
+  color: #222;
+  max-height: 300px;
+  overflow-y: scroll;
 }
 
 .Tooltip-triangle {
@@ -27,7 +29,7 @@
   margin-top: -1px;
   margin-left: -10px;
   width: 0;
-  border-top: 10px solid rgba(0,0,0,0.95);
+  border-top: 10px solid #eee;
   border-right: 10px solid transparent;
   border-left: 10px solid transparent;
   font-size: 0;
