@@ -1,4 +1,5 @@
-const JSZip = window.require('jszip');
+import JSZip from 'jszip';
+
 const fs = window.require('fs-extra');
 
 const loadBank = async (zip, bankName) => {

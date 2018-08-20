@@ -9,7 +9,6 @@
   "dependencies": {
     "diff-match-patch": "^1.0.0",
     "franc": "^4.0.0",
-    "fs-extra": "^7.0.0",
     "immutable": "^3.8.1",
     "jszip": "^3.1.5",
     "react": "^16.4.2",
@@ -20,8 +19,8 @@
   },
   "devDependencies": {
     "cross-env": "^5.0.5",
-    "electron": "^1.7.5",
-    "electron-builder": "^19.24.1",
+    "electron": "^2.0.7",
+    "electron-builder": "^20.28.1",
     "electron-rebuild": "^1.6.0"
   },
   "homepage": ".",
@@ -30,7 +29,7 @@
     "react-start": "cross-env BROWSER=none react-scripts start",
     "react-build": "react-scripts build",
     "electron-start": "cross-env NODE_ENV=development ELECTRON_START_URL=http://localhost:3000 electron app",
-    "rebuild-native": "electron-rebuild --module-dir app",
+    "rebuild-native": "electron-rebuild --module-dir app -f",
     "dist": "electron-builder",
     "dist-mac-dir": "electron-builder --mac -c.mac.target=dir",
     "test": "react-scripts test --env=jsdom",

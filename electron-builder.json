@@ -8,5 +8,6 @@
       "filter": ["**/*"]
     }
   ],
-  npmRebuild: false,
+  "npmRebuild": false,
+  "extends": null
 }

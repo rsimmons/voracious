@@ -12,7 +12,7 @@ let kuromojiLoadPromise = null;
 export const startLoadingKuromoji = () => {
   console.log('Loading Kuromoji ...');
   kuromojiLoadPromise = new Promise(resolve =>
-    kuromoji.builder({ dicPath: "/kuromoji/dict/" }).build(function (err, tokenizer) {
+    kuromoji.builder({ dicPath: "./kuromoji/dict/" }).build(function (err, tokenizer) {
       console.log('Kuromoji loaded');
       kuromojiTokenizer = tokenizer;
       resolve();
