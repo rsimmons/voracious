@@ -1,4 +1,4 @@
-const {app, protocol, ipcMain, dialog, BrowserWindow} = require('electron');
+const {app, protocol, ipcMain, dialog, BrowserWindow, Menu} = require('electron');
 
 const path = require('path');
 const url = require('url');
@@ -81,6 +81,7 @@ function createWindow() {
 app.on('ready', () => {
   registerLocalProtocol();
   addIpcHandlers();
+  Menu.setApplicationMenu(null); // for win/linux, but should be ignored on mac
   createWindow();
 });
 
