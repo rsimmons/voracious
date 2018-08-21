@@ -61,8 +61,8 @@ function createWindow() {
   });
   mainWindow.loadURL(startUrl);
 
-  // Open the DevTools in dev
-  if (process.env.NODE_ENV === 'development') {
+  // Open the DevTools in dev, or if flag is passed
+  if ((process.env.NODE_ENV === 'development') || process.argv.includes('--devtools')) {
     mainWindow.webContents.openDevTools();
   }
 
