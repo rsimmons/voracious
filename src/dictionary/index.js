@@ -85,7 +85,10 @@ export const search = (word) => {
     if (sequences) {
       for (const seq of sequences) {
         const entry = index.sequenceToEntry.get(seq);
-        result.push(Array.from(entry.glosses).join('\n'));
+        result.push({
+          dictionaryName: n,
+          text: Array.from(entry.glosses).join('\n')
+        });
       }
     }
   }

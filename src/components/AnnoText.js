@@ -147,23 +147,26 @@ export default class AnnoText extends PureComponent {
       return (
         <Tooltip anchorElems={anchorElems} onMouseEnter={this.handleTooltipMouseEnter} onMouseLeave={this.handleTooltipMouseLeave}>
           <div className="AnnoText-tooltip">
-            <ul className="AnnoText-tooltip-dictionary-hits">
+            <ul className="AnnoText-tooltip-search-words-list">
               {limitedHitWordAnnos.map(wordAnno => {
                 const lemma = wordAnno.data.lemma || cpSlice(annoText.text, wordAnno.cpBegin, wordAnno.cpEnd);
                 const encLemma = encodeURIComponent(lemma);
                 const searchHits = searchDictionaries(lemma);
                 return (
-                  <li key={`wordinfo-${wordAnno.cpBegin}:${wordAnno.cpEnd}`} className="AnnoText-tooltip-dictionary-hit">
+                  <li key={`wordinfo-${wordAnno.cpBegin}:${wordAnno.cpEnd}`} className="AnnoText-tooltip-search-words-item">
                     <div className="AnnoText-tooltip-external-links">
                       <SystemBrowserLink href={'https://dic.yahoo.co.jp/search/?p=' + encLemma}>Yahoo!</SystemBrowserLink>{' '}
                       <SystemBrowserLink href={'http://dictionary.goo.ne.jp/srch/all/' + encLemma + '/m0u/'}>goo</SystemBrowserLink>{' '}
                       <SystemBrowserLink href={'http://eow.alc.co.jp/search?q=' + encLemma}>英辞郎</SystemBrowserLink>{' '}
                       <SystemBrowserLink href={'https://jisho.org/search/' + encLemma}>Jisho</SystemBrowserLink>
                     </div>
-                    <div className="AnnoText-tooltip-word">{lemma}</div>
-                    <div style={{fontSize: '14px'}}>{searchHits.map((hit, idx) => (
-                      <div key={idx}>{hit}</div>
-                    ))}</div>
+                    <div className="AnnoText-tooltip-search-word">{lemma}</div>
+                    <ul className="AnnoText-tooltip-dict-hits">{searchHits.map(({dictionaryName, text}, idx) => (
+                      <li key={idx} className="AnnoText-tooltip-dict-hit">
+                        <div className="Annotext-tooltip-dict-name">{dictionaryName}</div>
+                        <div className="Annotext-tooltip-dict-hit-text">{text}</div>
+                      </li>
+                    ))}</ul>
                   </li>
                 );
               })}

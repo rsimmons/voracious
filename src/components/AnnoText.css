@@ -1,3 +1,4 @@
+
 .AnnoText {
   word-break: keep-all; /* improves CJK handling */
   overflow: hidden;
@@ -24,16 +25,32 @@
   line-height: 1.2;
 }
 
-.AnnoText-tooltip-dictionary-hits {
+.AnnoText-tooltip-search-words-list {
   text-align: left;
 }
 
-.AnnoText-tooltip-dictionary-hit:not(:last-child) {
+.AnnoText-tooltip-search-words-item:not(:last-child) {
   margin-bottom: 0.6em;
 }
 
-.AnnoText-tooltip-word {
+.AnnoText-tooltip-search-word {
   margin-bottom: 0.1em;
+}
+
+.AnnoText-tooltip-dict-hits {
+}
+
+.AnnoText-tooltip-dict-hit {
+  margin-top: 10px;
+}
+
+.Annotext-tooltip-dict-name {
+  color: #aaa;
+  font-size: 10px;
+}
+
+.Annotext-tooltip-dict-hit-text {
+  font-size: 14px;
 }
 
 .AnnoText-tooltip-external-links {
