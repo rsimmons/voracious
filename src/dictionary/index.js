@@ -75,7 +75,10 @@ export const openDictionaries = async () => {
   await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'));
 
   // Scan for imported dictionaries
-  await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'));
+  const importedPath = path.join(getUserDataPath(), 'dictionaries');
+  if (await fs.exists(importedPath)) {
+    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'));
+  }
 };
 
 export const search = (word) => {
