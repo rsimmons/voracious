@@ -36,10 +36,8 @@ export const loadYomichanZip = async (fn) => {
   if (!indexObj.sequenced) {
     throw new Error('not sequenced?');
   }
-  console.log('loading', indexObj.title);
 
   const termEntries = await loadBank(zip, 'term');
-  console.log('termEntries', termEntries.slice(30000, 30020));
   console.timeEnd('load yomichan zip ' + fn);
   return {
     name: indexObj.title,

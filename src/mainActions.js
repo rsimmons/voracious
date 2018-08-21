@@ -15,7 +15,7 @@ const PreferencesRecord = new Record({
 });
 
 const MainStateRecord = new Record({
-  loading: false,
+  modalLoadingMessage: null,
   collections: new IMap(), // locator -> CollectionRecord
   preferences: new PreferencesRecord(),
 });
@@ -60,15 +60,25 @@ export default class MainActions {
   initializeState = async () => {
     this.state.set(new MainStateRecord());
 
-    this.state.set(this.state.get().set('loading', true));
+    this._setLoadingMessage('Loading profile...');
 
     this.storage = await createStorageBackend();
 
     await this._storageLoadProfile();
 
+    this._setLoadingMessage('Loading dictionaries...');
+
     await openDictionaries();
 
-    this.state.set(this.state.get().set('loading', false));
+    this._clearLoadingMessage();
+  };
+
+  _clearLoadingMessage = (msg) => {
+    this.state.set(this.state.get().set('modalLoadingMessage', null));
+  };
+
+  _setLoadingMessage = (msg) => {
+    this.state.set(this.state.get().set('modalLoadingMessage', msg));
   };
 
   _addCollection = async (name, locator) => {

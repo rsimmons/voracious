@@ -44,8 +44,8 @@ class App extends Component {
   render() {
     const { mainState, actions } = this.props;
 
-    if (mainState.loading) {
-      return <WidthWrapper><h1 className="header-font">Loading...</h1></WidthWrapper>;
+    if (mainState.modalLoadingMessage) {
+      return <WidthWrapper><h1 className="header-font">{mainState.modalLoadingMessage}</h1></WidthWrapper>;
     } else {
       return (
         <Router>
