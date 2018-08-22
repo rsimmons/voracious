@@ -40,6 +40,7 @@ const VideoRecord = new Record({
   videoURL: undefined,
   subtitleTracks: new IMap(), // id -> SubtitleTrackRecord
   playbackPosition: 0,
+  loadingSubs: false,
 });
 
 const SubtitleTrackRecord = new Record({
@@ -195,18 +196,29 @@ export default class MainActions {
   };
 
   loadSubtitlesIfNeeded = async (collectionLocator, videoId) => {
+    if (this.state.get().getIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'])) {
+      return;
+    }
+
+    this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'], true));
+
     const subTracks = this.state.get().getIn(['collections', collectionLocator, 'videos', videoId, 'subtitleTracks']);
 
     for (const subTrack of subTracks.values()) {
-      if (!subTrack.chunkSet) {
+      if (!subTrack.chunkSet && !subTrack.loading) {
         const stid = subTrack.id;
         console.log('loading sub track...', collectionLocator, videoId, stid);
         const {language, chunkSet} = await loadCollectionSubtitleTrack(collectionLocator, stid);
         // NOTE: It's OK to update state, we are iterating from immutable object
-        this.state.set(this.state.get().updateIn(['collections', collectionLocator, 'videos', videoId, 'subtitleTracks', stid], subTrack => subTrack.merge({language, chunkSet})));
+        this.state.set(this.state.get().updateIn(['collections', collectionLocator, 'videos', videoId, 'subtitleTracks', stid], subTrack => subTrack.merge({
+          language,
+          chunkSet,
+        })));
         console.log('loaded sub track', collectionLocator, videoId, stid);
       }
     }
+
+    this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'], false));
   };
 
   addLocalCollection = async (name, directory) => {
