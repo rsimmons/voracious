@@ -239,6 +239,11 @@ export default class MainActions {
     await this._storageSaveProfile();
   };
 
+  setPreferenceSubtitleOrder = async (orderArr) => {
+    this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(orderArr)));
+    await this._storageSaveProfile();
+  };
+
   sortSubtitleTracksMap = (subTracksMap) => {
     const prefOrder = this.state.get().preferences.subtitleOrder.toArray();
 

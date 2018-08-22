@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Link, NavLink, Switch, Route, Redirect } from 
 import './App.css';
 
 import WidthWrapper from './WidthWrapper.js';
-import Button from './Button.js';
 import Player from './Player.js';
+import Settings from './Settings.js';
 import AddCollection from './AddCollection.js';
 import ImportEpwing from './ImportEpwing.js';
 
@@ -126,10 +126,7 @@ class App extends Component {
                       </div>
                     )}/>
                     <Route path="/settings" render={({history}) => (
-                      <div>
-                        <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>&nbsp;
-                        <Button onClick={() => {history.push('/import_epwing'); }}>Import EPWING Dictionary</Button>&nbsp;
-                      </div>
+                      <Settings mainState={mainState} actions={actions} history={history} />
                     )}/>
                     <Redirect to="/library"/>
                   </Switch>
