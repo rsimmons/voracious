@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { parseSRT, parseVTT } from '../util/subtitleParsing';
+import { parseSRT, parseVTT, parseASS } from '../util/subtitleParsing';
 import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
 import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
@@ -13,8 +13,8 @@ const SUPPORTED_VIDEO_EXTENSIONS = [
 ];
 
 const EPISODE_PATTERN = /ep([0-9]+)/;
-const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt|vtt)/;
-const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt|vtt)/;
+const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt|vtt|ass)/;
+const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt|vtt|ass)/;
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
@@ -200,6 +200,8 @@ const loadSubtitleTrackFromFile = async (filename) => {
     subs = parseSRT(data);
   } else if (filename.endsWith('.vtt')) {
     subs = parseVTT(data);
+  } else if (filename.endsWith('.ass')) {
+    subs = parseASS(data);
   } else {
     throw new Error('internal error');
   }
