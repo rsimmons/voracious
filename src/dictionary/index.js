@@ -17,6 +17,7 @@ export const loadAndIndexYomichanZip = async (zipfn, builtin, reportProgress) =>
   loadedDictionaries.set(name, {
     index: indexYomichanEntries(termEntries),
     builtin,
+    filename: zipfn,
   });
 };
 
@@ -45,6 +46,15 @@ export const openDictionaries = async (reportProgress) => {
 
 export const getLoadedDictionaries = () => {
   return loadedDictionaries;
+};
+
+export const deleteDictionary = (name) => {
+  if (loadedDictionaries.get(name).builtin) {
+    throw new Error('Not allowed to delete built-in dictionary');
+  }
+
+  fs.unlink(loadedDictionaries.get(name).filename);
+  loadedDictionaries.delete(name);
 };
 
 export const search = (word) => {
