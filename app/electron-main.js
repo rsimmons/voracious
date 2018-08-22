@@ -47,6 +47,10 @@ function addIpcHandlers() {
       }
     });
   });
+
+  ipcMain.on('open-devtools', () => {
+    mainWindow.webContents.openDevTools();
+  });
 }
 
 function createWindow() {
