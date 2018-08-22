@@ -356,7 +356,7 @@ export default class Player extends Component {
           const nextChunk = getNextChunkAtTime(firstTrack.chunkSet, this.state.displayedSubTime);
 
           if (nextChunk) {
-            this.videoMediaComponent.seek(nextChunk.position.begin);
+            this.videoMediaComponent.seek(nextChunk.position.begin+0.05); // add a bit to fix a precision bug
             // this.videoMediaComponent.play();
           }
         }
@@ -371,7 +371,7 @@ export default class Player extends Component {
       const currentChunk = (this.state.displayedSubs.length > 0) ? this.state.displayedSubs[0].chunk : null;
 
       if (currentChunk) {
-        this.videoMediaComponent.seek(currentChunk.position.begin);
+        this.videoMediaComponent.seek(currentChunk.position.begin+0.05); // add a bit to fix a precision bug
         this.videoMediaComponent.play();
       }
     }
