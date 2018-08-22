@@ -2,6 +2,7 @@ import path from 'path';
 
 import { getResourcesPath, getUserDataPath } from '../util/appPaths';
 import { loadYomichanZip } from './yomichan';
+export { importEpwing } from './epwing';
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
@@ -54,7 +55,7 @@ const indexYomichanEntries = (subentries) => {
   }
 };
 
-const loadAndIndexYomichanZip = async (zipfn) => {
+export const loadAndIndexYomichanZip = async (zipfn) => {
   const {name, termEntries} = await loadYomichanZip(zipfn);
 
   dictIndexes.set(name, indexYomichanEntries(termEntries));
@@ -71,6 +72,8 @@ const scanDirForYomichanZips = async (dir) => {
 };
 
 export const openDictionaries = async () => {
+  dictIndexes.clear();
+
   // Scan for built-in dictionaries
   await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'));
 

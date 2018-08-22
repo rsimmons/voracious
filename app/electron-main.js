@@ -35,15 +35,15 @@ function addIpcHandlers() {
     });
   });
 
-  ipcMain.on('choose-collection-directory', () => {
+  ipcMain.on('choose-directory', (event, prompt) => {
     dialog.showOpenDialog({
-      title: 'Select collection folder',
+      title: prompt,
       buttonLabel: 'Choose',
       properties: ['openDirectory'],
     }, files => {
       if (files && files.length) {
         const fn = files[0];
-        mainWindow.send('chose-collection-directory', fn)
+        mainWindow.send('chose-directory', fn)
       }
     });
   });

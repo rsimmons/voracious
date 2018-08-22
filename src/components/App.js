@@ -7,6 +7,7 @@ import WidthWrapper from './WidthWrapper.js';
 import Button from './Button.js';
 import Player from './Player.js';
 import AddCollection from './AddCollection.js';
+import ImportEpwing from './ImportEpwing.js';
 
 import { downloadFile } from '../util/download';
 
@@ -57,6 +58,9 @@ class App extends Component {
             }}/>
             <Route path="/add_collection" render={({ history }) => {
               return <AddCollection onAdd={(name, dir) => { actions.addLocalCollection(name, dir); history.replace('/library'); }} onExit={() => { history.goBack(); }} />;
+            }}/>
+            <Route path="/import_epwing" render={({ history }) => {
+              return <ImportEpwing onExit={() => { history.goBack(); }} />;
             }}/>
             <Route render={() => (
               <WidthWrapper>
@@ -132,6 +136,7 @@ class App extends Component {
                     <Route path="/settings" render={({history}) => (
                       <div>
                         <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>&nbsp;
+                        <Button onClick={() => {history.push('/import_epwing'); }}>Import EPWING Dictionary</Button>&nbsp;
                         <Button onClick={this.handleExportBackup}>Export Backup</Button>
                       </div>
                     )}/>

@@ -10,6 +10,10 @@ export const getResourcesPath = () => {
   return path.join(app.getAppPath(), 'resources');
 };
 
-export const getPlatformResourcesPath = () => {
-  return path.join(app.getAppPath(), 'platform_resources', process.platform);
+export const getBinariesPath = () => {
+  let appPath = app.getAppPath();
+  if (appPath.endsWith('.asar')) {
+    appPath += '.unpacked';
+  }
+  return path.join(appPath, 'resources/bin', process.platform);
 };
