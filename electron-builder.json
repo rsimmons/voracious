@@ -8,6 +8,10 @@
       "filter": ["**/*"]
     }
   ],
+  "asar": false,
+  "asarUnpack": [
+    "resources/bin/**",
+  ],
   "npmRebuild": false,
   "extends": null
 }
