@@ -3,7 +3,6 @@ import Immutable, { Record } from 'immutable';
 
 import './AnnoText.css';
 
-import { search as searchDictionaries } from '../dictionary';
 import Tooltip from './Tooltip';
 import CopyInterceptor from './CopyInterceptor';
 import SystemBrowserLink from './SystemBrowserLink';
@@ -128,7 +127,7 @@ export default class AnnoText extends PureComponent {
   };
 
   renderTooltip = () => {
-    const { annoText } = this.props;
+    const { annoText, searchDictionaries } = this.props;
 
     const tooltipRange = this.state.selectionRange || this.state.hoverRange;
 

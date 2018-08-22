@@ -6,69 +6,55 @@ export { importEpwing } from './epwing';
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
-const loadedDictionaries = new Map(); // name -> index
-
-export const loadAndIndexYomichanZip = async (zipfn, builtin, reportProgress) => {
+const loadAndIndexYomichanZip = async (zipfn, builtin, reportProgress) => {
   const {name, termEntries} = await loadYomichanZip(zipfn, reportProgress);
 
   if (reportProgress) {
     reportProgress('Indexing ' + name + '...');
   }
-  loadedDictionaries.set(name, {
+  return {
+    name,
     index: indexYomichanEntries(termEntries),
     builtin,
     filename: zipfn,
-  });
+  };
 };
 
 const scanDirForYomichanZips = async (dir, builtin, reportProgress) => {
+  const result = [];
   const dirents = await fs.readdir(dir);
   for (const dirent of dirents) {
     if (path.extname(dirent) === '.zip') {
       // Assume any zips are Yomichan dicts
-      await loadAndIndexYomichanZip(path.join(dir, dirent), builtin, reportProgress);
+      const info = await loadAndIndexYomichanZip(path.join(dir, dirent), builtin, reportProgress);
+      result.push(info);
     }
   }
+  return result;
 };
 
-export const openDictionaries = async (reportProgress) => {
-  loadedDictionaries.clear();
+export const loadDictionaries = async (reportProgress) => {
+  const result = [];
 
   // Scan for built-in dictionaries
-  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'), true, reportProgress);
+  result.push(...await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'), true, reportProgress));
 
   // Scan for imported dictionaries
   const importedPath = path.join(getUserDataPath(), 'dictionaries');
   if (await fs.exists(importedPath)) {
-    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'), false, reportProgress);
-  }
-};
-
-export const getLoadedDictionaries = () => {
-  return loadedDictionaries;
-};
-
-export const deleteDictionary = (name) => {
-  if (loadedDictionaries.get(name).builtin) {
-    throw new Error('Not allowed to delete built-in dictionary');
+    result.push(...await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'), false, reportProgress));
   }
 
-  fs.unlink(loadedDictionaries.get(name).filename);
-  loadedDictionaries.delete(name);
+  return result;
 };
 
-export const search = (word) => {
+export const searchIndex = (index, word) => {
   const result = [];
-  for (const [n, {index}] of loadedDictionaries.entries()) {
-    const sequences = index.wordOrReadingToSequences.get(word);
-    if (sequences) {
-      for (const seq of sequences) {
-        const entry = index.sequenceToEntry.get(seq);
-        result.push({
-          dictionaryName: n,
-          text: Array.from(entry.glosses).join('\n')
-        });
-      }
+  const sequences = index.wordOrReadingToSequences.get(word);
+  if (sequences) {
+    for (const seq of sequences) {
+      const entry = index.sequenceToEntry.get(seq);
+      result.push(Array.from(entry.glosses).join('\n'));
     }
   }
 

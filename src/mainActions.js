@@ -1,8 +1,10 @@
-import { List, Record, Map as IMap } from 'immutable';
+import { List, Record, Map as IMap, Set as ISet } from 'immutable';
 
 import createStorageBackend from './storage';
 import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
-import { openDictionaries } from './dictionary';
+import { loadDictionaries, searchIndex } from './dictionary';
+
+const fs = window.require('fs-extra'); // use window to avoid webpack
 
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
@@ -12,11 +14,13 @@ const PreferencesRecord = new Record({
   showHelp: true,
   subtitleMode: 'manual',
   subtitleOrder: new List(['jpn', 'eng']), // list of iso639-3 codes
+  disabledDictionaries: new ISet(),
 });
 
 const MainStateRecord = new Record({
   modalLoadingMessage: null,
   collections: new IMap(), // locator -> CollectionRecord
+  dictionaries: new IMap(), // name -> object that we don't mutate (TODO: make it a Record)
   preferences: new PreferencesRecord(),
 });
 
@@ -69,7 +73,7 @@ export default class MainActions {
 
     this._setLoadingMessage('Loading dictionaries...');
 
-    await openDictionaries(progressMsg => {
+    await this._loadDictionaries(progressMsg => {
       this._setLoadingMessage(progressMsg);
     });
 
@@ -135,6 +139,7 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'showHelp'], profile.preferences.showHelp));
       this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode));
       this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(profile.preferences.subtitleOrder)));
+      this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -155,6 +160,7 @@ export default class MainActions {
         showHelp: state.preferences.showHelp,
         subtitleMode: state.preferences.subtitleMode,
         subtitleOrder: state.preferences.subtitleOrder.toArray(),
+        disabledDictionaries: state.preferences.disabledDictionaries.toArray(),
       },
     };
 
@@ -223,26 +229,6 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'], false));
   };
 
-  addLocalCollection = async (name, directory) => {
-    await this._addCollection(name, 'local:'+directory);
-    await this._storageSaveProfile();
-  };
-
-  removeCollection = async (locator) => {
-    this.state.set(this.state.get().deleteIn(['collections', locator]));
-    await this._storageSaveProfile();
-  };
-
-  setPreference = async (pref, value) => {
-    // TODO: validate pref, value?
-    this.state.set(this.state.get().setIn(['preferences', pref], value));
-    await this._storageSaveProfile();
-  };
-
-  setPreferenceSubtitleOrder = async (orderArr) => {
-    this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(orderArr)));
-    await this._storageSaveProfile();
-  };
 
   sortSubtitleTracksMap = (subTracksMap) => {
     const prefOrder = this.state.get().preferences.subtitleOrder.toArray();
@@ -268,5 +254,82 @@ export default class MainActions {
       }
     });
     return arr;
+  };
+
+  addLocalCollection = async (name, directory) => {
+    await this._addCollection(name, 'local:'+directory);
+    await this._storageSaveProfile();
+  };
+
+  removeCollection = async (locator) => {
+    this.state.set(this.state.get().deleteIn(['collections', locator]));
+    await this._storageSaveProfile();
+  };
+
+  setPreference = async (pref, value) => {
+    // TODO: validate pref, value?
+    this.state.set(this.state.get().setIn(['preferences', pref], value));
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceSubtitleOrder = async (orderArr) => {
+    this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(orderArr)));
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceDisableDictionary = async (dictName) => {
+    this.state.set(this.state.get().updateIn(['preferences', 'disabledDictionaries'], set => set.add(dictName)));
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceEnableDictionary = async (dictName) => {
+    this.state.set(this.state.get().updateIn(['preferences', 'disabledDictionaries'], set => set.remove(dictName)));
+    await this._storageSaveProfile();
+  };
+
+  _loadDictionaries = async (reportProgress) => {
+    const dictionaries = await loadDictionaries(reportProgress);
+
+    const items = [];
+    for (const info of dictionaries) {
+      items.push([info.name, info]);
+    }
+
+    this.state.set(this.state.get().set('dictionaries', new IMap(items)));
+  };
+
+  searchDictionaries = (word) => {
+    const state = this.state.get();
+
+    const results = [];
+
+    for (const [name, info] of state.dictionaries) {
+      if (!state.preferences.disabledDictionaries.has(name)) {
+        for (const text of searchIndex(info.index, word)) {
+          results.push({
+            dictionaryName: name,
+            text,
+          });
+        }
+      }
+    }
+
+    return results;
+  };
+
+  reloadDictionaries = async (reportProgress) => {
+    await this._loadDictionaries(reportProgress);
+  };
+
+  deleteDictionary = async (name) => {
+    const dict = this.state.get().dictionaries.get(name);
+
+    if (dict.builtin) {
+      throw new Error('Not allowed to delete built-in dictionary');
+    }
+
+    await fs.unlink(dict.filename);
+
+    this.state.set(this.state.get().deleteIn(['dictionaries', name]));
   };
 };

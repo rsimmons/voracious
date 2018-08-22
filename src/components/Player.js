@@ -465,7 +465,7 @@ export default class Player extends Component {
                           </div>
                         ) : null}
                         <div style={{visibility: hidden ? 'hidden' : 'visible'}}>
-                          <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} />
+                          <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} searchDictionaries={this.props.searchDictionaries} />
                         </div>
                       </div>
                     </div>

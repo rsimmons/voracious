@@ -6,3 +6,7 @@
   color: grey;
   font-size: 0.8em;
 }
+
+.SettingsDictionaries-name-disabled {
+  text-decoration: line-through;
+}

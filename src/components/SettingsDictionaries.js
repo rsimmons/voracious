@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 
-import { getLoadedDictionaries, deleteDictionary } from '../dictionary';
 import Button from './Button';
 
 import './SettingsDictionaries.css';
@@ -8,17 +7,20 @@ import './SettingsDictionaries.css';
 export default class SettingsDictionaries extends Component {
   handleDeleteDictionary = (name) => {
     if (window.confirm('Are you sure you want to delete "' + name + '"?')) {
-      deleteDictionary(name);
-      this.forceUpdate();
+      this.props.onDeleteDictionary(name);
     }
   };
 
   render() {
-    const {history} = this.props;
+    const {history, dictionaries, disabledDictionaries} = this.props;
     return (
       <div>
-        <ul className="SettingsDictionaries-dict-list">{[...getLoadedDictionaries().entries()].map(([name, info]) => (
-          <li key={name}>&middot; {name} {info.builtin ? (
+        <ul className="SettingsDictionaries-dict-list">{[...dictionaries.entries()].map(([name, info]) => (
+          <li key={name}>&middot; <span className={disabledDictionaries.has(name) ? 'SettingsDictionaries-name-disabled' : ''}>{name}</span> {disabledDictionaries.has(name) ? (
+            <button onClick={() => { this.props.onEnableDictionary(name); }}>Enable</button>
+          ) : (
+            <button onClick={() => { this.props.onDisableDictionary(name); }}>Disable</button>
+          )} {info.builtin ? (
             <span className="SettingsDictionaries-builtin-tag">(built-in)</span>
           ) : (
             <button onClick={() => { this.handleDeleteDictionary(name); }}>Delete</button>

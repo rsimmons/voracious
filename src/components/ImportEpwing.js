@@ -5,7 +5,7 @@ import './ImportEpwing.css';
 import SecondaryScreen from './SecondaryScreen.js';
 import SystemBrowserLink from './SystemBrowserLink.js';
 import Button from './Button.js';
-import { importEpwing, openDictionaries } from '../dictionary';
+import { importEpwing } from '../dictionary';
 
 const { ipcRenderer } = window.require('electron'); // use window to avoid webpack
 
@@ -46,7 +46,7 @@ export default class ImportEpwing extends Component {
     try {
       await importEpwing(this.state.epwingDirectory);
 
-      await openDictionaries(progressMsg => {
+      await this.props.onReloadDictionaries(progressMsg => {
         this.setState({
           statusText: 'Reloading dictionaries: ' + progressMsg,
         });

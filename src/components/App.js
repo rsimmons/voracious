@@ -46,13 +46,13 @@ class App extends Component {
             <Route path="/player/:cloc/:vid" render={({ match, history }) => {
               const collectionLocator = decodeURIComponent(match.params.cloc);
               const videoId = decodeURIComponent(match.params.vid);
-              return <Player video={mainState.collections.get(collectionLocator).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionLocator, videoId, pos); }} onNeedSubtitles={() => { actions.loadSubtitlesIfNeeded(collectionLocator, videoId); }} getSavedPlaybackPosition={() => { return actions.loadVideoPlaybackPosition(collectionLocator, videoId); }} onSetPreference={(pref, value) => { actions.setPreference(pref, value); }} preferences={mainState.preferences} sortSubtitleTracksMap={actions.sortSubtitleTracksMap} />;
+              return <Player video={mainState.collections.get(collectionLocator).videos.get(videoId)} onExit={() => { history.goBack(); }} onUpdatePlaybackPosition={(pos) => { actions.saveVideoPlaybackPosition(collectionLocator, videoId, pos); }} onNeedSubtitles={() => { actions.loadSubtitlesIfNeeded(collectionLocator, videoId); }} getSavedPlaybackPosition={() => { return actions.loadVideoPlaybackPosition(collectionLocator, videoId); }} onSetPreference={(pref, value) => { actions.setPreference(pref, value); }} preferences={mainState.preferences} sortSubtitleTracksMap={actions.sortSubtitleTracksMap} searchDictionaries={actions.searchDictionaries} />;
             }}/>
             <Route path="/add_collection" render={({ history }) => {
               return <AddCollection onAdd={(name, dir) => { actions.addLocalCollection(name, dir); history.replace('/library'); }} onExit={() => { history.goBack(); }} />;
             }}/>
             <Route path="/import_epwing" render={({ history }) => {
-              return <ImportEpwing onExit={() => { history.goBack(); }} />;
+              return <ImportEpwing onExit={() => { history.goBack(); }} onReloadDictionaries={actions.reloadDictionaries} />;
             }}/>
             <Route render={() => (
               <WidthWrapper>

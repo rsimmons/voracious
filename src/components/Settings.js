@@ -18,7 +18,7 @@ export default class Settings extends Component {
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Dictionaries</h2>
-          <SettingsDictionaries history={history} />
+          <SettingsDictionaries history={history} dictionaries={mainState.dictionaries} disabledDictionaries={mainState.preferences.disabledDictionaries} onEnableDictionary={(name) => { actions.setPreferenceEnableDictionary(name); }} onDisableDictionary={(name) => { actions.setPreferenceDisableDictionary(name); }} onDeleteDictionary={(name) => { actions.deleteDictionary(name); }} />
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Subtitle Language Order</h2>
