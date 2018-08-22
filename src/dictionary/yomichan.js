@@ -50,3 +50,50 @@ export const loadYomichanZip = async (fn, reportProgress) => {
     termEntries,
   };
 };
+
+export const indexYomichanEntries = (subentries) => {
+  const sequenceToEntry = new Map(); // sequence (id) -> macro-entry object
+  const wordOrReadingToSequences = new Map(); // string -> Set(sequence ids)
+
+  for (const subentry of subentries) {
+    const word = subentry[0];
+    const reading = subentry[1];
+    const glosses = subentry[5].join('; ');
+    const sequence = subentry[6];
+
+    let record;
+    if (sequenceToEntry.has(sequence)) {
+      record = sequenceToEntry.get(sequence);
+    } else {
+      record = {
+        words: new Set(),
+        readings: new Set(),
+        glosses: new Set(),
+      };
+      sequenceToEntry.set(sequence, record);
+    }
+
+    record.words.add(word);
+    if (reading) {
+      record.readings.add(reading);
+    }
+    record.glosses.add(glosses);
+
+    if (!wordOrReadingToSequences.has(word)) {
+      wordOrReadingToSequences.set(word, new Set());
+    }
+    wordOrReadingToSequences.get(word).add(sequence);
+
+    if (reading) {
+      if (!wordOrReadingToSequences.has(reading)) {
+        wordOrReadingToSequences.set(reading, new Set());
+      }
+      wordOrReadingToSequences.get(reading).add(sequence);
+    }
+  }
+
+  return {
+    sequenceToEntry,
+    wordOrReadingToSequences,
+  }
+};

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import Button from './Button';
+import SettingsDictionaries from './SettingsDictionaries';
 import SettingsSubOrder from './SettingsSubOrder';
 
 import './Settings.css';
@@ -17,7 +18,7 @@ export default class Settings extends Component {
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Dictionaries</h2>
-          <Button onClick={() => {history.push('/import_epwing'); }}>Import EPWING Dictionary</Button>&nbsp;
+          <SettingsDictionaries history={history} />
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Subtitle Language Order</h2>

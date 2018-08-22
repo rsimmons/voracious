@@ -1,95 +1,55 @@
 import path from 'path';
 
 import { getResourcesPath, getUserDataPath } from '../util/appPaths';
-import { loadYomichanZip } from './yomichan';
+import { loadYomichanZip, indexYomichanEntries } from './yomichan';
 export { importEpwing } from './epwing';
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
-const dictIndexes = new Map(); // name -> index
+const loadedDictionaries = new Map(); // name -> index
 
-const indexYomichanEntries = (subentries) => {
-  const sequenceToEntry = new Map(); // sequence (id) -> macro-entry object
-  const wordOrReadingToSequences = new Map(); // string -> Set(sequence ids)
-
-  for (const subentry of subentries) {
-    const word = subentry[0];
-    const reading = subentry[1];
-    const glosses = subentry[5].join('; ');
-    const sequence = subentry[6];
-
-    let record;
-    if (sequenceToEntry.has(sequence)) {
-      record = sequenceToEntry.get(sequence);
-    } else {
-      record = {
-        words: new Set(),
-        readings: new Set(),
-        glosses: new Set(),
-      };
-      sequenceToEntry.set(sequence, record);
-    }
-
-    record.words.add(word);
-    if (reading) {
-      record.readings.add(reading);
-    }
-    record.glosses.add(glosses);
-
-    if (!wordOrReadingToSequences.has(word)) {
-      wordOrReadingToSequences.set(word, new Set());
-    }
-    wordOrReadingToSequences.get(word).add(sequence);
-
-    if (reading) {
-      if (!wordOrReadingToSequences.has(reading)) {
-        wordOrReadingToSequences.set(reading, new Set());
-      }
-      wordOrReadingToSequences.get(reading).add(sequence);
-    }
-  }
-
-  return {
-    sequenceToEntry,
-    wordOrReadingToSequences,
-  }
-};
-
-export const loadAndIndexYomichanZip = async (zipfn, reportProgress) => {
+export const loadAndIndexYomichanZip = async (zipfn, builtin, reportProgress) => {
   const {name, termEntries} = await loadYomichanZip(zipfn, reportProgress);
 
   if (reportProgress) {
     reportProgress('Indexing ' + name + '...');
   }
-  dictIndexes.set(name, indexYomichanEntries(termEntries));
+  loadedDictionaries.set(name, {
+    index: indexYomichanEntries(termEntries),
+    builtin,
+  });
 };
 
-const scanDirForYomichanZips = async (dir, reportProgress) => {
+const scanDirForYomichanZips = async (dir, builtin, reportProgress) => {
   const dirents = await fs.readdir(dir);
   for (const dirent of dirents) {
     if (path.extname(dirent) === '.zip') {
       // Assume any zips are Yomichan dicts
-      await loadAndIndexYomichanZip(path.join(dir, dirent), reportProgress);
+      await loadAndIndexYomichanZip(path.join(dir, dirent), builtin, reportProgress);
     }
   }
 };
 
 export const openDictionaries = async (reportProgress) => {
-  dictIndexes.clear();
+  loadedDictionaries.clear();
 
   // Scan for built-in dictionaries
-  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'), reportProgress);
+  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'), true, reportProgress);
 
   // Scan for imported dictionaries
   const importedPath = path.join(getUserDataPath(), 'dictionaries');
   if (await fs.exists(importedPath)) {
-    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'), reportProgress);
+    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'), false, reportProgress);
   }
+};
+
+export const getLoadedDictionaries = () => {
+  return loadedDictionaries;
 };
 
 export const search = (word) => {
   const result = [];
-  for (const [n, index] of dictIndexes.entries()) {
+  for (const [n, {index}] of loadedDictionaries.entries()) {
     const sequences = index.wordOrReadingToSequences.get(word);
     if (sequences) {
       for (const seq of sequences) {
