@@ -3,10 +3,14 @@ import { getBinariesPath, getUserDataPath } from '../util/appPaths';
 const path = window.require('path');
 const fs = window.require('fs-extra');
 const { execFile } = window.require('child_process');
+const { process } = window.require('electron').remote;
 
 export const importEpwing = async (epwingDir) => {
   const yomichanImportDir = path.join(getBinariesPath(), 'yomichan-import');
-  const yomichanImport = path.join(yomichanImportDir, 'yomichan-import');
+  let yomichanImport = path.join(yomichanImportDir, 'yomichan-import');
+  if (process.platform === 'win32') {
+    yomichanImport += '.exe';
+  }
 
   // Make destination filename based on src, that doesn't conflict
   // TODO: ensure that epwingDir is a directory?
