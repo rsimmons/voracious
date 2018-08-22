@@ -46,11 +46,11 @@ export default class ImportEpwing extends Component {
     try {
       await importEpwing(this.state.epwingDirectory);
 
-      this.setState({
-        statusText: 'Reloading dictionaries...',
+      await openDictionaries(progressMsg => {
+        this.setState({
+          statusText: 'Reloading dictionaries: ' + progressMsg,
+        });
       });
-
-      await openDictionaries(); // reload
 
       this.setState({
         importing: false,

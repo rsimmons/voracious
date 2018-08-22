@@ -55,32 +55,35 @@ const indexYomichanEntries = (subentries) => {
   }
 };
 
-export const loadAndIndexYomichanZip = async (zipfn) => {
-  const {name, termEntries} = await loadYomichanZip(zipfn);
+export const loadAndIndexYomichanZip = async (zipfn, reportProgress) => {
+  const {name, termEntries} = await loadYomichanZip(zipfn, reportProgress);
 
+  if (reportProgress) {
+    reportProgress('Indexing ' + name + '...');
+  }
   dictIndexes.set(name, indexYomichanEntries(termEntries));
 };
 
-const scanDirForYomichanZips = async (dir) => {
+const scanDirForYomichanZips = async (dir, reportProgress) => {
   const dirents = await fs.readdir(dir);
   for (const dirent of dirents) {
     if (path.extname(dirent) === '.zip') {
       // Assume any zips are Yomichan dicts
-      await loadAndIndexYomichanZip(path.join(dir, dirent));
+      await loadAndIndexYomichanZip(path.join(dir, dirent), reportProgress);
     }
   }
 };
 
-export const openDictionaries = async () => {
+export const openDictionaries = async (reportProgress) => {
   dictIndexes.clear();
 
   // Scan for built-in dictionaries
-  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'));
+  await scanDirForYomichanZips(path.join(getResourcesPath(), 'dictionaries'), reportProgress);
 
   // Scan for imported dictionaries
   const importedPath = path.join(getUserDataPath(), 'dictionaries');
   if (await fs.exists(importedPath)) {
-    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'));
+    await scanDirForYomichanZips(path.join(getUserDataPath(), 'dictionaries'), reportProgress);
   }
 };
 

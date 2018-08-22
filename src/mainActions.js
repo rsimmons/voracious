@@ -69,7 +69,9 @@ export default class MainActions {
 
     this._setLoadingMessage('Loading dictionaries...');
 
-    await openDictionaries();
+    await openDictionaries(progressMsg => {
+      this._setLoadingMessage(progressMsg);
+    });
 
     this._clearLoadingMessage();
   };
