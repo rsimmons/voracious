@@ -9,8 +9,6 @@ import Player from './Player.js';
 import AddCollection from './AddCollection.js';
 import ImportEpwing from './ImportEpwing.js';
 
-import { downloadFile } from '../util/download';
-
 class ScrollToTopOnMount extends Component {
   componentDidMount() {
     window.scrollTo(0, 0)
@@ -36,12 +34,6 @@ const VideoListItem = (props) => {
 
 // App
 class App extends Component {
-  handleExportBackup = () => {
-    // TODO: Is calling this actions method hacky? It's not an action, really. But it makes sense if we think of actions as a model, I guess.
-    const backupData = JSON.stringify(this.props.actions._saveToJSONable());
-    downloadFile(backupData, 'voracious_backup_' + (new Date()).toISOString() + '.json', 'application/json');
-  };
-
   render() {
     const { mainState, actions } = this.props;
 
@@ -137,7 +129,6 @@ class App extends Component {
                       <div>
                         <Button onClick={() => {history.push('/add_collection'); }}>Add Collection</Button>&nbsp;
                         <Button onClick={() => {history.push('/import_epwing'); }}>Import EPWING Dictionary</Button>&nbsp;
-                        <Button onClick={this.handleExportBackup}>Export Backup</Button>
                       </div>
                     )}/>
                     <Redirect to="/library"/>
