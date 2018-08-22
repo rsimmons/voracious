@@ -15,5 +15,5 @@ export const getBinariesPath = () => {
   if (appPath.endsWith('.asar')) {
     appPath += '.unpacked';
   }
-  return path.join(appPath, 'resources/bin', process.platform);
+  return path.join(appPath, 'resources', 'bin', process.platform);
 };
