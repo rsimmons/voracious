@@ -35,7 +35,7 @@ export const importEpwing = async (epwingDir) => {
 
   console.log('importEpwing', yomichanImport, epwingDir, destFn);
   return new Promise((resolve, reject) => {
-    execFile(yomichanImport, [epwingDir, destFn], {cwd: yomichanImportDir}, (error, stdout, stderr) => {
+    execFile(yomichanImport, [epwingDir, destFn], {cwd: yomichanImportDir, windowsHide: true}, (error, stdout, stderr) => {
       if (error) {
         reject(error);
       }
