@@ -9,8 +9,8 @@ Voracious is a video player app for Mac/Windows/Linux with special features for 
 - Quickly **replay** the current subtitle and navigate forward and back *by subtitle* using the keyboard
 - Train your listen/reading/comprehension with **special viewing modes** that automatically pause and hide/reveal subtitles
 - Automatically generate **furigana** annotations _(Japanese only)_
-- _(coming soon)_ Hover over words to see **dictionary definitions** _(Japanese only)_
-- _(coming soon)_ Import and use **EPWING** dictionaries
+- Hover over words to see **dictionary definitions** _(Japanese only)_
+- Import and use **EPWING** dictionaries _(limited to certain popular Japanese EPWINGs)_
 - _(coming soon)_ **Export subtitles as sentence cards** to Anki (with audio, ala subs2srs), instantly via AnkiConnect
 - _(coming soon)_ **Search for words/phrases** over your entire library of subtitles
 
