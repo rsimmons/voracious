@@ -15,6 +15,7 @@ const PreferencesRecord = new Record({
   subtitleMode: 'manual',
   subtitleOrder: new List(['jpn', 'eng']), // list of iso639-3 codes
   disabledDictionaries: new ISet(),
+  dictionaryOrder: new List(),
 });
 
 const MainStateRecord = new Record({
@@ -140,6 +141,7 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode));
       this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(profile.preferences.subtitleOrder)));
       this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
+      this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(profile.preferences.dictionaryOrder)));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -161,6 +163,7 @@ export default class MainActions {
         subtitleMode: state.preferences.subtitleMode,
         subtitleOrder: state.preferences.subtitleOrder.toArray(),
         disabledDictionaries: state.preferences.disabledDictionaries.toArray(),
+        dictionaryOrder: state.preferences.dictionaryOrder.toArray(),
       },
     };
 
@@ -287,6 +290,12 @@ export default class MainActions {
     await this._storageSaveProfile();
   };
 
+  setPreferenceDictionaryOrder = async (names) => {
+    this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(names)));
+    this._updateDictionaryOrderByPreference();
+    await this._storageSaveProfile();
+  };
+
   _loadDictionaries = async (reportProgress) => {
     const dictionaries = await loadDictionaries(reportProgress);
 
@@ -296,6 +305,27 @@ export default class MainActions {
     }
 
     this.state.set(this.state.get().set('dictionaries', new IMap(items)));
+
+    this._updateDictionaryOrderByPreference();
+  };
+
+  _updateDictionaryOrderByPreference = () => {
+    const state = this.state.get();
+
+    const items = [];
+    for (const name of state.preferences.dictionaryOrder) {
+      if (state.dictionaries.has(name)) {
+        items.push([name, state.dictionaries.get(name)]);
+      }
+    }
+
+    for (const [name, info] of state.dictionaries.entries()) {
+      if (!state.preferences.dictionaryOrder.has(name)) {
+        items.push([name, info]);
+      }
+    }
+
+    this.state.set(state.set('dictionaries', new IMap(items)));
   };
 
   searchDictionaries = (word) => {
