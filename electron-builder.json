@@ -1,5 +1,8 @@
 {
   "appId": "org.rsimmons.voracious",
+  "directories": {
+    "buildResources": "buildResources"
+  },
   "files": [
     "**/*",
     {
@@ -10,8 +13,11 @@
   ],
   "asar": false,
   "asarUnpack": [
-    "resources/bin/**",
+    "resources/bin/**"
   ],
   "npmRebuild": false,
-  "extends": null
+  "extends": null,
+  "mac": {
+    "target": "zip"
+  }
 }
