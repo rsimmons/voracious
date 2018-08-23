@@ -72,15 +72,13 @@ Then build the distributable desktop app:
 $ yarn dist
 ```
 
-The output zip and DMG can then be found in the `dist` dir.
+The output archive/executable can then be found in the `dist` dir.
 
-If you don't need the zip/DMG archives, then just run:
+If you just want to run the built app and don't need it packed into an archive/executable for distribution, then run:
 
 ```
-$ yarn dist-mac-dir
+$ yarn dist-nopack
 ```
-
-(On Mac) the resulting app can be found at `dist/mac/Voracious.app`.
 
 ## Inspecting the distributed archive
 
