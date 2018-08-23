@@ -109,6 +109,33 @@
   max-width: 25em;
 }
 
+.Player-text-reveal-instructions {
+  display: none; /* flex */
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  font-size: 12px;
+}
+
+.Player-text-chunk-annotext {
+}
+
+.Player-text-chunk-annotext-hidden {
+  /*visibility: hidden;*/
+  filter: blur(6px);
+  transition: filter 0s;
+  pointer-events: none;
+}
+
+.Player-text-chunk-annotext-visible {
+  transition: filter 0.2s;
+  /*visibility: visible;*/
+}
+
 .Player video {
   display: block;
   flex: auto;

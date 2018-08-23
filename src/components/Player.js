@@ -467,11 +467,11 @@ export default class Player extends Component {
                     <div className="Player-text-chunk-inner">
                       <div style={{position: 'relative'}}>
                         {hidden ? (
-                          <div key={chunk.uid} style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                          <div key={chunk.uid} className="Player-text-reveal-instructions">
                             <div style={{color: '#aaa'}}>(press &darr; to reveal)</div>
                           </div>
                         ) : null}
-                        <div style={{visibility: hidden ? 'hidden' : 'visible'}}>
+                        <div className={'Player-text-chunk-annotext Player-text-chunk-annotext-' + (hidden ? 'hidden' : 'visible')}>
                           <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} searchDictionaries={this.props.searchDictionaries} />
                         </div>
                       </div>
