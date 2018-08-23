@@ -130,6 +130,7 @@ class PlayControls extends Component {
 
 const MODE_TITLES = {
   manual: 'Manual',
+  qcheck: 'Quick Check',
   listen: 'Listening Test',
   read: 'Reading Test',
 };
@@ -192,7 +193,7 @@ export default class Player extends Component {
   };
 
   initialSubtitleState = (mode) => {
-    if (mode === 'listen') {
+    if ((mode === 'qcheck') || (mode === 'listen')) {
       return { tracksRevealed: 0};
     } else {
       return null;
@@ -235,6 +236,7 @@ export default class Player extends Component {
     if (this.videoIsPlaying) {
       // Is there at least one text track?
       if (this.state.subtitleMode === 'manual') {
+      } else if (this.state.subtitleMode === 'qcheck') {
       } else if (this.state.subtitleMode === 'listen') {
         if (this.state.displayedSubs.length >= 1) {
           const currentChunk = this.state.displayedSubs[0].chunk;
@@ -276,8 +278,8 @@ export default class Player extends Component {
     if (updateSubs) {
       let newSubtitleState = this.state.subtitleState;
 
-      // Determine if we need to reset revelation in listen mode (whether or not video is playing)
-      if (this.state.subtitleMode === 'listen') {
+      // Determine if we need to reset revelation (whether or not video is playing)
+      if ((this.state.subtitleMode === 'qcheck') || (this.state.subtitleMode === 'listen')) {
         if (this.state.displayedSubs.length > 0) {
           if (newDisplayedSubs[0].chunk !== this.state.displayedSubs[0].chunk) {
             // Reset subtitle track revelation
@@ -390,6 +392,7 @@ export default class Player extends Component {
         this.videoMediaComponent.play();
         break;
 
+      case 'qcheck': // fall through
       case 'listen':
         const maxRevelation = this.state.displayedSubs.length;
         const currentRevelation = this.state.subtitleState.tracksRevealed;
@@ -410,6 +413,10 @@ export default class Player extends Component {
               displayedSubs: this.getSubsToDisplay(s.displayedSubTime, s.subtitleMode, newSubtitleState),
             };
           });
+
+          if (this.state.subtitleMode === 'qcheck') {
+            this.videoMediaComponent.pause();
+          }
         }
         break;
 
@@ -451,7 +458,7 @@ export default class Player extends Component {
               {this.state.displayedSubs.map(({ subTrack, chunk }, subTrackIdx) => {
                 let hidden = false;
 
-                if ((this.state.subtitleMode === 'listen') && (subTrackIdx >= this.state.subtitleState.tracksRevealed)) {
+                if (((this.state.subtitleMode === 'qcheck') || (this.state.subtitleMode === 'listen')) && (subTrackIdx >= this.state.subtitleState.tracksRevealed)) {
                   hidden = true;
                 }
 
@@ -502,6 +509,11 @@ export default class Player extends Component {
                 case 'manual':
                   return (
                     <div>Manually toggle the display of each subtitle track using the number keys (e.g. 1 for the first track). To be honest, this mode is pretty boring and you should try the others.</div>
+                  );
+
+                case 'qcheck':
+                  return (
+                    <div>Subtitles are normally hidden, but when you press &darr; the video is paused and the (first) subtitle track is revealed. Press &darr; to reveal more subtitle tracks, if any. Then press &darr; to unpause the video and continue. This mode is useful if you can generally understand the video and want to avoid reading the subtitles unless you need them.</div>
                   );
 
                 case 'listen':
