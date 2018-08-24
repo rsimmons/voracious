@@ -5458,7 +5458,7 @@ package-json@^4.0.0:
     registry-url "^3.0.3"
     semver "^5.1.0"
 
-pako@~1.0.2, pako@~1.0.5:
+pako@1.0.6, pako@~1.0.2, pako@~1.0.5:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/pako/-/pako-1.0.6.tgz#0101211baa70c4bca4a0f63f2206e97b7dfaf258"
 
@@ -5644,6 +5644,12 @@ plist@^3.0.1:
 pluralize@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
+
+png2icons@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/png2icons/-/png2icons-1.0.1.tgz#be1a8d917826ce3af542f1678bc41893506435ff"
+  dependencies:
+    pako "1.0.6"
 
 portfinder@^1.0.9:
   version "1.0.13"
