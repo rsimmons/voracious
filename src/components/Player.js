@@ -139,8 +139,8 @@ class PlayControls extends Component {
 const MODE_TITLES = {
   manual: 'Manual',
   qcheck: 'Quick Check',
-  listen: 'Listening Test',
-  read: 'Reading Test',
+  listen: 'Listening Practice',
+  read: 'Reading Practice',
 };
 
 // Player
