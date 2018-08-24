@@ -1,6 +1,6 @@
 # Voracious
 
-**Warning: Voracious is still in development and not yet ready for public consumption**
+### [Download Voracious (alpha!)](https://github.com/rsimmons/voracious/releases)
 
 Voracious is a video player app for Mac/Windows/Linux with special features for studying foreign languages (esp. Japanese). 
 
