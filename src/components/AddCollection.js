@@ -46,7 +46,7 @@ export default class AddCollection extends Component {
 
     return (
       <SecondaryScreen title="Add Collection">
-        <div>Your collection folder should have your media and subtitles named and organized the same as for a media player like <SystemBrowserLink href="https://kodi.wiki/view/Naming_video_files">Kodi</SystemBrowserLink> or <SystemBrowserLink href="https://support.plex.tv/articles/#cat-media-preparation">Plex</SystemBrowserLink>. But unlike those, movies and TV shows can be mixed in the same folder.</div>
+        <div>Your collection folder should have your media and subtitles named and organized the same as for a media player like <SystemBrowserLink href="https://kodi.wiki/view/Naming_video_files">Kodi</SystemBrowserLink> or <SystemBrowserLink href="https://support.plex.tv/articles/#cat-media-preparation">Plex</SystemBrowserLink>. But unlike those, movies and TV shows can be mixed in the same folder. <em>Note:</em> Voracious can currently only play .mp4 video files with common codecs (H.264, AAC).</div>
         <br />
         <div><label>Display Name: <input style={{fontSize: 'inherit'}} value={this.state.collectionName} onChange={this.handleNameChange} placeholder="My Videos" /></label></div>
         <div>Folder: {this.state.collectionDirectory || <span><i>None selected</i></span>} <button onClick={this.handleClickChooseCollectionDirectory}>Choose Folder</button></div>
