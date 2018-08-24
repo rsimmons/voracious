@@ -69,45 +69,53 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp } = this.props;
+    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp, onNumberKey } = this.props;
 
     if (!e.repeat) {
-      switch (e.keyCode) {
-        case 37: // left arrow
-          onBack();
-          break;
+      if ((e.keyCode >= 49) && (e.keyCode <= 57)) {
+        onNumberKey(e.keyCode - 48);
+        e.preventDefault();
+      } else {
+        switch (e.keyCode) {
+          case 37: // left arrow
+            onBack();
+            e.preventDefault();
+            break;
 
-        case 39: // right arrow
-          onAhead();
-          break;
+          case 39: // right arrow
+            onAhead();
+            e.preventDefault();
+            break;
 
-        case 38: // up arrow
-          onReplay();
-          break;
+          case 38: // up arrow
+            onReplay();
+            e.preventDefault();
+            break;
 
-        case 32: // space
-          onTogglePause();
-          e.preventDefault();
-          break;
+          case 32: // space
+            onTogglePause();
+            e.preventDefault();
+            break;
 
-        case 40: // down arrow
-          onContinue();
-          e.preventDefault();
-          break;
+          case 40: // down arrow
+            onContinue();
+            e.preventDefault();
+            break;
 
-        case 70: // F key
-          onToggleRuby();
-          e.preventDefault();
-          break;
+          case 70: // F key
+            onToggleRuby();
+            e.preventDefault();
+            break;
 
-        case 72: // H key
-          onToggleHelp();
-          e.preventDefault();
-          break;
+          case 72: // H key
+            onToggleHelp();
+            e.preventDefault();
+            break;
 
-        default:
-          // ignore
-          break;
+          default:
+            // ignore
+            break;
+        }
       }
     }
   }
@@ -195,6 +203,8 @@ export default class Player extends Component {
   initialSubtitleState = (mode) => {
     if ((mode === 'qcheck') || (mode === 'listen')) {
       return { tracksRevealed: 0};
+    } else if (mode === 'manual') {
+      return { trackHidden: [] };
     } else {
       return null;
     }
@@ -441,6 +451,15 @@ export default class Player extends Component {
     onSetPreference('showHelp', !preferences.showHelp);
   };
 
+  handleNumberKey = (number) => {
+    if (this.state.subtitleMode === 'manual') {
+      const newTrackHidden = [...this.state.subtitleState.trackHidden];
+      const znumber = number - 1;
+      newTrackHidden[znumber] = !newTrackHidden[znumber];
+      this.setState({subtitleState: {trackHidden: newTrackHidden}});
+    }
+  };
+
   handleExit = () => {
     this.savePlaybackPosition();
     this.props.onExit();
@@ -459,6 +478,8 @@ export default class Player extends Component {
                 let hidden = false;
 
                 if (((this.state.subtitleMode === 'qcheck') || (this.state.subtitleMode === 'listen')) && (subTrackIdx >= this.state.subtitleState.tracksRevealed)) {
+                  hidden = true;
+                } else if ((this.state.subtitleMode === 'manual') && (this.state.subtitleState.trackHidden[subTrackIdx])) {
                   hidden = true;
                 }
 
@@ -481,7 +502,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} />
+          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} onNumberKey={this.handleNumberKey} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
