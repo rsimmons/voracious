@@ -31,7 +31,7 @@
     "react-build": "react-scripts build",
     "electron-start": "cross-env NODE_ENV=development ELECTRON_START_URL=http://localhost:3000 electron app",
     "rebuild-native": "electron-rebuild --module-dir app -f",
-    "build-icons": "png2icons buildResources/icon.png buildResources/icon -allp",
+    "build-icons": "png2icons buildResources/icon.png buildResources/icon -all",
     "dist": "electron-builder",
     "dist-nopack": "electron-builder -c.mac.target=dir -c.win.target=dir -c.linux.target=dir",
     "test": "react-scripts test --env=jsdom",
