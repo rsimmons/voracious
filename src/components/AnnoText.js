@@ -3,6 +3,7 @@ import Immutable, { Record } from 'immutable';
 
 import './AnnoText.css';
 
+import { iso6393To6391 } from '../util/languages';
 import Tooltip from './Tooltip';
 import CopyInterceptor from './CopyInterceptor';
 import SystemBrowserLink from './SystemBrowserLink';
@@ -213,7 +214,7 @@ export default class AnnoText extends PureComponent {
 
     return (
       <div className="AnnoText">
-        <div {... ((language === 'und' ? {} : {lang: language}))}>{annoTextChildren}</div>
+        <div {... ((language === 'und' ? {} : {lang: iso6393To6391(language)}))}>{annoTextChildren}</div>
         {this.renderTooltip()}
         {this.state.selectionRange ? (
           <CopyInterceptor copyData={[{format: 'text/plain', data: cpSlice(annoText.text, this.state.selectionRange.cpBegin, this.state.selectionRange.cpEnd)}]}/>
