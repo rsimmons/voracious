@@ -1,9 +1,12 @@
 # Voracious
 
-### [Download Voracious (alpha!)](https://github.com/rsimmons/voracious/releases)
+### [Download Voracious *(alpha)*](https://github.com/rsimmons/voracious/releases)
 
-Voracious is a video player app for Mac/Windows/Linux with special features for studying foreign languages (esp. Japanese). 
+Voracious is a video player app for Mac/Windows/Linux with special features for studying foreign languages (esp. Japanese).
 
+![screenshot](docs/screenshot.png "Screenshot")
+
+Voracious lets you:
 - **Scan and browse** your media collection ala Kodi or Plex
 - Simultaneously display **multiple subtitle tracks** (SRT, VTT. _ASS coming soon_)
 - Quickly **replay** the current subtitle and navigate forward and back *by subtitle* using the keyboard
