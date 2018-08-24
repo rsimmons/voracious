@@ -21,6 +21,6 @@
     "target": "zip"
   },
   "nsis": {
-    "artifactName": "${productName} Installer ${version}.${ext}"
+    "artifactName": "${productName}-${version}-windows.${ext}"
   }
 }
