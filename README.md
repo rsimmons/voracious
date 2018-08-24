@@ -25,8 +25,6 @@ If your media collection is ready to go, open Voracious and hit the *Add Collect
 
 # Development
 
-(Note: development has only been tested on macOS, though effort has been made to make it cross-platform)
-
 ## Overview and repo structure
 
 Voracious is mostly built as a single-page web app with React (using `create-react-app`), and then packaged as a cross-platform desktop app using Electron. As with a normal `create-react-app`-based app, the bulk of the code is in `src/` with some static resources in `public/`. The output of webpack (after `yarn react-build`) will go into `build/`. Electron-builder is used to package the resulting build into an Electron-based app, with its output going to `dist/`.
@@ -40,6 +38,8 @@ Dependencies that use native code (e.g. `sqlite`) need to be compiled against th
 Electron-builder is configured via `electron-builder.json`. The current config has it basically combine the contents of `build/` and `app/` to form the distributed archive.
 
 ## Installing for development
+
+To install for development you'll first need NodeJS, Yarn, and some extra build tools for node-gyp ([see here](https://github.com/nodejs/node-gyp)). Then:
 
 ```
 $ yarn # install pure-JS and development dependencies
