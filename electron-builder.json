@@ -19,5 +19,8 @@
   "extends": null,
   "mac": {
     "target": "zip"
+  },
+  "nsis": {
+    "artifactName": "${productName} Installer ${version}.${ext}"
   }
 }
