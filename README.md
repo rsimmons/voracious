@@ -19,7 +19,7 @@ Voracious lets you:
 
 # Using Voracious (Quick Start)
 
-Before using Voracious, you need to have a media collection that's organized and named the same way you would for Kodi or Plex _(each show/movie in its own directory, subtitle filename matching video filenames, etc.)_. Also, keep in mind that Voracious won't be useful unless you have subtitles in the language you're trying to learn.
+Before using Voracious, you need to have a media collection that's organized and named the same way you would for Kodi or Plex _(each show/movie in its own directory, subtitle filename matching video filenames, etc.)_. Note that Voracious can **only play .mp4 videos** currently. Also, keep in mind that Voracious won't be useful unless you have subtitles in the language you're trying to learn.
 
 If your media collection is ready to go, open Voracious and hit the *Add Collection* link. Select the folder where your collection lives, and give it name, and add it. On the Library page, you can browse your collection and play videos (videos without any available subtitles will appear grey). In the player, check the help overlay for keyboard controls, and try different subtitle modes.
 
