@@ -3,8 +3,11 @@ import React, { Component } from 'react';
 import Button from './Button';
 import SettingsDictionaries from './SettingsDictionaries';
 import SettingsSubOrder from './SettingsSubOrder';
+import SystemBrowserLink from './SystemBrowserLink.js';
 
 import './Settings.css';
+
+const { app } = window.require('electron').remote;
 
 export default class Settings extends Component {
   render() {
@@ -23,6 +26,16 @@ export default class Settings extends Component {
         <div className="Settings-section">
           <h2 className="Settings-section-title">Subtitle Language Order</h2>
           <SettingsSubOrder subtitleOrder={mainState.preferences.subtitleOrder} onSetOrder={order => { actions.setPreferenceSubtitleOrder(order) }} />
+        </div>
+        <div className="Settings-section">
+          <h2 className="Settings-section-title">Misc</h2>
+          <div>You're running Voracious version {app.getVersion()}</div>
+        </div>
+        <div className="Settings-section">
+          <h2 className="Settings-section-title">Acknowledgements</h2>
+          <div>
+            Voracious includes a copy of the <SystemBrowserLink href="http://www.edrdg.org/jmdict/j_jmdict.html">JMdict</SystemBrowserLink> Japanese dictionary, which is the property of the <SystemBrowserLink href="http://www.edrdg.org/">Electronic Dictionary Research and Development Group</SystemBrowserLink>, and is used in conformance with the Group's <SystemBrowserLink href="http://www.edrdg.org/edrdg/licence.html">license</SystemBrowserLink>.
+          </div>
         </div>
       </div>
     );
