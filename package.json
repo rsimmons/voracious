@@ -3,7 +3,6 @@
   "description": "A video player for studying foreign languages (esp. Japanese)",
   "author": "Russel Simmons",
   "license": "MIT",
-  "version": "0.1.0",
   "repository": "rsimmons/voracious",
   "private": true,
   "dependencies": {
