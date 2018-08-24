@@ -521,6 +521,9 @@ export default class Player extends Component {
               <tr><td>Pause/Unpause:</td><td>space</td></tr>
               <tr><td>Toggle Furigana:</td><td>F</td></tr>
               <tr><td>Toggle Help:</td><td>H</td></tr>
+              {(this.state.subtitleMode === 'manual') ? (
+                <tr><td>Hide/Show<br />Sub Track:</td><td>[1-9]</td></tr>
+              ) : null}
             </tbody></table>
           </div>
           <div className="Player-help-panel-section">
