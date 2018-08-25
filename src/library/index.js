@@ -9,7 +9,7 @@ const LOCAL_PREFIX = 'local:';
 
 const SUPPORTED_VIDEO_EXTENSIONS = [
   '.mp4',
-  // '.mkv',
+  '.mkv',
 ];
 
 const EPISODE_PATTERN = /ep([0-9]+)/;
