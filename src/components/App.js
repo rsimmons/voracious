@@ -73,10 +73,17 @@ class App extends Component {
                           <div className="App-collection-header">
                             <h2 className="App-collection-header-title"><Link to="/library" className="App-back-to-library-link">{collection.name}</Link> / {title.name}</h2>
                           </div>
+                          {title.parts.seasonEpisodes.length ? (
+                            <ul>
+                              {title.parts.seasonEpisodes.map(se => (
+                                <VideoListItem collection={collection} videoId={se.videoId} name={'Season ' + se.seasonNumber + ' Episode ' + se.episodeNumber} key={se.videoId} />
+                              ))}
+                            </ul>
+                          ) : null}
                           {title.parts.episodes.length ? (
                             <ul>
                               {title.parts.episodes.map(ep => (
-                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.number} key={ep.videoId} />
+                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.episodeNumber} key={ep.videoId} />
                               ))}
                             </ul>
                           ) : null}

@@ -12,9 +12,10 @@ const SUPPORTED_VIDEO_EXTENSIONS = [
   '.mkv',
 ];
 
-const EPISODE_PATTERN = /ep([0-9]+)/;
-const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt|vtt|ass)/;
-const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt|vtt|ass)/;
+const SEASON_EPISODE_PATTERN = /s([0-9]+)e([0-9]+)/i;
+const EPISODE_PATTERN = /ep([0-9]+)/i;
+const SUBTITLE_LANG_EXTENSION_PATTERN = /(.*)\.([a-zA-Z]{2,3})\.(srt|vtt|ass)/i;
+const SUBTITLE_NOLANG_EXTENSION_PATTERN = /(.*)\.(srt|vtt|ass)/i;
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
 
@@ -150,22 +151,34 @@ export const getCollectionIndex = async (collectionLocator) => {
           parts: null,
         });
       } else {
+        const seasonEpisodes = [];
         const episodes = [];
         const others = [];
 
         for (const vid of vids) {
-          const epMatch = EPISODE_PATTERN.exec(vid.name);
-          if (epMatch) {
-            const epNum = +(epMatch[1]);
-            episodes.push({
-              number: epNum,
+          const seMatch = SEASON_EPISODE_PATTERN.exec(vid.name);
+          if (seMatch) {
+            const sNum = +(seMatch[1]);
+            const eNum = +(seMatch[2]);
+            seasonEpisodes.push({
+              seasonNumber: sNum,
+              episodeNumber: eNum,
               videoId: vid.id,
             });
           } else {
-            others.push({
-              name: vid.name,
-              videoId: vid.id,
-            });
+            const eMatch = EPISODE_PATTERN.exec(vid.name);
+            if (eMatch) {
+              const eNum = +(eMatch[1]);
+              episodes.push({
+                episodeNumber: eNum,
+                videoId: vid.id,
+              });
+            } else {
+              others.push({
+                name: vid.name,
+                videoId: vid.id,
+              });
+            }
           }
         }
 
@@ -174,6 +187,7 @@ export const getCollectionIndex = async (collectionLocator) => {
           series: true,
           videoId: null,
           parts: {
+            seasonEpisodes,
             episodes,
             others,
             count: vids.length,
