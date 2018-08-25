@@ -76,7 +76,7 @@ class App extends Component {
                           {title.parts.episodes.length ? (
                             <ul>
                               {title.parts.episodes.map(ep => (
-                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.number} key={ep.number} />
+                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.number} key={ep.videoId} />
                               ))}
                             </ul>
                           ) : null}
