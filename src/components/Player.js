@@ -44,10 +44,16 @@ class VideoWrapper extends Component {
     }
   }
 
+  handleCanPlay = (e) => {
+    if (e.target.webkitAudioDecodedByteCount === 0) {
+      this.props.onNoAudio();
+    }
+  }
+
   render() {
     const { videoURL, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
-      <video src={videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} />
+      <video src={videoURL} controls onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} onCanPlay={this.handleCanPlay} />
     );
   }
 }
@@ -157,6 +163,7 @@ export default class Player extends Component {
       subtitleState,
       displayedSubTime,
       displayedSubs: this.getSubsToDisplay(displayedSubTime, subtitleMode, subtitleState),
+      noAudio: false,
     };
 
     this.videoTime = null;
@@ -327,6 +334,10 @@ export default class Player extends Component {
     this.unfreezeSubs();
   };
 
+  handleNoAudio = () => {
+    this.setState({noAudio: true});
+  };
+
   handleSetSubtitleMode = (newMode) => {
     this.setState(s => {
       const newSubtitleState = this.initialSubtitleState(newMode);
@@ -472,7 +483,7 @@ export default class Player extends Component {
       <div className="Player">
         <div className="Player-main">
           <div className="Player-video-area">
-            <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} ref={(c) => { this.videoMediaComponent = c; }} />
+            <VideoWrapper videoURL={video.videoURL} initialTime={video.playbackPosition} onTimeUpdate={this.handleVideoTimeUpdate} onPlaying={this.handleVideoPlaying} onPause={this.handleVideoPause} onEnded={this.handleVideoEnded} onSeeking={this.handleVideoSeeking} onNoAudio={this.handleNoAudio} ref={(c) => { this.videoMediaComponent = c; }} />
             <div className="Player-text-chunks">
               {this.state.displayedSubs.map(({ subTrack, chunk }, subTrackIdx) => {
                 let hidden = false;
@@ -556,6 +567,13 @@ export default class Player extends Component {
             })()}
           </div>
         </div>
+        { this.state.noAudio ? (
+          <div className="Player-no-audio-warning-layer">
+            <div className="Player-no-audio-warning">
+              video file has no audio or<br />an unsupported audio codec
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
