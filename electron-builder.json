@@ -20,7 +20,13 @@
   "mac": {
     "target": "zip"
   },
+  "win": {
+    "target": ["portable", "nsis"]
+  },
   "nsis": {
-    "artifactName": "${productName}-${version}-windows.${ext}"
+    "artifactName": "${productName}-${version}-windows-installer.${ext}",
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": false
   }
 }
