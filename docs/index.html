@@ -54,6 +54,10 @@ ul {
   flex: 2;
 }
 
+.hero-image img {
+  box-shadow: 0 0 25px 5px rgba(0,0,0,0.5);
+}
+
 .screenshot {
   max-width: 100%;
 }
@@ -86,7 +90,7 @@ ul {
       <div class="hero-copy">
         <div class="hero-headline">A video player for<br/>learning languages</div>
         <div class="download-section">
-          <div>Latest Version: {{ site.github.latest_release.name }}</div>
+          <div>Download (version {{ site.github.latest_release.name }}):</div>
           <ul>{% for asset in site.github.latest_release.assets %}
             <li>&#8226; <a href="{{ asset.browser_download_url }}">{{ asset.name }}</a></li>
           {% endfor %}</ul>
