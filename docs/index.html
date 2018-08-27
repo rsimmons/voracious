@@ -154,7 +154,7 @@ ul {
             <div class="download-section">
               <div>Download (version {{ site.github.latest_release.name }}):</div>
               <ul>{% for asset in site.github.latest_release.assets %}
-                <li>&#8226; <a href="{{ asset.browser_download_url }}">{{ asset.name }}</a></li>
+                <li>&#8226; <a href="{{ asset.browser_download_url }}" onClick="ga('send','event','Downloads','click','{{ asset.name }}')">{{ asset.name }}</a></li>
               {% endfor %}</ul>
             </div>
           </div>
