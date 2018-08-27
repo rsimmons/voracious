@@ -9,10 +9,10 @@
 </head>
 <body>
   <h1>Voracious</h1>
-  <p>{{ site.github.project_title }}</p>
-  <p>{{ site.github.latest_release.name }}</p>
-  <p>{{ site.github.latest_release.tag_name }}</p>
-  <p>{{ site.github.latest_release.body }}</p>
-  <code>{{ site.github || jsonify }}</code>
+  <p>Latest Version: {{ site.github.latest_release.name }}</p>
+  <ul>{% for asset in site.github.latest_release.assets %}
+    <li><a href="{{ asset.browser_download_url }}">{{ asset.name }}</a></li>
+  </ul>
+  <!-- <code>{{ site.github || jsonify }}</code> -->
 </body>
 </html>
