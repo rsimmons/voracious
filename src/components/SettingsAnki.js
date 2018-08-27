@@ -12,8 +12,6 @@ export default class SettingsAnki extends Component {
       statusMessage: '',
       ankiModels: [],
       ankiDecks: [],
-      currentModel: null,
-      currentDeck: null,
     };
   }
 
@@ -49,26 +47,40 @@ export default class SettingsAnki extends Component {
   };
 
   handleChangeModel = (e) => {
-    this.setState({currentModel: e.target.value});
+    this.props.onSetPrefModel(e.target.value);
   };
 
   handleChangeDeck   = (e) => {
-    this.setState({currentDeck: e.target.value});
+    this.props.onSetPrefDeck(e.target.value);
   };
 
   render() {
+    const { ankiPrefs } = this.props;
+
+    const modelOptions = [];
+    if (ankiPrefs.modelName && !this.state.ankiModels.includes(ankiPrefs.modelName)) {
+      modelOptions.push(ankiPrefs.modelName);
+    }
+    modelOptions.push(...this.state.ankiModels);
+
+    const deckOptions = [];
+    if (ankiPrefs.deckName && !this.state.ankiDecks.includes(ankiPrefs.deckName)) {
+      deckOptions.push(ankiPrefs.deckName);
+    }
+    deckOptions.push(...this.state.ankiDecks);
+
     return (
       <div>
         <div className="SettingsAnki-instructions">Voracious can create Anki cards and instantly import them if you have the <a href="https://ankiweb.net/shared/info/2055492159">AnkiConnect</a> add-on installed. Make sure Anki is running with AnkiConnect installed, and then specify below how you want new cards to be created.</div>
         <div>Status: {this.state.statusMessage} <button onClick={this.handleRefresh}>Refresh</button></div>
         <div><label>Note Type{' '}
-          <select value={this.state.currentModel || ''} onChange={this.handleChangeModel}>
-            {this.state.ankiModels.map((model) => <option key={model} value={model}>{model}</option>)}
+          <select value={ankiPrefs.modelName || ''} onChange={this.handleChangeModel}>
+            {modelOptions.map((model) => <option key={model} value={model}>{model}</option>)}
           </select>
         </label></div>
         <div><label>Deck{' '}
-          <select value={this.state.currentDeck || ''} onChange={this.handleChangeDeck}>
-            {this.state.ankiDecks.map((deck) => <option key={deck} value={deck}>{deck}</option>)}
+          <select value={ankiPrefs.deckName || ''} onChange={this.handleChangeDeck}>
+            {deckOptions.map((deck) => <option key={deck} value={deck}>{deck}</option>)}
           </select>
         </label></div>
       </div>

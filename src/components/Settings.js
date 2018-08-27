@@ -30,7 +30,7 @@ export default class Settings extends Component {
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Anki Export</h2>
-          <SettingsAnki />
+          <SettingsAnki ankiPrefs={mainState.preferences.anki} onSetPrefModel={(n) => { actions.setPreferenceAnkiModelName(n); }} onSetPrefDeck={(n) => { actions.setPreferenceAnkiDeckName(n); }} />
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Misc</h2>

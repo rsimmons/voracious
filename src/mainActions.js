@@ -9,6 +9,11 @@ const fs = window.require('fs-extra'); // use window to avoid webpack
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
 
+const AnkiPreferencesRecord = new Record({
+  modelName: undefined,
+  deckName: undefined,
+});
+
 const PreferencesRecord = new Record({
   showRuby: true,
   showHelp: true,
@@ -16,6 +21,7 @@ const PreferencesRecord = new Record({
   subtitleOrder: new List(['jpn', 'eng']), // list of iso639-3 codes
   disabledDictionaries: new ISet(),
   dictionaryOrder: new List(),
+  anki: new AnkiPreferencesRecord(),
 });
 
 const MainStateRecord = new Record({
@@ -142,6 +148,9 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(profile.preferences.subtitleOrder)));
       this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
       this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(profile.preferences.dictionaryOrder)));
+
+      const ankiPrefRecord = new AnkiPreferencesRecord(profile.preferences.anki);
+      this.state.set(this.state.get().setIn(['preferences', 'anki'], ankiPrefRecord));
     } else {
       // Key wasn't present, so initialize to default state
 
@@ -164,6 +173,7 @@ export default class MainActions {
         subtitleOrder: state.preferences.subtitleOrder.toArray(),
         disabledDictionaries: state.preferences.disabledDictionaries.toArray(),
         dictionaryOrder: state.preferences.dictionaryOrder.toArray(),
+        anki: state.preferences.anki.toJS(),
       },
     };
 
@@ -293,6 +303,16 @@ export default class MainActions {
   setPreferenceDictionaryOrder = async (names) => {
     this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(names)));
     this._updateDictionaryOrderByPreference();
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceAnkiModelName = async (modelName) => {
+    this.state.set(this.state.get().setIn(['preferences', 'anki', 'modelName'], modelName));
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceAnkiDeckName = async (deckName) => {
+    this.state.set(this.state.get().setIn(['preferences', 'anki', 'deckName'], deckName));
     await this._storageSaveProfile();
   };
 
