@@ -12,7 +12,7 @@
   <p>Latest Version: {{ site.github.latest_release.name }}</p>
   <ul>{% for asset in site.github.latest_release.assets %}
     <li><a href="{{ asset.browser_download_url }}">{{ asset.name }}</a></li>
-  </ul>
+  {% endfor %}</ul>
   <!-- <code>{{ site.github || jsonify }}</code> -->
 </body>
 </html>
