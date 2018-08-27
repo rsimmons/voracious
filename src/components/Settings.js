@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Button from './Button';
 import SettingsDictionaries from './SettingsDictionaries';
 import SettingsSubOrder from './SettingsSubOrder';
+import SettingsAnki from './SettingsAnki';
 import SystemBrowserLink from './SystemBrowserLink.js';
 
 import './Settings.css';
@@ -26,6 +27,10 @@ export default class Settings extends Component {
         <div className="Settings-section">
           <h2 className="Settings-section-title">Subtitle Language Order</h2>
           <SettingsSubOrder subtitleOrder={mainState.preferences.subtitleOrder} onSetOrder={order => { actions.setPreferenceSubtitleOrder(order) }} />
+        </div>
+        <div className="Settings-section">
+          <h2 className="Settings-section-title">Anki Export</h2>
+          <SettingsAnki />
         </div>
         <div className="Settings-section">
           <h2 className="Settings-section-title">Misc</h2>
