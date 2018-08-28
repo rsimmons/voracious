@@ -8,6 +8,7 @@
   "main": "electron-main.js",
   "dependencies": {
     "fs-extra": "^7.0.0",
-    "sqlite": "^2.8.0"
+    "sqlite": "^2.8.0",
+    "tmp-promise": "^1.0.5"
   }
 }

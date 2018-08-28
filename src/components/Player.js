@@ -6,6 +6,8 @@ import Select from './Select.js';
 import AnnoText from './AnnoText.js';
 
 import { getChunkAtTime, getPrevChunkAtTime, getNextChunkAtTime } from '../util/chunk';
+import { ankiConnectInvoke } from '../util/ankiConnect';
+import genuid from '../util/uid';
 
 class VideoWrapper extends Component {
   constructor(props) {
@@ -75,7 +77,7 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp, onNumberKey } = this.props;
+    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp, onNumberKey, onExportCard } = this.props;
 
     if (!e.repeat) {
       if ((e.keyCode >= 49) && (e.keyCode <= 57)) {
@@ -105,6 +107,11 @@ class PlayControls extends Component {
 
           case 40: // down arrow
             onContinue();
+            e.preventDefault();
+            break;
+
+          case 67: // C key
+            onExportCard();
             e.preventDefault();
             break;
 
@@ -471,6 +478,35 @@ export default class Player extends Component {
     }
   };
 
+  handleExportCard = async () => {
+    if (this.state.displayedSubs.length >= 1) {
+      const currentChunk = this.state.displayedSubs[0].chunk;
+      if (currentChunk) {
+        console.log('extracting audio...');
+        const audioData = await this.props.onExtractAudio(currentChunk.position.begin, currentChunk.position.end);
+        console.log('extracted audio', audioData);
+        const mediaFilename = 'voracious_' + genuid() + '.mp3';
+        const storeMediaResult = await ankiConnectInvoke('storeMediaFile', 6, {
+          filename: mediaFilename,
+          data: audioData.toString('base64'),
+        });
+        console.log('stored media to anki');
+        const addNoteResult = await ankiConnectInvoke('addNote', 6, {
+          'note': {
+            'deckName': 'Default',
+            'modelName': 'Basic',
+            'tags': ['voracious'],
+            'fields': {
+              'Front': '[sound:' + mediaFilename + ']',
+              'Back': currentChunk.annoText.text,
+            },
+          },
+        });
+        console.log('added note to Anki');
+      }
+    }
+  };
+
   handleExit = () => {
     this.savePlaybackPosition();
     this.props.onExit();
@@ -513,7 +549,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} onNumberKey={this.handleNumberKey} />
+          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} onNumberKey={this.handleNumberKey} onExportCard={this.handleExportCard} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">

@@ -4,6 +4,7 @@ import { parseSRT, parseVTT, parseASS } from '../util/subtitleParsing';
 import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
 import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
+import { extractAudio } from '../util/ffmpeg';
 
 const LOCAL_PREFIX = 'local:';
 
@@ -249,5 +250,16 @@ export const loadCollectionSubtitleTrack = async (collectionLocator, subTrackId)
     return await loadSubtitleTrackFromFile(subfn);
   } else {
     throw new Error('internal error');
+  }
+};
+
+export const extractAudioFromVideo = async (collectionLocator, vidId, startTime, endTime) => {
+  if (collectionLocator.startsWith(LOCAL_PREFIX)) {
+    const baseDirectory = collectionLocator.slice(LOCAL_PREFIX.length);
+    const vidfn = path.join(baseDirectory, vidId);
+    const audioData = await extractAudio(vidfn, startTime, endTime);
+    return audioData;
+  } else {
+    throw new Error('not a local collection');
   }
 };

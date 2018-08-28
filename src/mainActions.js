@@ -242,7 +242,6 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'], false));
   };
 
-
   sortSubtitleTracksMap = (subTracksMap) => {
     const prefOrder = this.state.get().preferences.subtitleOrder.toArray();
 
