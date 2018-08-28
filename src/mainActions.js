@@ -5,6 +5,7 @@ import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
 import { loadDictionaries, searchIndex } from './dictionary';
 
 const fs = window.require('fs-extra'); // use window to avoid webpack
+const { process } = window.require('electron').remote;
 
 const jstr = JSON.stringify; // alias
 const jpar = JSON.parse; // alias
@@ -78,11 +79,13 @@ export default class MainActions {
 
     await this._storageLoadProfile();
 
-    this._setLoadingMessage('Loading dictionaries...');
+    if (!process.argv.includes('--nodicts')) {
+      this._setLoadingMessage('Loading dictionaries...');
 
-    await this._loadDictionaries(progressMsg => {
-      this._setLoadingMessage(progressMsg);
-    });
+      await this._loadDictionaries(progressMsg => {
+        this._setLoadingMessage(progressMsg);
+      });
+    }
 
     this._clearLoadingMessage();
   };
