@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import { ankiConnectInvoke } from '../util/ankiConnect';
+import SystemBrowserLink from './SystemBrowserLink.js';
 
 import './SettingsAnki.css';
 
@@ -71,7 +72,7 @@ export default class SettingsAnki extends Component {
 
     return (
       <div>
-        <div className="SettingsAnki-instructions">Voracious can create Anki cards and instantly import them if you have the <a href="https://ankiweb.net/shared/info/2055492159">AnkiConnect</a> add-on installed. Make sure Anki is running with AnkiConnect installed, and then specify below how you want new cards to be created.</div>
+        <div className="SettingsAnki-instructions">Voracious can create Anki cards and instantly import them if you have the <SystemBrowserLink href="https://ankiweb.net/shared/info/2055492159">AnkiConnect</SystemBrowserLink> add-on installed. Make sure Anki is running with AnkiConnect installed, and then specify below how you want new cards to be created. <em>Note:</em> On Mac, AnkiConnect may be slow or unresponsive unless you <SystemBrowserLink href="https://foosoft.net/projects/anki-connect/index.html#notes-for-mac-os-x-users">disable App Napp</SystemBrowserLink> for Anki.</div>
         <div>Status: {this.state.statusMessage} <button onClick={this.handleRefresh}>Refresh</button></div>
         <div><label>Note Type{' '}
           <select value={ankiPrefs.modelName || ''} onChange={this.handleChangeModel}>
