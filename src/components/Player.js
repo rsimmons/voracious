@@ -8,6 +8,7 @@ import AnnoText from './AnnoText.js';
 import { getChunkAtTime, getPrevChunkAtTime, getNextChunkAtTime } from '../util/chunk';
 import { ankiConnectInvoke } from '../util/ankiConnect';
 import genuid from '../util/uid';
+import { customRender as annoTextCustomRender } from '../util/annotext';
 
 class VideoWrapper extends Component {
   constructor(props) {
@@ -479,30 +480,65 @@ export default class Player extends Component {
   };
 
   handleExportCard = async () => {
+    const { ankiPrefs } = this.props;
+
+    if (!ankiPrefs.modelName || !ankiPrefs.deckName) {
+      // Need to configure Anki settings
+      return;
+    }
+
     if (this.state.displayedSubs.length >= 1) {
       const currentChunk = this.state.displayedSubs[0].chunk;
       if (currentChunk) {
-        console.log('extracting audio...');
-        const audioData = await this.props.onExtractAudio(currentChunk.position.begin, currentChunk.position.end);
-        console.log('extracted audio', audioData);
-        const mediaFilename = 'voracious_' + genuid() + '.mp3';
-        const storeMediaResult = await ankiConnectInvoke('storeMediaFile', 6, {
-          filename: mediaFilename,
-          data: audioData.toString('base64'),
-        });
-        console.log('stored media to anki');
+        const textWithReadings = annoTextCustomRender(
+          currentChunk.annoText,
+          (a, inner) => {
+            if (a.kind === 'ruby') {
+              return [' ', ...inner, '[', a.data, ']'];
+            } else {
+              return inner;
+            }
+          },
+          (c, i) => (c)
+        ).join('');
+
+        let mediaFilename;
+        if ([...ankiPrefs.fieldMap.values()].includes('audio')) {
+          console.time('extracting audio');
+          const audioData = await this.props.onExtractAudio(currentChunk.position.begin, currentChunk.position.end);
+          console.timeEnd('extracting audio');
+
+          mediaFilename = 'voracious_' + genuid() + '.mp3';
+
+          console.time('store audio to Anki');
+          const storeMediaResult = await ankiConnectInvoke('storeMediaFile', 6, {
+            filename: mediaFilename,
+            data: audioData.toString('base64'),
+          });
+          console.timeEnd('store audio to Anki');
+        }
+
+        const fields = {};
+        for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
+          if (vorfn === 'text') {
+            fields[ankifn] = currentChunk.annoText.text;
+          } else if (vorfn === 'text_readings') {
+            fields[ankifn] = textWithReadings;
+          } else if (vorfn === 'audio') {
+            fields[ankifn] = '[sound:' + mediaFilename + ']';
+          }
+        }
+
+        console.time('add note to Anki');
         const addNoteResult = await ankiConnectInvoke('addNote', 6, {
           'note': {
-            'deckName': 'Default',
-            'modelName': 'Basic',
+            'deckName': ankiPrefs.deckName,
+            'modelName': ankiPrefs.modelName,
             'tags': ['voracious'],
-            'fields': {
-              'Front': '[sound:' + mediaFilename + ']',
-              'Back': currentChunk.annoText.text,
-            },
+            'fields': fields,
           },
         });
-        console.log('added note to Anki');
+        console.timeEnd('add note to Anki');
       }
     }
   };

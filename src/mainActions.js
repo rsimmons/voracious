@@ -13,6 +13,7 @@ const jpar = JSON.parse; // alias
 const AnkiPreferencesRecord = new Record({
   modelName: undefined,
   deckName: undefined,
+  fieldMap: new IMap(), // Anki field to our field that fills it
 });
 
 const PreferencesRecord = new Record({
@@ -152,7 +153,11 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
       this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(profile.preferences.dictionaryOrder)));
 
-      const ankiPrefRecord = new AnkiPreferencesRecord(profile.preferences.anki);
+      const ankiPrefRecord = new AnkiPreferencesRecord({
+        deckName: profile.preferences.anki.deckName,
+        modelName: profile.preferences.anki.modelName,
+        fieldMap: new IMap(profile.preferences.anki.fieldMap),
+      });
       this.state.set(this.state.get().setIn(['preferences', 'anki'], ankiPrefRecord));
     } else {
       // Key wasn't present, so initialize to default state
@@ -308,13 +313,12 @@ export default class MainActions {
     await this._storageSaveProfile();
   };
 
-  setPreferenceAnkiModelName = async (modelName) => {
-    this.state.set(this.state.get().setIn(['preferences', 'anki', 'modelName'], modelName));
-    await this._storageSaveProfile();
-  };
-
-  setPreferenceAnkiDeckName = async (deckName) => {
-    this.state.set(this.state.get().setIn(['preferences', 'anki', 'deckName'], deckName));
+  setPreferenceAnki = async (prefs) => {
+    this.state.set(this.state.get().setIn(['preferences', 'anki'], new AnkiPreferencesRecord({
+      deckName: prefs.deckName,
+      modelName: prefs.modelName,
+      fieldMap: new IMap(prefs.fieldMap),
+    })));
     await this._storageSaveProfile();
   };
 
