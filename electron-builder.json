@@ -28,5 +28,8 @@
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": false
+  },
+  "portable": {
+    "artifactName": "${productName}.${ext}"
   }
 }
