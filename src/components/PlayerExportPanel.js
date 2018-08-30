@@ -63,6 +63,14 @@ export default class PlayerExportPanel extends Component {
     };
   }
 
+  componentDidMount() {
+    document.body.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.body.removeEventListener('keydown', this.handleKeyDown);
+  }
+
   handleExport = async () => {
     const { ankiPrefs } = this.props;
 
@@ -154,8 +162,35 @@ export default class PlayerExportPanel extends Component {
   };
 
   handleDone = () => {
+    if (this.state.exporting) {
+      return;
+    }
+
     this.props.onDone();
-  }
+  };
+
+  handleKeyDown = (e) => {
+    // Only process event if the target is the body,
+    // to avoid messing with typing into input elements, etc.
+    // Should we do this instead? e.target.tagName.toUpperCase() === 'INPUT'
+    if (e.target !== document.body) {
+      return;
+    }
+
+    if (!e.repeat) {
+      switch (e.keyCode) {
+        case 13: // enter
+          e.preventDefault();
+          this.handleExport();
+          break;
+
+        case 27: // esc
+          e.preventDefault();
+          this.handleDone();
+          break;
+      }
+    }
+  };
 
   render() {
     const { ankiPrefs } = this.props;
@@ -179,8 +214,8 @@ export default class PlayerExportPanel extends Component {
               }
             })}</div>
             <div>
-              <button onClick={this.handleExport} disabled={this.state.exporting}>Export</button>{' '}
-              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel</button>{' '}
+              <button onClick={this.handleExport} disabled={this.state.exporting}>Export [enter]</button>{' '}
+              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button>{' '}
               <span>{this.state.statusMessage}</span>
             </div>
           </div>
@@ -188,7 +223,7 @@ export default class PlayerExportPanel extends Component {
           <div>
             <div>You need to configure your Anki settings before you can export. Back out and go to Settings.</div>
             <div>
-              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel</button>{' '}
+              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button>{' '}
             </div>
           </div>
         )}
