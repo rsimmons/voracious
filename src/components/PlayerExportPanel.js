@@ -188,6 +188,10 @@ export default class PlayerExportPanel extends Component {
           e.preventDefault();
           this.handleDone();
           break;
+
+        default:
+          // ignore
+          break;
       }
     }
   };
@@ -195,12 +199,19 @@ export default class PlayerExportPanel extends Component {
   render() {
     const { ankiPrefs } = this.props;
 
-    // TODO: disable Export if (!ankiPrefs.modelName || !ankiPrefs.deckName)
+    const configured = (ankiPrefs.modelName && ankiPrefs.deckName && ankiPrefs.fieldMap);
 
     return (
       <div className="PlayerExportPanel">
+        <div className="PlayerExportPanel-buttons">
+          <div>
+            <button onClick={this.handleExport} disabled={this.state.exporting && configured}>Export [enter]</button>{' '}
+            <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button><br/>
+          </div>
+          <div className="PlayerExportPanel-status-message">{this.state.statusMessage}</div>
+        </div>
         <div className="PlayerExportPanel-header">Export to Anki</div>
-        {(ankiPrefs.modelName && ankiPrefs.deckName && ankiPrefs.fieldMap) ? (
+        {configured ? (
           <div>
             <div>{[...ankiPrefs.fieldMap.entries()].map(([ankifn, vorfn]) => {
               if (vorfn === 'audio') {
@@ -213,19 +224,9 @@ export default class PlayerExportPanel extends Component {
                 );
               }
             })}</div>
-            <div>
-              <button onClick={this.handleExport} disabled={this.state.exporting}>Export [enter]</button>{' '}
-              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button>{' '}
-              <span>{this.state.statusMessage}</span>
-            </div>
           </div>
         ) : (
-          <div>
-            <div>You need to configure your Anki settings before you can export. Back out and go to Settings.</div>
-            <div>
-              <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button>{' '}
-            </div>
-          </div>
+          <div>You need to configure your Anki settings before you can export. Back out and go to Settings.</div>
         )}
       </div>
     );

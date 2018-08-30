@@ -14,3 +14,11 @@
   width: 100%;
   font-size: inherit;
 }
+
+.PlayerExportPanel-buttons {
+  float: right;
+}
+
+.PlayerExportPanel-status-message {
+  max-width: 12em;
+}

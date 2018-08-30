@@ -36,8 +36,8 @@
 
 .Player-help-panel {
   position: absolute;
-  top: 10%;
-  max-height: 60%;
+  top: 60px;
+  max-height: 50%;
   overflow-y: scroll;
   right: 0;
   color: white;
@@ -173,8 +173,8 @@
 
 .Player-export-panel {
   position: absolute;
-  top: 10%;
-  max-height: 60%;
+  top: 60px;
+  max-height: 50%;
   overflow-y: scroll;
   left: 0;
   color: white;
