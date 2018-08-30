@@ -153,6 +153,9 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
       this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(profile.preferences.dictionaryOrder)));
 
+      if (!profile.preferences.anki) {
+        profile.preferences.anki = {};
+      }
       const ankiPrefRecord = new AnkiPreferencesRecord({
         deckName: profile.preferences.anki.deckName,
         modelName: profile.preferences.anki.modelName,
