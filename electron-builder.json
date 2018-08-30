@@ -4,7 +4,11 @@
     "buildResources": "buildResources"
   },
   "files": [
-    "**/*",
+    {
+      "from": ".",
+      "to": ".",
+      "filter": ["**/*", "!resources/bin/"]
+    },
     {
       "from": "../build",
       "to": ".",
@@ -18,9 +22,15 @@
   "npmRebuild": false,
   "extends": null,
   "mac": {
+    "files": [
+      "resources/bin/darwin/**"
+    ],
     "target": "zip"
   },
   "win": {
+    "files": [
+      "resources/bin/win32/**"
+    ],
     "target": ["portable", "nsis"]
   },
   "nsis": {
