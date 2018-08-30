@@ -205,7 +205,7 @@ export default class PlayerExportPanel extends Component {
       <div className="PlayerExportPanel">
         <div className="PlayerExportPanel-buttons">
           <div>
-            <button onClick={this.handleExport} disabled={this.state.exporting && configured}>Export [enter]</button>{' '}
+            <button onClick={this.handleExport} disabled={this.state.exporting || !configured}>Export [enter]</button>{' '}
             <button onClick={this.handleDone} disabled={this.state.exporting}>Cancel [esc]</button><br/>
           </div>
           <div className="PlayerExportPanel-status-message">{this.state.statusMessage}</div>
