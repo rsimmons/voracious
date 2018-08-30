@@ -1,0 +1,16 @@
+.PlayerExportPanel-header {
+  font-size: 1.3em;
+}
+
+.PlayerExportPanel-field {
+  margin-bottom: 10px;
+}
+
+.PlayerExportPanel-field-value {
+  font-size: 18px;
+}
+
+.PlayerExportPanel-field-value textarea {
+  width: 100%;
+  font-size: inherit;
+}

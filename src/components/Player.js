@@ -4,11 +4,9 @@ import './Player.css';
 
 import Select from './Select.js';
 import AnnoText from './AnnoText.js';
+import PlayerExportPanel from './PlayerExportPanel';
 
 import { getChunkAtTime, getPrevChunkAtTime, getNextChunkAtTime } from '../util/chunk';
-import { ankiConnectInvoke } from '../util/ankiConnect';
-import genuid from '../util/uid';
-import { customRender as annoTextCustomRender } from '../util/annotext';
 
 class VideoWrapper extends Component {
   constructor(props) {
@@ -111,7 +109,7 @@ class PlayControls extends Component {
             e.preventDefault();
             break;
 
-          case 67: // C key
+          case 69: // E key
             onExportCard();
             e.preventDefault();
             break;
@@ -172,6 +170,7 @@ export default class Player extends Component {
       displayedSubTime,
       displayedSubs: this.getSubsToDisplay(displayedSubTime, subtitleMode, subtitleState),
       noAudio: false,
+      exporting: null,
     };
 
     this.videoTime = null;
@@ -479,68 +478,31 @@ export default class Player extends Component {
     }
   };
 
-  handleExportCard = async () => {
-    const { ankiPrefs } = this.props;
-
-    if (!ankiPrefs.modelName || !ankiPrefs.deckName) {
-      // Need to configure Anki settings
+  handleExportCard = () => {
+    if (!this.state.displayedSubs.length) {
       return;
     }
 
-    if (this.state.displayedSubs.length >= 1) {
-      const currentChunk = this.state.displayedSubs[0].chunk;
-      if (currentChunk) {
-        const textWithReadings = annoTextCustomRender(
-          currentChunk.annoText,
-          (a, inner) => {
-            if (a.kind === 'ruby') {
-              return [' ', ...inner, '[', a.data, ']'];
-            } else {
-              return inner;
-            }
-          },
-          (c, i) => (c)
-        ).join('');
-
-        let mediaFilename;
-        if ([...ankiPrefs.fieldMap.values()].includes('audio')) {
-          console.time('extracting audio');
-          const audioData = await this.props.onExtractAudio(currentChunk.position.begin, currentChunk.position.end);
-          console.timeEnd('extracting audio');
-
-          mediaFilename = 'voracious_' + genuid() + '.mp3';
-
-          console.time('store audio to Anki');
-          const storeMediaResult = await ankiConnectInvoke('storeMediaFile', 6, {
-            filename: mediaFilename,
-            data: audioData.toString('base64'),
-          });
-          console.timeEnd('store audio to Anki');
-        }
-
-        const fields = {};
-        for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
-          if (vorfn === 'text') {
-            fields[ankifn] = currentChunk.annoText.text;
-          } else if (vorfn === 'text_readings') {
-            fields[ankifn] = textWithReadings;
-          } else if (vorfn === 'audio') {
-            fields[ankifn] = '[sound:' + mediaFilename + ']';
-          }
-        }
-
-        console.time('add note to Anki');
-        const addNoteResult = await ankiConnectInvoke('addNote', 6, {
-          'note': {
-            'deckName': ankiPrefs.deckName,
-            'modelName': ankiPrefs.modelName,
-            'tags': ['voracious'],
-            'fields': fields,
-          },
-        });
-        console.timeEnd('add note to Anki');
-      }
+    const currentChunk = this.state.displayedSubs[0].chunk;
+    if (!currentChunk) {
+      return;
     }
+
+    this.setState(state => {
+      const newState = {...state};
+      if (!state.exporting) {
+        newState.exporting = {
+          chunk: currentChunk,
+        };
+      }
+      return newState;
+    });
+  };
+
+  handleExportDone = () => {
+    this.setState({
+      exporting: null,
+    });
   };
 
   handleExit = () => {
@@ -602,6 +564,7 @@ export default class Player extends Component {
               <tr><td>Previous Sub:</td><td>&larr;</td></tr>
               <tr><td>Next Sub:</td><td>&rarr;</td></tr>
               <tr><td>Pause/Unpause:</td><td>space</td></tr>
+              <tr><td>Export To Anki:</td><td>E</td></tr>
               <tr><td>Toggle Furigana:</td><td>F</td></tr>
               <tr><td>Toggle Help:</td><td>H</td></tr>
               {(this.state.subtitleMode === 'manual') ? (
@@ -644,6 +607,11 @@ export default class Player extends Component {
             <div className="Player-no-audio-warning">
               video file has no audio or<br />an unsupported audio codec
             </div>
+          </div>
+        ) : null}
+        { this.state.exporting ? (
+          <div className="Player-export-panel">
+            <PlayerExportPanel ankiPrefs={this.props.ankiPrefs} onExtractAudio={this.props.onExtractAudio} onDone={this.handleExportDone} {...this.state.exporting} />
           </div>
         ) : null}
       </div>

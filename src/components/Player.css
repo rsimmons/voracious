@@ -36,11 +36,13 @@
 
 .Player-help-panel {
   position: absolute;
-  top: 50px;
+  top: 10%;
+  max-height: 60%;
+  overflow-y: scroll;
   right: 0;
   color: white;
   background-color: black;
-  opacity: 0.7;
+  opacity: 0.8;
   font-size: 14px;
   width: 250px;
   padding: 10px;
@@ -167,4 +169,18 @@
   color: white;
   padding: 10px;
   border-radius: 5px;
+}
+
+.Player-export-panel {
+  position: absolute;
+  top: 10%;
+  max-height: 60%;
+  overflow-y: scroll;
+  left: 0;
+  color: white;
+  background-color: black;
+  opacity: 0.8;
+  font-size: 14px;
+  width: 500px;
+  padding: 10px;
 }
