@@ -8,7 +8,7 @@ Voracious is a video player app for Mac/Windows/Linux with special features for 
 
 Voracious lets you:
 - **Scan and browse** your media collection ala Kodi or Plex
-- Simultaneously display **multiple subtitle tracks** (SRT, VTT, ASS)
+- Simultaneously display **multiple subtitle languages/tracks** (all common formats supported)
 - Quickly **replay** the current subtitle and navigate forward and back *by subtitle* using the keyboard
 - Train your listen/reading/comprehension with **special viewing modes** that automatically pause and hide/reveal subtitles
 - Automatically generate **furigana** annotations _(Japanese only)_
