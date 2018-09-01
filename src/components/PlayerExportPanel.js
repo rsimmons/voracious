@@ -27,8 +27,15 @@ export default class PlayerExportPanel extends Component {
 
     let audioDataPromise;
     if ([...ankiPrefs.fieldMap.values()].includes('audio')) {
+      const AUDIO_EXTRACT_PADDING = 0.25;
+      let paddedBegin = chunk.position.begin - AUDIO_EXTRACT_PADDING;
+      if (paddedBegin < 0) {
+        paddedBegin = 0;
+      }
+      const paddedEnd = chunk.position.end + AUDIO_EXTRACT_PADDING;
+
       console.time('extracting audio');
-      audioDataPromise = this.props.onExtractAudio(chunk.position.begin, chunk.position.end);
+      audioDataPromise = this.props.onExtractAudio(paddedBegin, paddedEnd);
       audioDataPromise.then(audioData => {
         console.timeEnd('extracting audio');
         this.setState(state => {
