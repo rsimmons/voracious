@@ -387,7 +387,11 @@ export default class Player extends Component {
 
           if (nextChunk) {
             this.videoMediaComponent.seek(nextChunk.position.begin+0.05); // add a bit to fix a precision bug
-            // this.videoMediaComponent.play();
+
+            // If in read mode, we miss the start by jumping ahead, so we need to pause here
+            if (this.state.subtitleMode === 'read') {
+              this.videoMediaComponent.pause();
+            }
           }
         }
       } else {
