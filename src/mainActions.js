@@ -1,4 +1,4 @@
-import { List, Record, Map as IMap, Set as ISet } from 'immutable';
+import { List, Record, Map as IMap, OrderedMap, Set as ISet } from 'immutable';
 
 import createStorageBackend from './storage';
 import { getCollectionIndex, loadCollectionSubtitleTrack } from './library';
@@ -13,7 +13,7 @@ const jpar = JSON.parse; // alias
 const AnkiPreferencesRecord = new Record({
   modelName: undefined,
   deckName: undefined,
-  fieldMap: new IMap(), // Anki field to our field that fills it
+  fieldMap: new OrderedMap(), // Anki field to our field that fills it
 });
 
 const PreferencesRecord = new Record({
@@ -159,7 +159,7 @@ export default class MainActions {
       const ankiPrefRecord = new AnkiPreferencesRecord({
         deckName: profile.preferences.anki.deckName,
         modelName: profile.preferences.anki.modelName,
-        fieldMap: new IMap(profile.preferences.anki.fieldMap),
+        fieldMap: new OrderedMap(profile.preferences.anki.fieldMap),
       });
       this.state.set(this.state.get().setIn(['preferences', 'anki'], ankiPrefRecord));
     } else {
@@ -320,7 +320,7 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['preferences', 'anki'], new AnkiPreferencesRecord({
       deckName: prefs.deckName,
       modelName: prefs.modelName,
-      fieldMap: new IMap(prefs.fieldMap),
+      fieldMap: new OrderedMap(prefs.fieldMap),
     })));
     await this._storageSaveProfile();
   };
