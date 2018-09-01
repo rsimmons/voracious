@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Link, NavLink, Switch, Route, Redirect } from 'react-router-dom';
+import { ScrollContext } from 'react-router-scroll-4';
 
 import { extractAudioFromVideo } from '../library';
 
@@ -10,16 +11,6 @@ import Player from './Player.js';
 import Settings from './Settings.js';
 import AddCollection from './AddCollection.js';
 import ImportEpwing from './ImportEpwing.js';
-
-class ScrollToTopOnMount extends Component {
-  componentDidMount() {
-    window.scrollTo(0, 0)
-  }
-
-  render() {
-    return null
-  }
-}
 
 const VideoListItem = (props) => {
   const { videoId, collection, name } = props;
@@ -43,7 +34,7 @@ class App extends Component {
       return <WidthWrapper><h1 className="header-font">{mainState.modalLoadingMessage}</h1></WidthWrapper>;
     } else {
       return (
-        <Router>
+        <Router><ScrollContext>
           <Switch>
             <Route path="/player/:cloc/:vid" render={({ match, history }) => {
               const collectionLocator = decodeURIComponent(match.params.cloc);
@@ -56,7 +47,7 @@ class App extends Component {
             <Route path="/import_epwing" render={({ history }) => {
               return <ImportEpwing onExit={() => { history.goBack(); }} onReloadDictionaries={actions.reloadDictionaries} />;
             }}/>
-            <Route render={() => (
+            <Route render={({ history }) => (
               <WidthWrapper>
                 <nav className="App-main-nav header-font">
                   <NavLink to={'/library'} activeClassName="selected">Library</NavLink>
@@ -71,9 +62,8 @@ class App extends Component {
                       const title = collection.titles.find(t => t.name === titleName); // unindexed, but should be quick
                       return (
                         <div>
-                          <ScrollToTopOnMount/>
                           <div className="App-collection-header">
-                            <h2 className="App-collection-header-title"><Link to="/library" className="App-back-to-library-link">{collection.name}</Link> / {title.name}</h2>
+                            <h2 className="App-collection-header-title"><a href="/library" onClick={e => {e.preventDefault(); history.goBack();}} className="App-back-to-library-link">{collection.name}</a> / {title.name}</h2>
                           </div>
                           {title.parts.seasonEpisodes.length ? (
                             <ul>
@@ -143,7 +133,7 @@ class App extends Component {
               </WidthWrapper>
             )}/>
           </Switch>
-        </Router>
+        </ScrollContext></Router>
       );
     }
   }
