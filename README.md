@@ -14,7 +14,7 @@ Voracious lets you:
 - Automatically generate **furigana** annotations _(Japanese only)_
 - Hover over words to see **dictionary definitions** _(Japanese only)_
 - Import and use **EPWING** dictionaries _(limited to certain popular Japanese EPWINGs)_
-- **Export subtitles as sentence cards** to Anki (with audio, ala [subs2srs](http://subs2srs.sourceforge.net/)), instantly via [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
+- **Export subtitles as sentence cards** to Anki (with audio and/or image, ala [subs2srs](http://subs2srs.sourceforge.net/)), instantly via [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
 - _(coming soon)_ **Search for words/phrases** over your entire library of subtitles
 
 # Using Voracious (Quick Start)
