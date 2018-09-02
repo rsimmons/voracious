@@ -497,6 +497,7 @@ export default class Player extends Component {
       if (!state.exporting) {
         newState.exporting = {
           chunk: currentChunk,
+          videoTime: this.videoTime,
         };
       }
       return newState;
@@ -615,7 +616,7 @@ export default class Player extends Component {
         ) : null}
         { this.state.exporting ? (
           <div className="Player-export-panel">
-            <PlayerExportPanel ankiPrefs={this.props.ankiPrefs} onExtractAudio={this.props.onExtractAudio} onDone={this.handleExportDone} {...this.state.exporting} />
+            <PlayerExportPanel ankiPrefs={this.props.ankiPrefs} onExtractAudio={this.props.onExtractAudio} onExtractFrameImage={this.props.onExtractFrameImage} onDone={this.handleExportDone} {...this.state.exporting} />
           </div>
         ) : null}
       </div>

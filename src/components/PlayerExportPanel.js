@@ -11,7 +11,7 @@ export default class PlayerExportPanel extends Component {
   constructor(props) {
     super(props);
 
-    const { ankiPrefs, chunk } = this.props;
+    const { ankiPrefs, chunk, videoTime } = this.props;
 
     const textWithReadings = annoTextCustomRender(
       chunk.annoText,
@@ -52,6 +52,26 @@ export default class PlayerExportPanel extends Component {
       });
     }
 
+    let imageDataPromise;
+    if ([...ankiPrefs.fieldMap.values()].includes('image')) {
+      console.time('extracting image');
+      imageDataPromise = this.props.onExtractFrameImage(videoTime);
+      imageDataPromise.then(imageData => {
+        console.timeEnd('extracting image');
+        this.setState(state => {
+          const newState = {...state};
+
+          for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
+            if (vorfn === 'image') {
+              this.state.fieldData.set(ankifn, imageData);
+            }
+          }
+
+          return newState;
+        })
+      });
+    }
+
     const fieldData = new Map();
     for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
       if (vorfn === 'text') {
@@ -60,6 +80,8 @@ export default class PlayerExportPanel extends Component {
         fieldData.set(ankifn, textWithReadings);
       } else if (vorfn === 'audio') {
         fieldData.set(ankifn, audioDataPromise);
+      } else if (vorfn === 'image') {
+        fieldData.set(ankifn, imageDataPromise);
       }
     }
 
@@ -95,7 +117,7 @@ export default class PlayerExportPanel extends Component {
     // Wait for audio, if necessary
     const mediaPromises = [];
     for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
-      if (vorfn === 'audio') {
+      if ((vorfn === 'audio') && (vorfn === 'image')) {
         mediaPromises.push(fieldData.get(ankifn));
       }
     }
@@ -129,6 +151,26 @@ export default class PlayerExportPanel extends Component {
         console.timeEnd('store audio to Anki');
 
         addNoteFields[ankifn] = '[sound:' + audioFilename + ']';
+      } else if (vorfn === 'image') {
+        // NOTE: If image is being sent to multiple fields, each will get its own file
+        const imageFilename = 'voracious_' + genuid() + '.jpg';
+
+        console.time('store image to Anki');
+        try {
+          await ankiConnectInvoke('storeMediaFile', 6, {
+            filename: imageFilename,
+            data: fieldData.get(ankifn).toString('base64'),
+          });
+        } catch (e) {
+          this.setState({
+            exporting: false,
+            statusMessage: e.toString(),
+          });
+          return;
+        }
+        console.timeEnd('store image to Anki');
+
+        addNoteFields[ankifn] = '<img src="' + imageFilename + '" />';
       } else {
         throw new Error('unrecognized field type');
       }
@@ -224,6 +266,10 @@ export default class PlayerExportPanel extends Component {
               if (vorfn === 'audio') {
                 return (
                   <div key={ankifn} className="PlayerExportPanel-field"><label>{ankifn}<div className="PlayerExportPanel-field-value">{this.state.fieldData.get(ankifn).then ? '[extracting audio...]' : '[audio]'}</div></label></div>
+                );
+              } else if (vorfn === 'image') {
+                return (
+                  <div key={ankifn} className="PlayerExportPanel-field"><label>{ankifn}<div className="PlayerExportPanel-field-value">{this.state.fieldData.get(ankifn).then ? '[extracting image...]' : '[image]'}</div></label></div>
                 );
               } else {
                 return (

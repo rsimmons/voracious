@@ -4,7 +4,7 @@ import { parseSRT, parseVTT, parseASS } from '../util/subtitleParsing';
 import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis';
 import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
-import { extractAudio } from '../util/ffmpeg';
+import { extractAudio, extractFrameImage } from '../util/ffmpeg';
 
 const LOCAL_PREFIX = 'local:';
 
@@ -259,6 +259,17 @@ export const extractAudioFromVideo = async (collectionLocator, vidId, startTime,
     const vidfn = path.join(baseDirectory, vidId);
     const audioData = await extractAudio(vidfn, startTime, endTime);
     return audioData;
+  } else {
+    throw new Error('not a local collection');
+  }
+};
+
+export const extractFrameImageFromVideo = async (collectionLocator, vidId, time) => {
+  if (collectionLocator.startsWith(LOCAL_PREFIX)) {
+    const baseDirectory = collectionLocator.slice(LOCAL_PREFIX.length);
+    const vidfn = path.join(baseDirectory, vidId);
+    const imageData = await extractFrameImage(vidfn, time);
+    return imageData;
   } else {
     throw new Error('not a local collection');
   }

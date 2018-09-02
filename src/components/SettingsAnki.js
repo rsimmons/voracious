@@ -10,12 +10,14 @@ const VORACIOUS_FIELD_NAMES = new Map([
   ['text', 'Text'],
   ['text_readings', 'Text with kanji readings'],
   ['audio', 'Audio'],
+  ['image', 'Image'],
 ]);
 
 const FIELD_DEFAULTS = new Map([
   ['Expression', 'text'],
   ['Reading', 'text_readings'],
   ['Audio', 'audio'],
+  ['Image', 'image'],
 ]);
 
 export default class SettingsAnki extends Component {
