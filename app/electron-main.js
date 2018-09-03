@@ -55,7 +55,7 @@ function addIpcHandlers() {
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1200, height: 600});
+  mainWindow = new BrowserWindow({width: 1280, height: 720});
 
   // and load the index.html of the app.
   const startUrl = process.env.ELECTRON_START_URL || url.format({
