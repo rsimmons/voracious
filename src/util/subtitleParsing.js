@@ -17,7 +17,7 @@ const parseSRTTime = (s) => {
 export const parseSRT = (text) => {
   const normText = text.replace(/\r\n/g, '\n'); // normalize newlines
 
-  const re = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n((?:.+\n)+)/g;
+  const re = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\s*\n((?:.+\n)+)/g;
   const subs = [];
   let found;
 
