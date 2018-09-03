@@ -81,6 +81,7 @@ const analyzeJAKuromoji = async (text) => {
           const diffs = dmp.diff_main(kataToHira(t.surface_form), hiraReading);
           let beginOff = 0;
           let endOff = 0;
+
           for (const [action, s] of diffs) {
             if (action === -1) {
               // Deletion
@@ -88,7 +89,7 @@ const analyzeJAKuromoji = async (text) => {
             } else if (action === 1) {
               // Insertion
               if (endOff <= beginOff) {
-                throw new Error('Unexpected');
+                console.warn('diff matching furigana, endOff <= beginOff', t.surface_form, hiraReading);
               }
               annotations.push({
                 cpBegin: cpBegin + beginOff,
@@ -99,14 +100,14 @@ const analyzeJAKuromoji = async (text) => {
               beginOff = endOff;
             } else {
               if (action !== 0) {
-                throw new Error('Unexpected');
+                throw new Error('diff should only return [-1,0,1]');
               }
               beginOff += [...s].length;
               endOff = beginOff;
             }
           }
           if (beginOff !== endOff) {
-            throw new Error('Unexpected');
+            console.warn('diff matching furigana, beginOff !== endOff', t.surface_form, hiraReading);
           }
         } else {
           // Simple case
