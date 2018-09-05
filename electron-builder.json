@@ -33,6 +33,12 @@
     ],
     "target": ["portable", "nsis"]
   },
+  "linux": {
+    "files": [
+      "resources/bin/linux/**"
+    ],
+    "target": ["AppImage"]
+  },
   "nsis": {
     "artifactName": "${productName}-${version}-windows-installer.${ext}",
     "oneClick": false,
