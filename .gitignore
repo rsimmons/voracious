@@ -22,3 +22,6 @@ yarn-debug.log*
 yarn-error.log*
 
 *.sublime-workspace
+
+/.vagrant
+*.log
