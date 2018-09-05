@@ -83,6 +83,28 @@ If you just want to run the built app and don't need it packed into an archive/e
 $ yarn dist-nopack
 ```
 
+## Building a Linux release in a VM
+
+Download and install [VirtualBox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/). Then run:
+```
+vagrant up
+```
+
+This will download an Ubuntu image, spin it up in a VM, and do a clean clone and build in that VM. When it's done (it takes quite a while), it will copy the resulting `.AppImage` file to the `dist` dir of your working copy. After that, you can run:
+
+```
+vagrant destroy
+```
+
+and confirm to tear down and delete the VM. If you want to inspect the build environment before you destroy the VM, you can run:
+
+```
+vagrant ssh
+cd voracious
+```
+
+and check it out.
+
 ## Inspecting the distributed archive
 
 It's often useful to check exactly what files have been included in the archive distributed with the Electron app. An easy way to do that is to install the `asar` tool (`yarn global add asar`) and then (on mac) run:
