@@ -8,7 +8,9 @@
   "dependencies": {
     "diff-match-patch": "^1.0.0",
     "franc": "^4.0.0",
+    "iconv-lite": "^0.4.24",
     "immutable": "^3.8.1",
+    "jschardet": "^1.6.0",
     "jszip": "^3.1.5",
     "react": "^16.4.2",
     "react-autosize-textarea": "^4.0.0",
