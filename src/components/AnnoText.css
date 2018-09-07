@@ -1,6 +1,5 @@
 
 .AnnoText {
-  word-break: keep-all; /* improves CJK handling */
   overflow: hidden;
   user-select: none;
 }
