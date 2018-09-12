@@ -8,6 +8,8 @@ import PlayerExportPanel from './PlayerExportPanel';
 
 import { getChunkAtTime, getPrevChunkAtTime, getNextChunkAtTime } from '../util/chunk';
 
+const { remote } = window.require('electron');
+
 class VideoWrapper extends Component {
   constructor(props) {
     super(props);
@@ -54,7 +56,7 @@ class VideoWrapper extends Component {
   render() {
     const { videoURL, initialTime, onTimeUpdate, onPlaying, onPause, onEnded, onSeeking } = this.props;
     return (
-      <video src={videoURL} controls controlsList="nodownload" onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} onCanPlay={this.handleCanPlay} />
+      <video src={videoURL} controls controlsList="nodownload nofullscreen" onTimeUpdate={e => { onTimeUpdate(e.target.currentTime); }} onPlaying={onPlaying} onPause={onPause} onEnded={onEnded} onSeeking={onSeeking} ref={(el) => { this.videoElem = el; }} onLoadedMetadata={e => { e.target.currentTime = initialTime ? initialTime : 0; }} onCanPlay={this.handleCanPlay} />
     );
   }
 }
@@ -76,7 +78,7 @@ class PlayControls extends Component {
       return;
     }
 
-    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp, onNumberKey, onExportCard } = this.props;
+    const { onBack, onAhead, onReplay, onTogglePause, onContinue, onToggleRuby, onToggleHelp, onNumberKey, onExportCard, onToggleFullscreen } = this.props;
 
     if (!e.repeat) {
       if ((e.keyCode >= 49) && (e.keyCode <= 57)) {
@@ -115,6 +117,12 @@ class PlayControls extends Component {
             break;
 
           case 70: // F key
+            // onToggleRuby();
+            onToggleFullscreen();
+            e.preventDefault();
+            break;
+
+          case 82: // R key
             onToggleRuby();
             e.preventDefault();
             break;
@@ -510,6 +518,11 @@ export default class Player extends Component {
     });
   };
 
+  handleToggleFullscreen = () => {
+    const currentWindow = remote.getCurrentWindow();
+    currentWindow.setFullScreen(!currentWindow.isFullScreen());
+  };
+
   handleExit = () => {
     this.savePlaybackPosition();
     this.props.onExit();
@@ -552,7 +565,7 @@ export default class Player extends Component {
               })}
             </div>
           </div>
-          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} onNumberKey={this.handleNumberKey} onExportCard={this.handleExportCard} />
+          <PlayControls onBack={this.handleBack} onAhead={this.handleAhead} onReplay={this.handleReplay} onTogglePause={this.handleTogglePause} onContinue={this.handleContinue} onToggleRuby={this.handleToggleRuby} onToggleHelp={this.handleToggleHelp} onNumberKey={this.handleNumberKey} onExportCard={this.handleExportCard} onToggleFullscreen={this.handleToggleFullscreen} />
         </div>
         <button className="Player-big-button Player-exit-button" onClick={this.handleExit}>↩</button>
         <div className="Player-subtitle-controls-panel">
@@ -570,7 +583,8 @@ export default class Player extends Component {
               <tr><td>Next Sub:</td><td>&rarr;</td></tr>
               <tr><td>Pause/Unpause:</td><td>space</td></tr>
               <tr><td>Export To Anki:</td><td>E</td></tr>
-              <tr><td>Toggle Furigana:</td><td>F</td></tr>
+              <tr><td>Toggle Fullscreen:</td><td>F</td></tr>
+              <tr><td>Toggle Furigana/Ruby:</td><td>R</td></tr>
               <tr><td>Toggle Help:</td><td>H</td></tr>
               {(this.state.subtitleMode === 'manual') ? (
                 <tr><td>Hide/Show<br />Sub Track:</td><td>[1-9]</td></tr>
