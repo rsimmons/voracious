@@ -11,7 +11,7 @@ export default class PlayerExportPanel extends Component {
   constructor(props) {
     super(props);
 
-    const { ankiPrefs, chunk, videoTime } = this.props;
+    const { ankiPrefs, chunk, videoTime, selectedText } = this.props;
 
     const textWithReadings = annoTextCustomRender(
       chunk.annoText,
@@ -78,6 +78,8 @@ export default class PlayerExportPanel extends Component {
         fieldData.set(ankifn, chunk.annoText.text);
       } else if (vorfn === 'text_readings') {
         fieldData.set(ankifn, textWithReadings);
+      } else if (vorfn === 'selected_text') {
+        fieldData.set(ankifn, selectedText || '');
       } else if (vorfn === 'audio') {
         fieldData.set(ankifn, audioDataPromise);
       } else if (vorfn === 'image') {
@@ -129,7 +131,7 @@ export default class PlayerExportPanel extends Component {
 
     const addNoteFields = {};
     for (const [ankifn, vorfn] of ankiPrefs.fieldMap.entries()) {
-      if ((vorfn === 'text') || (vorfn === 'text_readings') || (vorfn === 'nofill')) {
+      if ((vorfn === 'nofill') || (vorfn === 'text') || (vorfn === 'text_readings') || (vorfn === 'selected_text')) {
         addNoteFields[ankifn] = fieldData.get(ankifn);
       } else if (vorfn === 'audio') {
         // NOTE: If audio is being sent to multiple fields, each will get its own file

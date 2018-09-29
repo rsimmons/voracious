@@ -168,6 +168,7 @@ export default class Player extends Component {
   constructor(props) {
     super(props);
     this.videoMediaComponent = undefined;
+    this.firstAnnoTextComponent = undefined;
 
     const subtitleMode = props.preferences.subtitleMode;
     const subtitleState = this.initialSubtitleState(subtitleMode);
@@ -506,6 +507,7 @@ export default class Player extends Component {
         newState.exporting = {
           chunk: currentChunk,
           videoTime: this.videoTime,
+          selectedText: this.firstAnnoTextComponent ? this.firstAnnoTextComponent.getSelectedText() : null,
         };
       }
       return newState;
@@ -556,7 +558,7 @@ export default class Player extends Component {
                           </div>
                         ) : null}
                         <div className={'Player-text-chunk-annotext Player-text-chunk-annotext-' + (hidden ? 'hidden' : 'visible')}>
-                          <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} searchDictionaries={this.props.searchDictionaries} />
+                          <AnnoText key={chunk.uid} annoText={chunk.annoText} language={subTrack.language} showRuby={this.props.preferences.showRuby} searchDictionaries={this.props.searchDictionaries} ref={(subTrackIdx === 0) ? (c => { this.firstAnnoTextComponent = c; }) : null} />
                         </div>
                       </div>
                     </div>

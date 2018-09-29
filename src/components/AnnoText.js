@@ -62,11 +62,19 @@ export default class AnnoText extends PureComponent {
 
   clearSelection = () => {
     this.setSelRange(null);
-  }
+  };
 
   setSelection = (begin, end) => {
     this.setSelRange(new CPRange({cpBegin: begin, cpEnd: end}));
-  }
+  };
+
+  getSelectedText = () => {
+    const selRange = this.state.selectionRange;
+    if (!selRange) {
+      return null;
+    }
+    return cpSlice(this.props.annoText.text, selRange.cpBegin, selRange.cpEnd);
+  };
 
   handleMouseUp = (e) => {
     this.dragStartIndex = null;
