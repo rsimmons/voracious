@@ -213,7 +213,7 @@ export default class Player extends Component {
   }
 
   getOrderedSubtitleTracks = () => {
-    return this.props.sortSubtitleTracksMap(this.props.video.subtitleTracks);
+    return this.props.sortFilterSubtitleTracksMap(this.props.video.subtitleTracks);
   }
 
   restorePlaybackPosition = async () => {

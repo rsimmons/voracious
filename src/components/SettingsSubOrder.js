@@ -13,7 +13,7 @@ export default class SettingsSubOrder extends Component {
 
   // Returns null if invalid
   parseOrderStr = () => {
-    const langs = this.state.orderStr.split(',').map(s => s.trim());
+    const langs = this.state.orderStr.split(',').map(s => s.trim()).filter(s => s);
     if (!langs.every(lang => /^[a-z]{3}$/.exec(lang))) {
       return null;
     }

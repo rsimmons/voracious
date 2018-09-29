@@ -21,6 +21,7 @@ const PreferencesRecord = new Record({
   showHelp: true,
   subtitleMode: 'manual',
   subtitleOrder: new List(['jpn', 'eng']), // list of iso639-3 codes
+  subtitleIgnores: new List([]), // list of iso639-3 codes
   disabledDictionaries: new ISet(),
   dictionaryOrder: new List(),
   anki: new AnkiPreferencesRecord(),
@@ -150,6 +151,7 @@ export default class MainActions {
       this.state.set(this.state.get().setIn(['preferences', 'showHelp'], profile.preferences.showHelp));
       this.state.set(this.state.get().setIn(['preferences', 'subtitleMode'], profile.preferences.subtitleMode));
       this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(profile.preferences.subtitleOrder)));
+      this.state.set(this.state.get().setIn(['preferences', 'subtitleIgnores'], new List(profile.preferences.subtitleIgnores)));
       this.state.set(this.state.get().setIn(['preferences', 'disabledDictionaries'], new ISet(profile.preferences.disabledDictionaries)));
       this.state.set(this.state.get().setIn(['preferences', 'dictionaryOrder'], new List(profile.preferences.dictionaryOrder)));
 
@@ -182,6 +184,7 @@ export default class MainActions {
         showHelp: state.preferences.showHelp,
         subtitleMode: state.preferences.subtitleMode,
         subtitleOrder: state.preferences.subtitleOrder.toArray(),
+        subtitleIgnores: state.preferences.subtitleIgnores.toArray(),
         disabledDictionaries: state.preferences.disabledDictionaries.toArray(),
         dictionaryOrder: state.preferences.dictionaryOrder.toArray(),
         anki: state.preferences.anki.toJS(),
@@ -253,10 +256,11 @@ export default class MainActions {
     this.state.set(this.state.get().setIn(['collections', collectionLocator, 'videos', videoId, 'loadingSubs'], false));
   };
 
-  sortSubtitleTracksMap = (subTracksMap) => {
+  sortFilterSubtitleTracksMap = (subTracksMap) => {
     const prefOrder = this.state.get().preferences.subtitleOrder.toArray();
+    const ignores = this.state.get().preferences.subtitleIgnores.toArray();
 
-    const arr = subTracksMap.valueSeq().toArray();
+    const arr = subTracksMap.valueSeq().toArray().filter(t => !ignores.includes(t.language));
     arr.sort((a, b) => {
       const aIdx = prefOrder.includes(a.language) ? prefOrder.indexOf(a.language) : Infinity;
       const bIdx = prefOrder.includes(b.language) ? prefOrder.indexOf(b.language) : Infinity;
@@ -297,6 +301,11 @@ export default class MainActions {
 
   setPreferenceSubtitleOrder = async (orderArr) => {
     this.state.set(this.state.get().setIn(['preferences', 'subtitleOrder'], new List(orderArr)));
+    await this._storageSaveProfile();
+  };
+
+  setPreferenceSubtitleIgnores = async (ignoresArr) => {
+    this.state.set(this.state.get().setIn(['preferences', 'subtitleIgnores'], new List(ignoresArr)));
     await this._storageSaveProfile();
   };
 
