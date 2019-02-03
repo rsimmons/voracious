@@ -24,6 +24,10 @@ export const extractAudio = async (vidfn, startTime, endTime) => {
       reject(error);
     });
 
+    subp.stderr.on('data', (data) => {
+      console.log(`ffmpeg extract audio stderr: ${data}`);
+    });
+
     subp.on('exit', (code) => {
       if (code) {
         reject(new Error('ffmpeg exit code ' + code));
@@ -47,6 +51,10 @@ export const extractFrameImage = async (vidfn, time) => {
 
     subp.on('error', (error) => {
       reject(error);
+    });
+
+    subp.stderr.on('data', (data) => {
+      console.log(`ffmpeg extract image stderr: ${data}`);
     });
 
     subp.on('exit', (code) => {
