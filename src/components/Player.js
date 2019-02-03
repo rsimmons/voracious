@@ -526,6 +526,12 @@ export default class Player extends Component {
   };
 
   handleExit = () => {
+    // Make sure they are out of full screen so they don't get stuck in it
+    const currentWindow = remote.getCurrentWindow();
+    if (currentWindow.isFullScreen()) {
+      currentWindow.setFullScreen(false);
+    }
+
     this.savePlaybackPosition();
     this.props.onExit();
   }
