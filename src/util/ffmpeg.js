@@ -18,7 +18,7 @@ export const extractAudio = async (vidfn, startTime, endTime) => {
   const tmpfile = await tmp.file({keep: true, postfix: '.mp3'});
 
   await new Promise((resolve, reject) => {
-    const subp = spawn(getBinaryFilename(), ['-ss', startTime.toString(), '-i', vidfn, '-t', (endTime-startTime).toString(), '-map', 'a', '-ab', '192k', '-f', 'mp3', '-y', tmpfile.path], {windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
+    const subp = spawn(getBinaryFilename(), ['-ss', startTime.toString(), '-i', vidfn, '-t', (endTime-startTime).toString(), '-map', '0:a:0', '-ab', '192k', '-f', 'mp3', '-y', tmpfile.path], {windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
 
     subp.on('error', (error) => {
       reject(error);
