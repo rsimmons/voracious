@@ -116,6 +116,11 @@ export const getCollectionIndex = async (collectionLocator) => {
       titles: [],
     };
 
+    if (!(await fs.exists(baseDirectory))) {
+      // Short circuit if base directory is missing
+      return result;
+    }
+
     // Look for videos directly in baseDirectory
     const baseVideos = await listVideosRel(baseDirectory, '');
     for (const vid of baseVideos) {
