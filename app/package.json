@@ -3,7 +3,7 @@
   "description": "A video player for studying foreign languages (esp. Japanese)",
   "author": "Russel Simmons",
   "license": "MIT",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "repository": "rsimmons/voracious",
   "main": "electron-main.js",
   "dependencies": {
