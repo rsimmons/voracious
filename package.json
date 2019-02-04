@@ -37,6 +37,7 @@
     "build-icons": "png2icons buildResources/icon.png buildResources/icon -all",
     "dist": "electron-builder",
     "dist-nopack": "electron-builder -c.mac.target=dir -c.win.target=dir -c.linux.target=dir",
+    "force-rebuild-pages": "git commit -m 'force rebuild of GH pages' --allow-empty && git push",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }
