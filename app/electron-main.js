@@ -79,13 +79,60 @@ function createWindow() {
   })
 }
 
+const menuTemplate = [
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'pasteandmatchstyle' },
+      { role: 'delete' },
+      { role: 'selectall' },
+    ]
+  },
+  {
+    role: 'window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'close' },
+    ]
+  },
+];
+
+if (process.platform === 'darwin') {
+  menuTemplate.unshift({
+    label: app.getName(),
+    submenu: [
+      { role: 'services' },
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { role: 'unhide' },
+      { type: 'separator' },
+      { role: 'quit' },
+    ]
+  })
+
+  menuTemplate[2].submenu = [
+    { role: 'minimize' },
+    { role: 'zoom' },
+  ];
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   registerLocalProtocol();
   addIpcHandlers();
-  Menu.setApplicationMenu(null); // for win/linux, but should be ignored on mac
+
+  const menu = Menu.buildFromTemplate(menuTemplate)
+  Menu.setApplicationMenu(menu); // for win/linux, but should be ignored on mac
+
   createWindow();
 });
 
