@@ -10,5 +10,9 @@ export function detectIso6393(text) {
 }
 
 export function iso6393To6391(iso6393) {
-  return iso6393ToEntry.get(iso6393).iso6391;
+  const entry = iso6393ToEntry.get(iso6393);
+  if (!entry) {
+    return undefined;
+  }
+  return entry.iso6391;
 }
