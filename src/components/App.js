@@ -31,7 +31,6 @@ const VideoListItem = (props) => {
   if (hrs > 0 || mnts > 0 || secs > 0) {
     time_stamp += "Watched ";
     if (hrs > 0) {
-      time_stamp += ("00" + hrs).slice(-2);
       time_stamp += ("00" + hrs).slice(-2) + ":";
     }
     time_stamp += ("00" + mnts).slice(-2) + ":";
