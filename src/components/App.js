@@ -13,13 +13,35 @@ import AddCollection from './AddCollection.js';
 import ImportEpwing from './ImportEpwing.js';
 
 const VideoListItem = (props) => {
-  const { videoId, collection, name } = props;
+  const { videoId, collection, name, pos} = props;
   const hasSubs = collection.videos.get(videoId).subtitleTracks.size > 0;
+  const pos_live = collection.videos.get(videoId).playbackPosition;
+
+  // Build timestamp for how much of the episode has been played.
+  var pos_real = pos;
+  if (pos_live != null) {
+    pos_real = pos_live
+  }
+  const hrs = Math.floor(pos_real / (60*60));
+  pos_real -= hrs * 60 * 60;
+  const mnts = Math.floor(pos_real / 60);
+  pos_real -= mnts * 60;
+  const secs = Math.floor(pos_real);
+  var time_stamp = "";
+  if (hrs > 0 || mnts > 0 || secs > 0) {
+    time_stamp += "Watched ";
+    if (hrs > 0) {
+      time_stamp += ("00" + hrs).slice(-2);
+      time_stamp += ("00" + hrs).slice(-2) + ":";
+    }
+    time_stamp += ("00" + mnts).slice(-2) + ":";
+    time_stamp += ("00" + secs).slice(-2);
+  }
 
   return (
     <li className={'App-library-list-item ' + (hasSubs ? 'App-library-list-item-has-subs' : 'App-library-list-item-no-subs')}>
       <Link to={'/player/' + encodeURIComponent(collection.locator) + '/' + encodeURIComponent(videoId)}>
-        {name}
+        {name} <span className="App-library-list-item-time-stamp">{time_stamp}</span>
       </Link>
     </li>
   );
@@ -68,21 +90,21 @@ class App extends Component {
                           {title.parts.seasonEpisodes.length ? (
                             <ul>
                               {title.parts.seasonEpisodes.map(se => (
-                                <VideoListItem collection={collection} videoId={se.videoId} name={'Season ' + se.seasonNumber + ' Episode ' + se.episodeNumber} key={se.videoId} />
+                                <VideoListItem collection={collection} videoId={se.videoId} name={'Season ' + se.seasonNumber + ' Episode ' + se.episodeNumber} pos={se.playbackPosition} key={se.videoId} />
                               ))}
                             </ul>
                           ) : null}
                           {title.parts.episodes.length ? (
                             <ul>
                               {title.parts.episodes.map(ep => (
-                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.episodeNumber} key={ep.videoId} />
+                                <VideoListItem collection={collection} videoId={ep.videoId} name={'Episode ' + ep.episodeNumber} pos={ep.playbackPosition} key={ep.videoId} />
                               ))}
                             </ul>
                           ) : null}
                           {title.parts.others.length ? (
                             <ul>
                               {title.parts.others.map(other => (
-                                <VideoListItem collection={collection} videoId={other.videoId} name={other.name} key={other.name} />
+                                <VideoListItem collection={collection} videoId={other.videoId} name={other.name} pos={other.playbackPosition} key={other.name} />
                               ))}
                             </ul>
                           ) : null}
@@ -112,7 +134,7 @@ class App extends Component {
                                     </Link>
                                   </li>
                                 ) : (
-                                  <VideoListItem collection={collection} videoId={title.videoId} name={title.name} key={title.name} />
+                                  <VideoListItem collection={collection} videoId={title.videoId} name={title.name} pos={title.playbackPosition} key={title.name} />
                                 )
                               )}
                             </ul>

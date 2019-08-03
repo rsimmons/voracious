@@ -53,7 +53,7 @@ const VideoRecord = new Record({
   name: undefined,
   videoURL: undefined,
   subtitleTracks: new IMap(), // id -> SubtitleTrackRecord
-  playbackPosition: 0,
+  playbackPosition: null,
   loadingSubs: false,
 });
 
