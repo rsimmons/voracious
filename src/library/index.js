@@ -8,6 +8,7 @@ import { ensureKuromojiLoaded, createAutoAnnotatedText } from '../util/analysis'
 import { detectIso6393 } from '../util/languages';
 import { createTimeRangeChunk, createTimeRangeChunkSet } from '../util/chunk';
 import { extractAudio, extractFrameImage } from '../util/ffmpeg';
+import createStorageBackend from '../storage';
 
 const LOCAL_PREFIX = 'local:';
 
@@ -108,6 +109,16 @@ const listDirs = async (dir) => {
 };
 
 export const getCollectionIndex = async (collectionLocator) => {
+  const storage = await createStorageBackend();
+  const playbackPos = async (vid_id) => {
+      const positionStr = await storage.getItemMaybe('playback_position/' + encodeURIComponent(collectionLocator) + '/' + encodeURIComponent(vid_id));
+      if (!positionStr) {
+        return 0;
+      } else {
+        return JSON.parse(positionStr);
+      }
+  };
+
   if (collectionLocator.startsWith(LOCAL_PREFIX)) {
     const baseDirectory = collectionLocator.slice(LOCAL_PREFIX.length);
 
@@ -130,6 +141,7 @@ export const getCollectionIndex = async (collectionLocator) => {
         series: false,
         videoId: vid.id,
         parts: null,
+        playbackPosition: await playbackPos(vid.id),
       });
     }
 
@@ -158,6 +170,7 @@ export const getCollectionIndex = async (collectionLocator) => {
           series: false,
           videoId: vids[0].id,
           parts: null,
+          playbackPosition: await playbackPos(vids[0].id),
         });
       } else {
         const seasonEpisodes = [];
@@ -173,6 +186,7 @@ export const getCollectionIndex = async (collectionLocator) => {
               seasonNumber: sNum,
               episodeNumber: eNum,
               videoId: vid.id,
+              playbackPosition: await playbackPos(vid.id),
             });
           } else {
             const eMatch = EPISODE_PATTERN.exec(vid.name);
@@ -181,11 +195,13 @@ export const getCollectionIndex = async (collectionLocator) => {
               episodes.push({
                 episodeNumber: eNum,
                 videoId: vid.id,
+                playbackPosition: await playbackPos(vid.id),
               });
             } else {
               others.push({
                 name: vid.name,
                 videoId: vid.id,
+                playbackPosition: await playbackPos(vid.id),
               });
             }
           }

@@ -96,6 +96,13 @@
   color: #888;
 }
 
+.App-library-list-item-time-stamp {
+  color: #888;
+  float: right;
+  margin-right: 1em;
+  font-size: 0.8em;
+}
+
 .App-library-list-item:last-child {
   border-bottom: 1px solid #ddd;
 }
