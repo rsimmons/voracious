@@ -140,8 +140,8 @@ export const getCollectionIndex = async (collectionLocator) => {
         name: vid.name,
         series: false,
         videoId: vid.id,
-        playbackPosition: await playbackPos(vid.id),
         parts: null,
+        playbackPosition: await playbackPos(vid.id),
       });
     }
 
@@ -169,8 +169,8 @@ export const getCollectionIndex = async (collectionLocator) => {
           name: dir,
           series: false,
           videoId: vids[0].id,
-          playbackPosition: await playbackPos(vids[0].id),
           parts: null,
+          playbackPosition: await playbackPos(vids[0].id),
         });
       } else {
         const seasonEpisodes = [];
@@ -185,8 +185,8 @@ export const getCollectionIndex = async (collectionLocator) => {
             seasonEpisodes.push({
               seasonNumber: sNum,
               episodeNumber: eNum,
-              playbackPosition: await playbackPos(vid.id),
               videoId: vid.id,
+              playbackPosition: await playbackPos(vid.id),
             });
           } else {
             const eMatch = EPISODE_PATTERN.exec(vid.name);
@@ -194,14 +194,14 @@ export const getCollectionIndex = async (collectionLocator) => {
               const eNum = +(eMatch[1]);
               episodes.push({
                 episodeNumber: eNum,
-                playbackPosition: await playbackPos(vid.id),
                 videoId: vid.id,
+                playbackPosition: await playbackPos(vid.id),
               });
             } else {
               others.push({
                 name: vid.name,
-                playbackPosition: await playbackPos(vid.id),
                 videoId: vid.id,
+                playbackPosition: await playbackPos(vid.id),
               });
             }
           }

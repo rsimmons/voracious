@@ -46,6 +46,7 @@ const TitleRecord = new Record({
   series: undefined,
   videoId: undefined, // only defined if not a series
   parts: undefined, // only defined if a series
+  playbackPosition: undefined,
 });
 
 const VideoRecord = new Record({
@@ -115,6 +116,7 @@ export default class MainActions {
         name: vid.name,
         videoURL: vid.url,
         subtitleTracks: new IMap(subTrackKVs),
+        playbackPosition: vid.playbackPosition,
         // remaining fields are OK to leave as default
       })]);
     }
@@ -126,6 +128,7 @@ export default class MainActions {
         series: title.series,
         videoId: title.videoId, // only defined if not a series
         parts: title.parts, // only defined if a series
+        playbackPosition: title.playbackPosition,
       }));
     }
 
